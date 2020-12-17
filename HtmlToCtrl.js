@@ -167,6 +167,18 @@ ExCtrl_Prototype={
             return i;
         }
     },
+    /**
+     * 
+     * @param {String} key 属性的key
+     * @param {Array<Element>} elements 实例的 elements 的引用，用于添加新的子元素
+     * @param {Array<DEF_VirtualElement>} ves DEF_VirtualElement 的数组
+     * @param {Number} i 当前的ves的下标
+     * @param {String} _attrVal 属性值
+     * @param {String} tname 临时的元素名称，用作实例的 elements 当前的索引
+     * @param {Number} k 当前的ves的下标
+     * @param {String} forkey 给 for 用的 for 的 判断体
+     * @returns {Number} 返回运算完成后的ves下标
+     */
     attrHandle:function(key,elements,ves,i,_attrVal,tname,k,forkey){
         var attrVal=htmlToCode(_attrVal);
         if(key.indexOf("ctrl-")!=-1&&key!="ctrl-id"){
@@ -194,8 +206,8 @@ ExCtrl_Prototype={
         return k;
     },
     /**把 ve 转换成 js 的 Element 对象;
-     * @param   {Array} ves   DEF_VirtualElement list
-     * @param   {*}     _nameEX    用来添加命名的
+     * @param   {Array<DEF_VirtualElement>} ves   DEF_VirtualElement list
+     * @param   {String}     _nameEX    用来添加命名的
      * @return  {Object{elements,DocumentFragment}}
      */
     itemVEToElement:function(ves,_nameEX,forkey){

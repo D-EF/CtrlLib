@@ -13,7 +13,7 @@ CtrlLib.prototype={
      */
     addend:function(_parentNode,...surplusArgument){
         if(_parentNode){
-            this.initialize(arguments);
+            this.initialize(...arguments);
             this.parentNode=_parentNode;
             if(!this.rootNodes.length)this.createContent(surplusArgument);
             var tempDocF=document.createDocumentFragment();
@@ -21,7 +21,7 @@ CtrlLib.prototype={
                 tempDocF.prepend(this.rootNodes[i]);
             }
             this.parentNode.appendChild(tempDocF);
-            this.callback(arguments);
+            this.callback(...arguments);
         }else{
             console.error('Fatal error! This Control have not parentNode!');
         }
