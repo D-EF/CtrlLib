@@ -212,7 +212,7 @@ ExCtrl_Prototype={
      */
     itemVEToElement:function(ves,_nameEX,forkey){
         var elements={},
-            rtnFragment=document.createDocumentFragment(),tempFragment=document.createDocumentFragment(),
+            rtnFragment=document.createDocumentFragment(),
             i,j,k,minD=Infinity,
             dHash=new Array(ves.length),
             nameEX=_nameEX||"",
