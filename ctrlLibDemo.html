@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <title>ctrlLib-htmlToCtrl Demo</title>
+        <title>ctrlLib-xmlToCtrl Demo</title>
     </head>
     <body>
         <div id="a">
@@ -40,14 +40,14 @@
         <script src="../Basics.js"></script>
         <script src="./CtrlLib.js"></script>
         <script src="./ve.js"></script>
-        <script src="./htmlToCtrl.js"></script>
+        <script src="./xmlToCtrl.js"></script>
         <script>
             
         // console.log(new Date()-opentime,window.performance.getEntries());
 
         var leftBox=document.getElementById("a");
 
-        var IndexNav=htmlToCtrl(document.getElementById("indexNavBluePrint").innerHTML,{});
+        var IndexNav=xmlToCtrl(document.getElementById("indexNavBluePrint").innerHTML,{});
         var cd=new IndexNav("leftIndex");
         cd.data={
             a:"123",

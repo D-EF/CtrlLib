@@ -15,6 +15,7 @@ function DEF_VirtualElement(tagName,depth,attribute,before,innerEnd){
 }
 DEF_VirtualElement.prototype={
     /**
+     * 存入属性
      * @return {Number} 1:join; 2:update
      */
     setAttribute:function(key,val){
@@ -28,6 +29,7 @@ DEF_VirtualElement.prototype={
         return 1;
     },
     /**
+     * 获取属性
      * @return {String} val
      */
     getAttribute:function(key){
@@ -45,7 +47,7 @@ var voidElementsTagName=["br","hr","img","input","link","meta","area","base","co
 
 /**把xml转换成DEF_VirtualElement
  * @param {String} xmlStr
- * @return {Object} {ves:[VirtualElement],maxDepth:Number}
+ * @return {Object} {ves:Array<VirtualElement>,maxDepth:Number}
  */
 function xmlToVE(_xmlStr){
     var xmlStr=_xmlStr.replace(/<!--(.|[\r\n])*?-->/,"");//去除注释

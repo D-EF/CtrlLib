@@ -4,7 +4,7 @@
  * @param {Object} _prototype 追加到派生控件的原型链
  * @returns 返回一个 CtrlLib 的 派生类
  */
-function htmlToCtrl(htmlStr,_prototype){
+function xmlToCtrl(htmlStr,_prototype){
     var i,j;
     var ExCtrl=function(){
         CtrlLib.call(this,arguments);
@@ -45,7 +45,8 @@ function htmlToCtrl(htmlStr,_prototype){
 }
 ExCtrl_Prototype={
     templateKeyStr:{op:"${",ed:"}"},
-    /**渲染 模板字符 内容
+    /**
+     * 渲染 模板字符 内容
      * @param {String} str  write TemplateKeyStr
      * @param {String} ctrlID    可选的, 登记 ID       
      * @param {String} type      可选的, 登记 类型  
@@ -147,7 +148,7 @@ ExCtrl_Prototype={
         return k-1;
     },
     /**
-     * 
+     * 控制元素是否出现
      * @param {Array<Element>}   elements    
      * @param {Array<DEF_VirtualElement>}   ves         DEF_VirtualElement list
      * @param {Number}  i           当前的ves的索引
@@ -168,7 +169,7 @@ ExCtrl_Prototype={
         }
     },
     /**
-     * 
+     * 控制标签的属性
      * @param {String} key 属性的key
      * @param {Array<Element>} elements 实例的 elements 的引用，用于添加新的子元素
      * @param {Array<DEF_VirtualElement>} ves DEF_VirtualElement 的数组
@@ -205,7 +206,8 @@ ExCtrl_Prototype={
         }
         return k;
     },
-    /**把 ve 转换成 js 的 Element 对象;
+    /**
+     * 把 ve 转换成 js 的 Element 对象;
      * @param   {Array<DEF_VirtualElement>} ves   DEF_VirtualElement list
      * @param   {String}     _nameEX    用来添加命名的
      * @return  {Object{elements,DocumentFragment}}
@@ -307,8 +309,8 @@ ExCtrl_Prototype={
             }while(k--)
             this.elements[ctrlID].appendChild(this.stringRender(tempT.bluePrint,ctrlID,"innerEnd",1));
         },
+        // 元素 属性
         attr:function(tempT,ctrlID,attrkey){
-            // 元素 属性
             this.elements[ctrlID].setAttribute(attrkey.slice(8),this.stringRender(tempT.bluePrint,ctrlID,"attr"));//6=="attrVal-".length
         }
     },
