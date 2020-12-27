@@ -1,3 +1,20 @@
+/**
+ * @param {Array<DEF_VirtualElement>} ves
+ * @param {Number} maxDepth
+ */
+function DEF_VirtualElementList(ves,maxDepth){
+    this.ves=ves;
+    this.maxDepth=maxDepth;
+}
+DEF_VirtualElementList.prototype={
+    getByCtrlID:function(ctrlID){
+        for(var i=this.ves.length-1;i>=0;--i){
+            if(this.ves[i].ctrlID==ctrlID){
+                return this.ves[i];
+            }
+        }
+    }
+}
 
 /**供 htmlToControl 处理xml字符串
  * @param {String}  tagName     标签名
@@ -9,9 +26,13 @@
 function DEF_VirtualElement(tagName,depth,attribute,before,innerEnd){
     this.tagName=tagName;
     this.depth=depth;
-    this.attribute=attribute;
+    this.attribute=[];
+    for(var i=attribute.length-1;i>=0;--i){
+        this.setAttribute(attribute[i].key,attribute[i].val);
+    }
     this.before=before;
     this.innerEnd=innerEnd;
+    this.ctrlID;
 }
 DEF_VirtualElement.prototype={
     /**
@@ -40,6 +61,7 @@ DEF_VirtualElement.prototype={
         }
         return;
     }
+    
 }
 
 //所有无内容元素(短标签)的tag name
@@ -115,5 +137,5 @@ function xmlToVE(_xmlStr){
         console.error("标签没有对应的 开始 结束; 深度:"+depth);
         // return;
     }
-    return {ves:ves,maxDepth:maxDepth};
+    return new DEF_VirtualElementList(ves,maxDepth);
 }

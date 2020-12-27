@@ -1,3 +1,9 @@
+/*!
+ * 将xml转化成一个可复用的控件
+ * 注意! 不要在渲染里做会影响数据的事情!
+ */
+
+
 /**
  * 根据html代码, 创建一个 CtrlLib 的派生类
  * @param {String} htmlStr html代码
@@ -44,80 +50,55 @@ function xmlToCtrl(htmlStr,_prototype){
     return ExCtrl;
 }
 ExCtrl_Prototype={
-    templateKeyStr:{op:"${",ed:"}"},
     /**
      * 渲染 模板字符 内容
      * @param {String} str  write TemplateKeyStr
-     * @param {String} ctrlID    可选的, 登记 ID       
-     * @param {String} type      可选的, 登记 类型  
+     * @param {String} ctrlID    登记 ID       
+     * @param {String} type      登记 类型  
      * @param {Boolean} ishtml   控制返回值, 默认将返回字符串 ，非0 将返回 DocumentFragment
-     * @param {Array} forkey   用于给 for 配备唯一值, 会将 模板 中的表达式替换
+     * @param {Array} attrkey   如果是登记的 标签的属性值 这个是属性的 key
      * @return {String||DocumentFragment} 字符串 或 包含内容的文档片段
      */
-    stringRender:function(str,ctrlID,type,ishtml,forkey){
-        var temp=[],tDL,tempstr;
-        var headFlag=0,footFlag=0;
-        var q,p;// q是左
+    stringRender:function(str,ctrlID,type,ishtml,attrkey){
+        var temp=templateStringRender(str,this);
         var fragment=document.createDocumentFragment(),tempElement=document.createElement("div");
 
-        //字符串处理open
-        if(ctrlID){
-            if(!this.dLink)this.dLink={};
-            if(!this.dLink[ctrlID])this.dLink[ctrlID]={};
-            tDL=this.dLink[ctrlID][type]={bluePrint:str,nodes:[]};
-        }
-        for(p=0,q=0;str[p];++p){
-            for(var i=0;i<this.templateKeyStr.op.length;++i){
-                if(!(headFlag=str[p+i]==this.templateKeyStr.op[i])){break;}
-            }
-            
-            if(headFlag){ // 检测到头
-                temp.push(str.slice(q,p));
-                q=p+2;
-                while(1){
-                    ++p;
-                    for(var i=0;i<this.templateKeyStr.ed.length;++i){
-                        if(!(footFlag=str[p+i]==this.templateKeyStr.ed[i])){break;}
+        if(temp.hit.length 
+            && ctrlID&&ctrlID.indexOf("EX-for")==-1
+            ){
+            // 有模版字符串,添加一条datalink
+            for(var i=temp.hit.length-1;i>=0;--i){
+                if(this.dataLinks[temp.hit[i].expression]){
+                    var f=1;
+                    for(var j=this.dataLinks[temp.hit[i].expression].length-1;(j>=0)&&(f);--j){
+                        if(this.dataLinks[temp.hit[i].expression].link[j].ctrlID==ctrlID&&this.dataLinks[temp.hit[i].expression].link[j].type==type){
+                            f=0;
+                            break;
+                        }
                     }
-                    if(footFlag){
-                        tempstr=str.slice(q,p);
-                        oldL=temp.join("").length;
-                        temp.push((new Function("return "+tempstr)).call(this));
-                        q=p+1;
-                        break;
+                    if(f){
+                        if(type=="attr"&&attrkey)
+                        this.dataLinks[temp.hit[i].expression].link.push({ctrlID:ctrlID,type:type,attrkey});
                     }
+                    // else continue;
+                }
+                else{
+                    this.dataLinks[temp.hit[i].expression]=new DataLink(temp.hit[i].expression,temp.hit[i].value,{ctrlID:ctrlID,type:type});
                 }
             }
         }
-        temp.push(str.slice(q,p));
-        //字符串处理end
-        if(tDL&&temp.length<2){
-            //因为没有匹配 模板标记(templateKeyStr) 所以删除登记
-            delete this.dLink[ctrlID][type];
-        }
-        // else{
-        //     console.log(ctrlID);
-        // }
-
-        if((ctrlID&&type&&!Object.keys(this.dLink[ctrlID]).length)){
-            delete this.dLink[ctrlID];
-        }
-        // if(ctrlID&&ctrlID.indexOf("EX-for")!=-1){
-        //     /*删除由 for 创建的元素的dlink*/
-        //     delete this.dLink[ctrlID];
-        // }
+        
         if(ishtml){
             // 将字符串转成 node 并且输入到 fragment
-            tempElement.innerHTML=temp.join("");
-            p=tempElement.childNodes.length;
+            tempElement.innerHTML=temp.str;
+            var p=tempElement.childNodes.length;
             for(--p;p>=0;--p){
-                tDL.nodes.push(tempElement.childNodes[p]);
                 fragment.prepend(tempElement.childNodes[p]);
             }
             return fragment;
         }
         else{
-            return temp.join("");
+            return temp.str;
         }
     },
     /**
@@ -201,7 +182,7 @@ ExCtrl_Prototype={
                 elements[tname].forVesED=k;
             break;
             default:
-                elements[tname].setAttribute(key,this.stringRender(attrVal,tname,"attr",0,forkey));
+                elements[tname].setAttribute(key,this.stringRender(attrVal,tname,"attr",0,key));
             break;
         }
         return k;
@@ -261,7 +242,7 @@ ExCtrl_Prototype={
      * 根据依赖项重新渲染所有内容 仅有在 stringRender 中登记过才能使用
      */
     reRender:function(){
-        var i,j,ctrlIDs=Object.keys(this.dLink),keys2,tempT;
+        var i,j,tempFootprint={},tid,ttype;
         var ves=this.bluePrint.ves;
         var elementCtrlIDs=Object.keys(this.elements);
 
@@ -273,12 +254,16 @@ ExCtrl_Prototype={
             }
         }
         //  重新渲染 stringRender 的
-        for(i=ctrlIDs.length-1;i>=0;--i)
-        {
-            keys2=Object.keys(this.dLink[ctrlIDs[i]]);
-            for(j=keys2.length-1;j>=0;--j){
-                tempT=this.dLink[ctrlIDs[i]][keys2[j]];
-                this.renderCtrl[keys2[j]].call(this,tempT,ctrlIDs[i],keys2[j]);
+        for(i in this.dataLinks){
+            for(j=this.dataLinks[i].link.length-1;j>=0;--j){
+                // todo : 如果在模板文本里有会修改数据的表达式 
+                if(this.dataLinks[i].value==this.dataLinks[i].expFnc.call(this)) continue;
+                tid=this.dataLinks[i].link[j].ctrlID;
+                ttype=this.dataLinks[i].link[j].type;
+                if(!tempFootprint[tid+"-"+ttype]){
+                    tempFootprint[tid+"-"+ttype]=1;
+                    this.renderCtrl[ttype].call(this,tid,this.dataLinks[i].link[j].attrkey);
+                }
             }
         }
         // 重新渲染 ctrl-attr 内容
@@ -294,24 +279,26 @@ ExCtrl_Prototype={
     // render 的 方法集; 给 stringRender 处理的内容
     renderCtrl:{
         // 加在元素前面的东西
-        before:function(tempT,ctrlID){
-            var k=tempT.nodes.length-1;
+        before:function(ctrlID){
+            var thisElement=this.elements[ctrlID];
+            var thisVe=this.bluePrint.getByCtrlID(ctrlID);
             do{
-                tempT.nodes[k].remove();
-            }while(k--)
-            this.elements[ctrlID].before(this.stringRender(tempT.bluePrint,ctrlID,"before",1));
+                thisElement.previousSibling.remove();
+            }while(!(thisElement.previousSibling.ctrlID));
+            this.elements[ctrlID].before(this.stringRender(thisVe.before,ctrlID,"before",1));
         },
         //加在元素末尾的内容
-        innerEnd:function(tempT,ctrlID){
-            var k=tempT.nodes.length-1;
+        innerEnd:function(ctrlID){
+            var thisElement=this.elements[ctrlID];
+            var thisVe=this.bluePrint.getByCtrlID(ctrlID);
             do{
-                tempT.nodes[k].remove();
-            }while(k--)
-            this.elements[ctrlID].appendChild(this.stringRender(tempT.bluePrint,ctrlID,"innerEnd",1));
+                thisElement.childNodes[thisElement.childNodes.length-1].remove();
+            }while(thisElement.childNodes[thisElement.childNodes.length-1]&&thisElement.childNodes[thisElement.childNodes.length-1].ctrlID);
+            this.elements[ctrlID].appendChild(this.stringRender(thisVe.innerEnd,ctrlID,"innerEnd",1));
         },
         // 元素 属性
-        attr:function(tempT,ctrlID,attrkey){
-            this.elements[ctrlID].setAttribute(attrkey.slice(8),this.stringRender(tempT.bluePrint,ctrlID,"attr"));//6=="attrVal-".length
+        attr:function(ctrlID,attrkey){
+            this.elements[ctrlID].setAttribute(attrkey,this.stringRender(thisVE.attribute[attrkey],ctrlID,"attr",0,attrkey));
         }
     },
     // render 的 方法集; 给影响自身内部的属性 "ctrl-for" "ctrl-if" 等

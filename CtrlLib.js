@@ -5,6 +5,7 @@ function CtrlLib(){
     this.rootNodes=[];
     this.parentNode;
     this.recont=[];
+    this.dataLinks={};
 }
 CtrlLib.prototype={
     /**
@@ -42,4 +43,20 @@ CtrlLib.prototype={
      * 根据data渲染部分需要渲染的内容
      */
     reRender:function(){}
+}
+
+/**
+ * @param {String} expression
+ * @param {String} value
+ * @param {Object{CtorID,type}} link
+ */
+function DataLink(expression,value,link){
+    this.expression=expression;
+    this.expFnc=new Function("return "+expression);
+    this.value=value;
+    this.link=[link];
+    // link={
+    //     ctrlID:"id",
+    //     type:"type"
+    // }
 }
