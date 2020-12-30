@@ -243,7 +243,7 @@ ExCtrl_Prototype={
      */
     reRender:function(){
         var i,j,tempFootprint={},tid,ttype;
-        var ves=this.bluePrint.ves;
+        var bluePrint=this.bluePrint;
         var elementCtrlIDs=Object.keys(this.elements);
 
         // 清除循环填充的东西
@@ -270,9 +270,13 @@ ExCtrl_Prototype={
         elementCtrlIDs=Object.keys(this.elements);
         for(i=0;i<elementCtrlIDs.length;++i){
             tgtElem=this.elements[elementCtrlIDs[i]];
-            var ctrlAttrKeys=Object.keys(tgtElem.ctrlAttr);
-            for(j=ctrlAttrKeys.length-1;j>=0;--j){
-                this.reRenderAttrCtrl[ctrlAttrKeys[j]].call(this,ves,tgtElem);
+            var tempVE=bluePrint.getByCtrlID(elementCtrlIDs[i]),attrKey;
+                
+            for(j=tempVE.attribute.length-1;j>=0;--j){
+                attrKey=tempVE.attribute[j].key;
+                if(this.reRenderAttrCtrl[attrKey]){
+                    this.reRenderAttrCtrl[attrKey].call(this,bluePrint.ves,tgtElem);
+                }
             }
         }
     },
