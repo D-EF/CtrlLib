@@ -162,14 +162,7 @@ ExCtrl_Prototype={
      * @returns {Number} 返回运算完成后的ves下标
      */
     attrHandle:function(key,elements,ves,i,_attrVal,tname,k,forkey){
-        var attrVal=htmlToCode(_attrVal);
-        if(key.indexOf("ctrl-")!=-1&&key!="ctrl-id"){
-            if(!elements[tname].ctrlAttr){
-                elements[tname].ctrlAttr={}
-            }
-            elements[tname].ctrlAttr[key]=_attrVal;
-        }
-        var k=k;
+        var attrVal=htmlToCode(_attrVal), k=k, that=this;
         switch(key){
             case "ctrl-id":
             break;
@@ -182,7 +175,14 @@ ExCtrl_Prototype={
                 elements[tname].forVesED=k;
             break;
             default:
-                elements[tname].setAttribute(key,this.stringRender(attrVal,tname,"attr",0,key));
+                if(key.indexOf("pa-")!=-1){
+                    elements[tname].addEventListener(key.slice(3),function(e){
+                        (new Function(_attrVal)).call(that);
+                    });
+                }
+                else{
+                    elements[tname].setAttribute(key,this.stringRender(attrVal,tname,"attr",0,key));
+                }
             break;
         }
         return k;

@@ -12,7 +12,7 @@
         </div>
         <template id="indexNavBluePrint">
             0
-            <nav class="indexNav">
+            <nav class="indexNav" pa-click="this.pat1()">
                 1<ul class="indexNav-D1List" ctrl-for="this.i=0;this.i<this.data.d1List.length;++this.i">
                     2<li class="indexNav-D1Item hiddenChile">
                         3<div class="indexNav-D1Content">
@@ -47,7 +47,13 @@
 
         var leftBox=document.getElementById("a");
 
-        var IndexNav=xmlToCtrl(document.getElementById("indexNavBluePrint").innerHTML,{});
+        var IndexNav=xmlToCtrl(document.getElementById("indexNavBluePrint").innerHTML,{
+
+            pat1:function(e){
+                console.log(this);
+            }
+
+        });
         var cd=new IndexNav("leftIndex");
         cd.data={
             a:"123",
