@@ -64,7 +64,7 @@ ExCtrl_Prototype={
         var fragment=document.createDocumentFragment(),tempElement=document.createElement("div");
 
         if(temp.hit.length 
-            && ctrlID&&ctrlID.indexOf("EX-for")==-1
+            && ctrlID&&ctrlID.indexOf("-EX_for-")==-1
             ){
             // 有模版字符串,添加一条datalink
             for(var i=temp.hit.length-1;i>=0;--i){
@@ -122,7 +122,7 @@ ExCtrl_Prototype={
         fillInner=ves.slice(i+1,k);
         for(for1Fun.call(this),l=1;for2Fun.call(this);++l,for3Fun.call(this)){
             //递归得到循环内部的元素
-            temp=this.itemVEToElement(fillInner,"_EX-for"+tname+"-C"+l);
+            temp=this.itemVEToElement(fillInner,"-EX_for-"+tname+"-C"+l);
             elements[tname].appendChild(temp.fragment);
             Object.assign(elements,temp.elements);
         }
@@ -177,7 +177,7 @@ ExCtrl_Prototype={
             default:
                 if(key.indexOf("pa-")!=-1){
                     elements[tname].addEventListener(key.slice(3),function(e){
-                        (new Function(_attrVal)).call(that);
+                        (new Function(["e","tgt"],_attrVal)).call(that,e,this);
                     });
                 }
                 else{
@@ -248,7 +248,7 @@ ExCtrl_Prototype={
 
         // 清除循环填充的东西
         for(i=elementCtrlIDs.length-1;i>=0;--i){
-            if(elementCtrlIDs[i].indexOf("_EX-for")!=-1){
+            if(elementCtrlIDs[i].indexOf("-EX_for-")!=-1){
                 this.elements[elementCtrlIDs[i]].remove();
                 delete this.elements[elementCtrlIDs[i]];
             }
