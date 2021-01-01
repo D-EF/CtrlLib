@@ -162,7 +162,8 @@ ExCtrl_Prototype={
      * @returns {Number} 返回运算完成后的ves下标
      */
     attrHandle:function(key,elements,ves,i,_attrVal,tname,k,forkey){
-        var attrVal=htmlToCode(_attrVal), k=k, that=this;
+        var attrVal=templateStringRender(_attrVal,this).str,//htmlToCode(_attrVal),
+         k=k, that=this;
         switch(key){
             case "ctrl-id":
             break;
@@ -177,11 +178,11 @@ ExCtrl_Prototype={
             default:
                 if(key.indexOf("pa-")!=-1){
                     elements[tname].addEventListener(key.slice(3),function(e){
-                        (new Function(["e","tgt"],_attrVal)).call(that,e,this);
+                        (new Function(["e","tgt"],attrVal)).call(that,e,this);
                     });
                 }
                 else{
-                    elements[tname].setAttribute(key,this.stringRender(attrVal,tname,"attr",0,key));
+                    elements[tname].setAttribute(key,this.stringRender(htmlToCode(_attrVal),tname,"attr",0,key));
                 }
             break;
         }
