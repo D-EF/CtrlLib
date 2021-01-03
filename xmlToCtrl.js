@@ -71,19 +71,24 @@ ExCtrl_Prototype={
                 if(this.dataLinks[temp.hit[i].expression]){
                     var f=1;
                     for(var j=this.dataLinks[temp.hit[i].expression].length-1;(j>=0)&&(f);--j){
-                        if(this.dataLinks[temp.hit[i].expression].link[j].ctrlID==ctrlID&&this.dataLinks[temp.hit[i].expression].link[j].type==type){
+                        if(this.dataLinks[temp.hit[i].expression].link[j].ctrlID==ctrlID&&
+                            this.dataLinks[temp.hit[i].expression].link[j].type==type){
                             f=0;
                             break;
                         }
                     }
-                    if(f){
+                    if(!f){
                         if(type=="attr"&&attrkey)
-                        this.dataLinks[temp.hit[i].expression].link.push({ctrlID:ctrlID,type:type,attrkey});
+                        this.dataLinks[temp.hit[i].expression].link.push({ctrlID:ctrlID,type:type,attrkey:attrkey});
                     }
+                    this.dataLinks[temp.hit[i].expression].value=temp.hit[i].value;
                     // else continue;
                 }
                 else{
                     this.dataLinks[temp.hit[i].expression]=new DataLink(temp.hit[i].expression,temp.hit[i].value,{ctrlID:ctrlID,type:type});
+                    if(type=="attr"&&attrkey){
+                        this.dataLinks[temp.hit[i].expression].link[0].attrkey=attrkey;
+                    }
                 }
             }
         }
@@ -239,6 +244,22 @@ ExCtrl_Prototype={
         this.elements=temp.elements;
         this.rootNodes=nodeListToArray(temp.fragment.childNodes);
     },
+    renderString:function(){
+        var i,j,tempFootprint={},tid,ttype;
+        //  重新渲染 stringRender 的
+        for(i in this.dataLinks){
+            for(j=this.dataLinks[i].link.length-1;j>=0;--j){
+                // todo : 如果在模板文本里有会修改数据的表达式 
+                if(this.dataLinks[i].value==this.dataLinks[i].expFnc.call(this)) continue;
+                tid=this.dataLinks[i].link[j].ctrlID;
+                ttype=this.dataLinks[i].link[j].type;
+                if(!tempFootprint[tid+"-"+ttype]){
+                    tempFootprint[tid+"-"+ttype]=1;
+                    this["renderCtrl_"+ttype](tid,this.dataLinks[i].link[j].attrkey);
+                }
+            }
+        }
+    },
     /**
      * 根据依赖项重新渲染所有内容 仅有在 stringRender 中登记过才能使用
      */
@@ -263,7 +284,7 @@ ExCtrl_Prototype={
                 ttype=this.dataLinks[i].link[j].type;
                 if(!tempFootprint[tid+"-"+ttype]){
                     tempFootprint[tid+"-"+ttype]=1;
-                    this.renderCtrl[ttype].call(this,tid,this.dataLinks[i].link[j].attrkey);
+                    this["renderCtrl_"+ttype](tid,this.dataLinks[i].link[j].attrkey);
                 }
             }
         }
@@ -282,29 +303,28 @@ ExCtrl_Prototype={
         }
     },
     // render 的 方法集; 给 stringRender 处理的内容
-    renderCtrl:{
-        // 加在元素前面的东西
-        before:function(ctrlID){
-            var thisElement=this.elements[ctrlID];
-            var thisVe=this.bluePrint.getByCtrlID(ctrlID);
-            do{
-                thisElement.previousSibling.remove();
-            }while(!(thisElement.previousSibling.ctrlID));
-            this.elements[ctrlID].before(this.stringRender(thisVe.before,ctrlID,"before",1));
-        },
-        //加在元素末尾的内容
-        innerEnd:function(ctrlID){
-            var thisElement=this.elements[ctrlID];
-            var thisVe=this.bluePrint.getByCtrlID(ctrlID);
-            do{
-                thisElement.childNodes[thisElement.childNodes.length-1].remove();
-            }while(thisElement.childNodes[thisElement.childNodes.length-1]&&thisElement.childNodes[thisElement.childNodes.length-1].ctrlID);
-            this.elements[ctrlID].appendChild(this.stringRender(thisVe.innerEnd,ctrlID,"innerEnd",1));
-        },
-        // 元素 属性
-        attr:function(ctrlID,attrkey){
-            this.elements[ctrlID].setAttribute(attrkey,this.stringRender(thisVE.attribute[attrkey],ctrlID,"attr",0,attrkey));
-        }
+    // 加在元素前面的东西
+    renderCtrl_before:function(ctrlID){
+        var thisElement=this.elements[ctrlID];
+        var thisVe=this.bluePrint.getByCtrlID(ctrlID);
+        do{
+            thisElement.previousSibling.remove();
+        }while(!(thisElement.previousSibling.ctrlID));
+        this.elements[ctrlID].before(this.stringRender(thisVe.before,ctrlID,"before",1));
+    },
+    //加在元素末尾的内容
+    renderCtr_linnerEnd:function(ctrlID){
+        var thisElement=this.elements[ctrlID];
+        var thisVe=this.bluePrint.getByCtrlID(ctrlID);
+        do{
+            thisElement.childNodes[thisElement.childNodes.length-1].remove();
+        }while(thisElement.childNodes[thisElement.childNodes.length-1]&&thisElement.childNodes[thisElement.childNodes.length-1].ctrlID);
+        this.elements[ctrlID].appendChild(this.stringRender(thisVe.innerEnd,ctrlID,"innerEnd",1));
+    },
+    // 元素 属性
+    renderCtrl_attr:function(ctrlID,attrkey){
+        var thisVE=this.bluePrint.getByCtrlID(ctrlID);
+        this.elements[ctrlID].setAttribute(attrkey,this.stringRender(thisVE.getAttribute(attrkey),ctrlID,"attr",0,attrkey));
     },
     // render 的 方法集; 给影响自身内部的属性 "ctrl-for" "ctrl-if" 等
     reRenderAttrCtrl:{
