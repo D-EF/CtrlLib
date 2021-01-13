@@ -65,15 +65,16 @@ DEF_VirtualElement.prototype={
 }
 
 //所有无内容元素(短标签)的tag name
-var voidElementsTagName=["br","hr","img","input","link","meta","area","base","col","command","embed","keygen","param","source","track","wbr"];
+var voidElementsTagName=["br","hr","img","input","link","meta","area","base","col","command","embed","keygen","param","source","track","wbr","?xml"];
 
 /**把xml转换成DEF_VirtualElement
  * @param {String} xmlStr
  * @return {Object} {ves:Array<VirtualElement>,maxDepth:Number}
  */
 function xmlToVE(_xmlStr){
-    var xmlStr=_xmlStr.replace(/<!--(.|[\r\n])*?-->/,"");//去除注释
-        xmlStr=xmlStr.replace(/\ +/g," ").replace(/[\r\n]/g,"");//去除多余的空格和换行
+    var xmlStr=_xmlStr.replace(/\ +/g," ").replace(/[\r\n]/g,"");//去除多余的空格和换行
+        xmlStr=xmlStr.replace(/<!--(.|[\r\n])*?-->/,"");//去除注释
+        xmlStr=xmlStr.replace(/<\?(.|[\r\n])*?\?>/,"");//去除头
     var strleng=xmlStr.length;
     var i,j,p,q,tempOP,tempED,depth=0,tempTagName,maxDepth=0;
     var lastStrP,strFlag=0;

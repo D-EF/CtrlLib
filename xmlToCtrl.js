@@ -220,7 +220,9 @@ ExCtrl_Prototype={
                 if(!elements[tname].hidden)dHash[ves[i].depth-1].appendChild(elements[tname]);
             }
             if(!ves[i+1]||ves[i+1].depth<=ves[i].depth){// 如果下一个不是这一个的子
-                elements[tname].appendChild(this.stringRender(ves[i].innerEnd,tname,"innerEnd",1,forkey));
+                if(ves[i].innerEnd){
+                    elements[tname].appendChild(this.stringRender(ves[i].innerEnd,tname,"innerEnd",1,forkey));
+                }
             }
             dHash[ves[i].depth]=elements[tname];
 
