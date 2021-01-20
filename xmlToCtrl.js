@@ -331,8 +331,9 @@ ExCtrl_Prototype={
     // render 的 方法集; 给影响自身内部的属性 "ctrl-for" "ctrl-if" 等
     reRenderAttrCtrl:{
         "ctrl-for":function(ves,tgtElem){
+            var tgtve=ves.getByCtrlID(tgtElem.ctrlID);
             tgtElem.innerHTML="";
-            this.renderFor(this.elements,ves,tgtElem.vesIndex,tgtElem.ctrlAttr["ctrl-for"],tgtElem.ctrlID);
+            this.renderFor(this.elements,ves,tgtElem.vesIndex,tgtve.getAttribute("ctrl-for"),tgtElem.ctrlID);
         },
         "ctrl-if":function(ves,tgtElem){
             if(eval(tgtElem.ctrlAttr["ctrl-if"])){
