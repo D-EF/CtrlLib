@@ -331,7 +331,7 @@ ExCtrl_Prototype={
     // render 的 方法集; 给影响自身内部的属性 "ctrl-for" "ctrl-if" 等
     reRenderAttrCtrl:{
         "ctrl-for":function(ves,tgtElem){
-            var tgtve=ves.getByCtrlID(tgtElem.ctrlID);
+            var tgtve=this.bluePrint.getByCtrlID(tgtElem.ctrlID);
             tgtElem.innerHTML="";
             this.renderFor(this.elements,ves,tgtElem.vesIndex,tgtve.getAttribute("ctrl-for"),tgtElem.ctrlID);
         },
@@ -368,3 +368,6 @@ ExCtrl_Prototype={
         }
     }
 }
+
+// todo: ? 能不能把render for 优化, 再次渲染时能否只影响部分dom？
+// 但是要这必须用 for in 或其他的指令, 非常呃呃
