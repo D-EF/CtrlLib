@@ -42,7 +42,11 @@ CtrlLib.prototype={
      * 重新渲染
      * 根据data渲染部分需要渲染的内容
      */
-    reRender:function(){}
+    reRender:function(){},
+    /**
+     * 重新渲染完成后的回调
+     */
+    // reRender_callback:function(){}
 }
 
 /**

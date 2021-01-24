@@ -303,6 +303,7 @@ ExCtrl_Prototype={
                 }
             }
         }
+        if(this.reRender_callback)this.reRender_callback();
     },
     // render 的 方法集; 给 stringRender 处理的内容
     // 加在元素前面的东西
