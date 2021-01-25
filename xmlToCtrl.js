@@ -316,7 +316,7 @@ ExCtrl_Prototype={
         this.elements[ctrlID].before(this.stringRender(thisVe.before,ctrlID,"before",1));
     },
     //加在元素末尾的内容
-    renderCtr_linnerEnd:function(ctrlID){
+    renderCtrl_innerEnd:function(ctrlID){
         var thisElement=this.elements[ctrlID];
         var thisVe=this.bluePrint.getByCtrlID(ctrlID);
         do{
