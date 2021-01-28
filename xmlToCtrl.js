@@ -8,7 +8,7 @@
  * 根据html代码, 创建一个 CtrlLib 的派生类
  * @param {String} htmlStr html代码
  * @param {Object} _prototype 追加到派生控件的原型链
- * @returns 返回一个 CtrlLib 的 派生类
+ * @returns {class} 返回一个 CtrlLib 的 派生类
  */
 function xmlToCtrl(htmlStr,_prototype){
     var i,j;
@@ -23,7 +23,7 @@ function xmlToCtrl(htmlStr,_prototype){
 
     // 建立蓝图 op
     ExCtrl.prototype.bluePrint=xmlToVE(htmlStr);
-    var proxyEvent_keyWord="proxy-on";
+    var proxyEvent_keyWord="pa-";
 
     ExCtrl.prototype.bluePrint=xmlToVE(htmlStr);
     var tempCountDepth=new Array(ExCtrl.prototype.bluePrint.maxDepth);
@@ -180,6 +180,13 @@ ExCtrl_Prototype={
                 elements[tname].forVesOP=i;
                 elements[tname].forVesED=k;
             break;
+            case "ctrl-childCtrl":
+                this.renderChildCtrl(elements[ves[k].ctrlID],ves[k],_attrVal);
+            break;
+            case "ctrl-childCtrlData":
+                // 这是给子控件赋 data 的属性， 应为一个表达式;
+                // 实现在 renderChildCtrl() 里
+            break;
             default:
                 if(key.indexOf("pa-")!=-1){
                     elements[tname].addEventListener(key.slice(3),function(e){
@@ -192,6 +199,20 @@ ExCtrl_Prototype={
             break;
         }
         return k;
+    },
+    chileCtrlType:{},
+    /**
+     * 渲染子控件
+     * @param {Element} element         
+     * @param {DEF_VirtualElement} ve   
+     * @param {String} childCtrlType  控件的类型
+     */
+    renderChildCtrl:function(element,ve,childCtrlType){
+        var dataStr=ve.getAttribute("ctrl-childCtrlData");
+        var data=(new Function("return "+dataStr)).call(this);
+        var chileCtrl=new this.chileCtrlType[childCtrlType](data);
+        this.chileCtrl[ve.ctrlID]=chileCtrl;
+        chileCtrl.addend(element);
     },
     /**
      * 把 ve 转换成 js 的 Element 对象;

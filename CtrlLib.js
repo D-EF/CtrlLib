@@ -1,11 +1,16 @@
-function CtrlLib(){
+/**
+ * 控件的基类
+ * @param {Object} data
+ */
+function CtrlLib(data){
     this.name;
-    this.data={};
+    this.data=data||{};
     this.nodes=[];
     this.rootNodes=[];
     this.parentNode;
     this.recont=[];
     this.dataLinks={};
+    this.childCtrl={};
 }
 CtrlLib.prototype={
     /**
