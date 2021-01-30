@@ -18,12 +18,11 @@ function xmlToCtrl(htmlStr,_prototype){
     inheritClass(CtrlLib,ExCtrl);
 
     //  把实参的prototype添加到ExCtrl;
-    if(_prototype)ExCtrl.prototype=Object.assign(ExCtrl.prototype,_prototype);
     ExCtrl.prototype=Object.assign(ExCtrl.prototype,ExCtrl_Prototype);
+    if(_prototype)ExCtrl.prototype=Object.assign(ExCtrl.prototype,_prototype);
 
     // 建立蓝图 op
     ExCtrl.prototype.bluePrint=xmlToVE(htmlStr);
-    var proxyEvent_keyWord="pa-";
 
     ExCtrl.prototype.bluePrint=xmlToVE(htmlStr);
     var tempCountDepth=new Array(ExCtrl.prototype.bluePrint.maxDepth);
@@ -56,13 +55,14 @@ ExCtrl_Prototype={
      * @param {String} ctrlID    登记 ID       
      * @param {String} type      登记 类型  
      * @param {Boolean} ishtml   控制返回值, 默认将返回字符串 ，非0 将返回 DocumentFragment
-     * @param {Array} attrkey   如果是登记的 标签的属性值 这个是属性的 key
+     * @param {Array<>} attrkey   如果是登记的 标签的属性值 这个是属性的 key
+     * @param {Element} tgt 
      * @return {String||DocumentFragment} 字符串 或 包含内容的文档片段
      */
-    stringRender:function(str,ctrlID,type,ishtml,attrkey){
-        var temp=templateStringRender(str,this);
+    stringRender:function(str,ctrlID,type,ishtml,attrkey,tgt){
+        var tgt=tgt;
+        var temp=templateStringRender(str,this,[tgt]);
         var fragment=document.createDocumentFragment(),tempElement=document.createElement("div");
-
         if(temp.hit.length 
             && ctrlID&&ctrlID.indexOf("-EX_for-")==-1
             ){
@@ -119,13 +119,14 @@ ExCtrl_Prototype={
     renderFor:function(elements,ves,i,forStr,tname,forkey){
         var k=i,p,temp,l,ioffset=ioffset||0;
         var fillInner;
-        var for1Fun=new Function(forStr.slice(0,forStr.indexOf(';'))),
-            for2Fun=new Function("return "+forStr.slice(forStr.indexOf(';')+1,forStr.lastIndexOf(';'))),
-            for3Fun=new Function(forStr.slice(forStr.lastIndexOf(';')));
+        var tgt=this.elements[ves[i].ctrlID];
+        var for1Fun=new Function(["tgt"],forStr.slice(0,forStr.indexOf(';'))),
+            for2Fun=new Function(["tgt"],"return "+forStr.slice(forStr.indexOf(';')+1,forStr.lastIndexOf(';'))),
+            for3Fun=new Function(["tgt"],forStr.slice(forStr.lastIndexOf(';')));
         // k=循环后遇到的元素的下标
         for(k=i+1;k<ves.length&&ves[k].depth>ves[i].depth;++k);
         fillInner=ves.slice(i+1,k);
-        for(for1Fun.call(this),l=1;for2Fun.call(this);++l,for3Fun.call(this)){
+        for(for1Fun.call(this,tgt),l=1;for2Fun.call(this,tgt);++l,for3Fun.call(this,tgt)){
             //递归得到循环内部的元素
             temp=this.itemVEToElement(fillInner,"-EX_for-"+tname+"-C"+l);
             elements[tname].appendChild(temp.fragment);
@@ -167,7 +168,8 @@ ExCtrl_Prototype={
      * @returns {Number} 返回运算完成后的ves下标
      */
     attrHandle:function(key,elements,ves,i,_attrVal,tname,k,forkey){
-        var attrVal=templateStringRender(_attrVal,this).str,//htmlToCode(_attrVal),
+        var tgt=elements[ves[i].ctrlID];
+        var attrVal=templateStringRender(_attrVal,this,[tgt]).str,//htmlToCode(_attrVal),
          k=k, that=this;
         switch(key){
             case "ctrl-id":
@@ -180,10 +182,10 @@ ExCtrl_Prototype={
                 elements[tname].forVesOP=i;
                 elements[tname].forVesED=k;
             break;
-            case "ctrl-childCtrl":
+            case "ctrl-child_ctrl":
                 this.renderChildCtrl(elements[ves[k].ctrlID],ves[k],_attrVal);
             break;
-            case "ctrl-childCtrlData":
+            case "ctrl-child_ctrl_data":
                 // 这是给子控件赋 data 的属性， 应为一个表达式;
                 // 实现在 renderChildCtrl() 里
             break;
@@ -194,13 +196,12 @@ ExCtrl_Prototype={
                     });
                 }
                 else{
-                    elements[tname].setAttribute(key,this.stringRender(htmlToCode(_attrVal),tname,"attr",0,key));
+                    elements[tname].setAttribute(key,this.stringRender(htmlToCode(_attrVal),tname,"attr",0,key,tgt));
                 }
             break;
         }
         return k;
     },
-    chileCtrlType:{},
     /**
      * 渲染子控件
      * @param {Element} element         
@@ -210,9 +211,10 @@ ExCtrl_Prototype={
     renderChildCtrl:function(element,ve,childCtrlType){
         var dataStr=ve.getAttribute("ctrl-childCtrlData");
         var data=(new Function("return "+dataStr)).call(this);
-        var chileCtrl=new this.chileCtrlType[childCtrlType](data);
-        this.chileCtrl[ve.ctrlID]=chileCtrl;
-        chileCtrl.addend(element);
+        var childCtrl=new this.childCtrlType[childCtrlType](data);
+        this.childCtrl[ve.ctrlID]=childCtrl;
+        this.childCtrl[ve.ctrlID].parentCtrl=this;
+        childCtrl.addend(element);
     },
     /**
      * 把 ve 转换成 js 的 Element 对象;
@@ -237,12 +239,12 @@ ExCtrl_Prototype={
                 k=this.attrHandle(ves[i].attribute[j].key,elements,ves,i,ves[i].attribute[j].val,tname,k,forkey);
             }
             if(dHash[ves[i].depth-1]){ //如果存在上一层
-                dHash[ves[i].depth-1].appendChild(this.stringRender(ves[i].before,tname,"before",1,forkey));
+                dHash[ves[i].depth-1].appendChild(this.stringRender(ves[i].before,tname,"before",1,forkey,dHash[ves[i].depth-1]));
                 if(!elements[tname].hidden)dHash[ves[i].depth-1].appendChild(elements[tname]);
             }
             if(!ves[i+1]||ves[i+1].depth<=ves[i].depth){// 如果下一个不是这一个的子
                 if(ves[i].innerEnd){
-                    elements[tname].appendChild(this.stringRender(ves[i].innerEnd,tname,"innerEnd",1,forkey));
+                    elements[tname].appendChild(this.stringRender(ves[i].innerEnd,tname,"innerEnd",1,forkey,elements[tname]));
                 }
             }
             dHash[ves[i].depth]=elements[tname];
@@ -250,11 +252,11 @@ ExCtrl_Prototype={
             if(ves[i].depth<minD){// 刷新最小深度
                 minD=ves[i].depth;
                 rtnFragment=document.createDocumentFragment();
-                rtnFragment.appendChild(this.stringRender(ves[i].before,tname,"before",1,forkey));
+                rtnFragment.appendChild(this.stringRender(ves[i].before,tname,"before",1,forkey,rtnFragment));
                 if(!elements[tname].hidden)rtnFragment.appendChild(elements[tname]);//添加到root
             }else{
                 if(ves[i].depth==minD){
-                    rtnFragment.appendChild(this.stringRender(ves[i].before,tname,"before",1,forkey));
+                    rtnFragment.appendChild(this.stringRender(ves[i].before,tname,"before",1,forkey,rtnFragment));
                     if(!elements[tname].hidden)rtnFragment.appendChild(elements[tname]);
                 }
             }
@@ -273,8 +275,8 @@ ExCtrl_Prototype={
         for(i in this.dataLinks){
             for(j=this.dataLinks[i].link.length-1;j>=0;--j){
                 // todo : 如果在模板文本里有会修改数据的表达式 
-                if(this.dataLinks[i].value==this.dataLinks[i].expFnc.call(this)) continue;
                 tid=this.dataLinks[i].link[j].ctrlID;
+                if(this.dataLinks[i].value==this.dataLinks[i].expFnc.call(this,this.elements[tid])) continue;
                 ttype=this.dataLinks[i].link[j].type;
                 if(!tempFootprint[tid+"-"+ttype]){
                     tempFootprint[tid+"-"+ttype]=1;
@@ -302,8 +304,8 @@ ExCtrl_Prototype={
         for(i in this.dataLinks){
             for(j=this.dataLinks[i].link.length-1;j>=0;--j){
                 // todo : 如果在模板文本里有会修改数据的表达式 
-                if(this.dataLinks[i].value==this.dataLinks[i].expFnc.call(this)) continue;
                 tid=this.dataLinks[i].link[j].ctrlID;
+                if(this.dataLinks[i].value==this.dataLinks[i].expFnc.call(this,this.elements[tid])) continue;
                 ttype=this.dataLinks[i].link[j].type;
                 if(!tempFootprint[tid+"-"+ttype]){
                     tempFootprint[tid+"-"+ttype]=1;
@@ -329,26 +331,27 @@ ExCtrl_Prototype={
     // render 的 方法集; 给 stringRender 处理的内容
     // 加在元素前面的东西
     renderCtrl_before:function(ctrlID){
-        var thisElement=this.elements[ctrlID];
+        var tgtElement=this.elements[ctrlID];
         var thisVe=this.bluePrint.getByCtrlID(ctrlID);
         do{
-            thisElement.previousSibling.remove();
-        }while(!(thisElement.previousSibling.ctrlID));
+            tgtElement.previousSibling.remove();
+        }while(!(tgtElement.previousSibling.ctrlID));
         this.elements[ctrlID].before(this.stringRender(thisVe.before,ctrlID,"before",1));
     },
     //加在元素末尾的内容
     renderCtrl_innerEnd:function(ctrlID){
-        var thisElement=this.elements[ctrlID];
+        var tgtElement=this.elements[ctrlID];
         var thisVe=this.bluePrint.getByCtrlID(ctrlID);
         do{
-            thisElement.childNodes[thisElement.childNodes.length-1].remove();
-        }while(thisElement.childNodes[thisElement.childNodes.length-1]&&thisElement.childNodes[thisElement.childNodes.length-1].ctrlID);
-        this.elements[ctrlID].appendChild(this.stringRender(thisVe.innerEnd,ctrlID,"innerEnd",1));
+            tgtElement.childNodes[tgtElement.childNodes.length-1].remove();
+        }while(tgtElement.childNodes[tgtElement.childNodes.length-1]&&tgtElement.childNodes[tgtElement.childNodes.length-1].ctrlID);
+        this.elements[ctrlID].appendChild(this.stringRender(thisVe.innerEnd,ctrlID,"innerEnd",1,tgtElement));
     },
     // 元素 属性
     renderCtrl_attr:function(ctrlID,attrkey){
+        var tgtElement=this.elements[ctrlID];
         var thisVE=this.bluePrint.getByCtrlID(ctrlID);
-        this.elements[ctrlID].setAttribute(attrkey,this.stringRender(thisVE.getAttribute(attrkey),ctrlID,"attr",0,attrkey));
+        this.elements[ctrlID].setAttribute(attrkey,this.stringRender(thisVE.getAttribute(attrkey),ctrlID,"attr",0,attrkey,tgtElement));
     },
     // render 的 方法集; 给影响自身内部的属性 "ctrl-for" "ctrl-if" 等
     reRenderAttrCtrl:{
@@ -387,6 +390,9 @@ ExCtrl_Prototype={
             else{
                 tgtElem.remove();
             }
+        },
+        "ctrl-child_ctrl":function(ves,tgtElem){
+            this.childCtrl[tgtElem.ctrlID].reRender();
         }
     }
 }

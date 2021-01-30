@@ -5,12 +5,12 @@
 function CtrlLib(data){
     this.name;
     this.data=data||{};
-    this.nodes=[];
     this.rootNodes=[];
     this.parentNode;
-    this.recont=[];
+    this.parentCtrl;
     this.dataLinks={};
     this.childCtrl={};
+    this.elements={};
 }
 CtrlLib.prototype={
     /**
@@ -52,6 +52,23 @@ CtrlLib.prototype={
      * 重新渲染完成后的回调
      */
     // reRender_callback:function(){}
+    /**
+     * 卸载控件
+     */
+    removeCtrl:function(){
+        for(var i in this.childCtrl){
+            this.childCtrl[i].removeCtrl();
+            delete this.childCtrl[i];
+        }
+        for(var i in this.elements){
+            this.elements[i].remove();
+            delete this.elements[i];
+        }
+        for(var i in this.rootNodes){
+            this.rootNodes[i].remove();
+            delete this.rootNodes[i];
+        }
+    }
 }
 
 /**
@@ -61,7 +78,7 @@ CtrlLib.prototype={
  */
 function DataLink(expression,value,link){
     this.expression=expression;
-    this.expFnc=new Function("return "+expression);
+    this.expFnc=new Function(["tgt"],"return "+expression);
     this.value=value;
     this.link=[link];
     // link={
