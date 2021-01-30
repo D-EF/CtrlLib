@@ -21,7 +21,7 @@
                             </a>
                         </div>
                         5
-                        <div ctrl-if="this.data.d1List[this.i].child&&this.data.d1List[this.i].child.length" class="indexNav-D2ListBox">
+                        <div ctrl-if="this.data.d1List[this.i].child.length" class="indexNav-D2ListBox">
                             6<ul class="indexNav-D2List" ctrl-for="this.j=0;this.j<this.data.d1List[this.i].child.length;++this.j">
                                 7<li class="indexNav-D2Content">
                                     8<div class="indexNav-D2Content">
@@ -47,7 +47,7 @@
 
         var leftBox=document.getElementById("a");
 
-        var IndexNav=xmlToCtrl(document.getElementById("indexNavBluePrint").innerHTML,{
+        var IndexNav=ExCtrl.xmlToCtrl(document.getElementById("indexNavBluePrint").innerHTML,{
 
             pat1:function(e){
                 console.log(this);
