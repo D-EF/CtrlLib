@@ -1,5 +1,5 @@
 /**
- * 草泥马
+ * 以后写需要继承类的东西都不会再用function的写法了. 忒蛋疼了
  */
 class DEF_VirtualElementList{
     /**
