@@ -259,6 +259,9 @@ function DataLink(expression,value,link){
  * 注意! 不要在渲染里做会影响数据的事情!
  */
 
+/**
+ * 控件库派生类的基类,需要在派生时添加 bluePrint {DEF_VirtualElementList} 属性
+ */
 class ExCtrl extends CtrlLib{
     constructor(data){
         super(data);
