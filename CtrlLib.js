@@ -241,7 +241,7 @@ class DEF_VirtualElement{
  * 控件中的 表达式的 索引
  * @param {String} expression
  * @param {String} value
- * @param {Object{CtorID,type}} link
+ * @param {Object{CtrlID,type}} link
  */
 function DataLink(expression,value,link){
     this.expression=expression;
@@ -276,6 +276,8 @@ class ExCtrl extends CtrlLib{
         childCtrl:"ctrl-child_ctrl",
         childCtrlData:"ctrl-child_ctrl_data",
         proxyEventBefore:"pa-",
+        // element resize 
+        proxyResizeEvent:"pa-resize",
         // 按下按键事件 (组合键)
         keyDownEventBefore:"pakeydown[",
         keyDownEventCilpKey:",",
@@ -320,12 +322,7 @@ class ExCtrl extends CtrlLib{
                 // 实现在 renderChildCtrl() 里
             break;
             default:
-                if(key.indexOf(ExCtrl.attrKeyStr.proxyEventBefore)==0){
-                    elements[tname].addEventListener(key.slice(ExCtrl.attrKeyStr.proxyEventBefore.length),function(e){
-                        (new Function(["e","tgt"],attrVal)).call(that,e,this);
-                    });
-                }
-                else if(key.indexOf(ExCtrl.attrKeyStr.keyDownEventBefore)==0){
+                if(key.indexOf(ExCtrl.attrKeyStr.keyDownEventBefore)==0){
                     addKeyEvent(tgt,true,
                         (key.slice(ExCtrl.attrKeyStr.keyDownEventBefore.length,key.lastIndexOf(ExCtrl.attrKeyStr.keyDownEventAfter)))
                         .split(ExCtrl.attrKeyStr.keyDownEventCilpKey),
@@ -339,6 +336,16 @@ class ExCtrl extends CtrlLib{
                         function(e){
                             (new Function(["e","tgt"],attrVal)).call(that,e,this)
                         },true);
+                }
+                else if(key==ExCtrl.attrKeyStr.proxyResizeEvent){
+                    addResizeEvent(tgt,function(e){
+                        (new Function(['e',"tgt",],attrVal)).call(that,e,tgt)
+                    });
+                }
+                else if(key.indexOf(ExCtrl.attrKeyStr.proxyEventBefore)==0){
+                    elements[tname].addEventListener(key.slice(ExCtrl.attrKeyStr.proxyEventBefore.length),function(e){
+                        (new Function(["e","tgt"],attrVal)).call(that,e,this);
+                    });
                 }
                 else{
                     elements[tname].setAttribute(key,this.stringRender(htmlToCode(_attrVal),tname,"attr",0,key,tgt));
@@ -389,8 +396,16 @@ class ExCtrl extends CtrlLib{
                         }
                     }
                     if(!f){
+                        // 有被登记过的元素
                         if(type=="attr"&&attrkey)
                         this.dataLinks[temp.hit[i].expression].link.push({ctrlID:ctrlID,type:type,attrkey:attrkey});
+                    }else{
+                        // 未被登记过的元素
+                        if(type=="attr"&&attrkey){
+                            this.dataLinks[temp.hit[i].expression].link.push({ctrlID:ctrlID,type:type,attrkey:attrkey});
+                        }else{
+                            this.dataLinks[temp.hit[i].expression].link.push({ctrlID:ctrlID,type:type});
+                        }
                     }
                     this.dataLinks[temp.hit[i].expression].value=temp.hit[i].value;
                     // else continue;
@@ -540,12 +555,18 @@ class ExCtrl extends CtrlLib{
             for(j=this.dataLinks[i].link.length-1;j>=0;--j){
                 // todo : 如果在模板文本里有会修改数据的表达式 
                 tid=this.dataLinks[i].link[j].ctrlID;
-                if(this.dataLinks[i].value==this.dataLinks[i].expFnc.call(this,this.elements[tid])) continue;
+                if(this.dataLinks[i].value==this.dataLinks[i].expFnc.call(this,this.elements[tid]))
+                continue;
                 ttype=this.dataLinks[i].link[j].type;
-                if(!tempFootprint[tid+"-"+ttype]){
-                    tempFootprint[tid+"-"+ttype]=1;
-                    this["renderCtrl_"+ttype](tid,this.dataLinks[i].link[j].attrkey);
+                for(j=this.dataLinks[i].link.length-1;j>=0;--j){
+                    tid=this.dataLinks[i].link[j].ctrlID;
+                    ttype=this.dataLinks[i].link[j].type;
+                    if(!tempFootprint[tid+"-"+ttype]){
+                        tempFootprint[tid+"-"+ttype]=1;
+                        this["renderCtrl_"+ttype](tid,this.dataLinks[i].link[j].attrkey);
+                    }
                 }
+                break;
             }
         }
     }
@@ -570,12 +591,18 @@ class ExCtrl extends CtrlLib{
             for(j=this.dataLinks[i].link.length-1;j>=0;--j){
                 // todo : 如果在模板文本里有会修改数据的表达式 
                 tid=this.dataLinks[i].link[j].ctrlID;
-                if(this.dataLinks[i].value==this.dataLinks[i].expFnc.call(this,this.elements[tid])) continue;
+                if(this.dataLinks[i].value==this.dataLinks[i].expFnc.call(this,this.elements[tid]))
+                continue;
                 ttype=this.dataLinks[i].link[j].type;
-                if(!tempFootprint[tid+"-"+ttype]){
-                    tempFootprint[tid+"-"+ttype]=1;
-                    this["renderCtrl_"+ttype](tid,this.dataLinks[i].link[j].attrkey);
+                for(j=this.dataLinks[i].link.length-1;j>=0;--j){
+                    tid=this.dataLinks[i].link[j].ctrlID;
+                    ttype=this.dataLinks[i].link[j].type;
+                    if(!tempFootprint[tid+"-"+ttype]){
+                        tempFootprint[tid+"-"+ttype]=1;
+                        this["renderCtrl_"+ttype](tid,this.dataLinks[i].link[j].attrkey);
+                    }
                 }
+                break;
             }
         }
         // 重新渲染 ctrl-attr 内容
