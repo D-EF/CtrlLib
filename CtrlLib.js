@@ -274,7 +274,7 @@ class ExCtrl extends CtrlLib{
         if:"ctrl-if",
         for:"ctrl-for",
         childCtrl:"ctrl-child_ctrl",
-        childCtrlData:"ctrl-child_ctrl_data",
+        childCtrlData:"ctrl-child_ctrl_datafnc",
         proxyEventBefore:"pa-",
         // element resize 
         proxyResizeEvent:"pa-resize",
@@ -286,6 +286,17 @@ class ExCtrl extends CtrlLib{
         keyUpEventBefore:"pakeyup[",
         keyUpEventCilpKey:",",
         keyUpEventAfter:"]",
+    }
+    /**
+     * 请求并用json反序列化
+     */
+    static getJsonData(method,url,callback,body){
+        requestAPI(method,url,
+            function(){
+                var data=JSON.parse(this.response);
+                callback.call(this,data);
+            }
+            ,body);
     }
     /**
      * 控制标签的属性
@@ -488,12 +499,21 @@ class ExCtrl extends CtrlLib{
      * @param {String} childCtrlType  控件的类型
      */
     renderChildCtrl(element,ve,childCtrlType){
-        var dataStr=ve.getAttribute("ctrl-childCtrlData");
-        var data=(new Function("return "+dataStr)).call(this);
-        var childCtrl=new this.childCtrlType[childCtrlType](data);
-        this.childCtrl[ve.ctrlID]=childCtrl;
-        this.childCtrl[ve.ctrlID].parentCtrl=this;
-        childCtrl.addend(element);
+        var dataStr=ve.getAttribute(ExCtrl.attrKeyStr.childCtrlData);
+        var then=this;
+        if(!dataStr){
+            getDataCallback();
+            return;
+        }
+        else{
+            (new Function(["callback"],dataStr)).call(this,getDataCallback);
+        }
+        function getDataCallback(data){
+            var childCtrl=new then.childCtrlType[childCtrlType](data);
+            then.childCtrl[ve.ctrlID]=childCtrl;
+            then.childCtrl[ve.ctrlID].parentCtrl=this;
+            childCtrl.addend(element);
+        }
     }
     /**
      * 把 ve 转换成 js 的 Element 对象;
