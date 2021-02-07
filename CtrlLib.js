@@ -288,7 +288,7 @@ class ExCtrl extends CtrlLib{
         keyUpEventAfter:"]",
     }
     /**
-     * 请求并用json反序列化
+     * 请求 api 并用json反序列化
      */
     static getJsonData(method,url,callback,body){
         requestAPI(method,url,
