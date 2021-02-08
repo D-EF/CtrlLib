@@ -35,14 +35,15 @@ class CtrlLib{
         }
     }
     /**
-     * addend刚开始执行的
+     * addend刚开始执行的函数,
+     * 能调用到 addend 的 argument
      */
-    initialize(){}
+    initialize(...argument){}
     /**
-     * addend后的回调
-     * 能调用到initialize 的 argument
+     * addend 后的回调
+     * 能调用到 addend 的 argument
      */
-    callback(){}
+    callback(...argument){}
     /** 创建内容 */
     createContent(){this.nodes=this.rootNodes=[document.createElement("div")]}
     /**
