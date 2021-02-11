@@ -14,6 +14,7 @@ class CtrlLib{
         this.dataLinks={};
         this.childCtrl={};
         this.elements={};
+        this.ctrlActionList={callback:[]};
     }
     /**
      * 初始化
@@ -30,6 +31,7 @@ class CtrlLib{
             }
             this.parentNode.appendChild(tempDocF);
             this.callback(...arguments);
+            this.touchCtrlAction("callback");
         }else{
             console.error('Fatal error! This Control have not parentNode!');
         }
@@ -70,6 +72,16 @@ class CtrlLib{
         for(var i in this.rootNodes){
             this.rootNodes[i].remove();
             delete this.rootNodes[i];
+        }
+    }
+    /**
+     * 触发控件事件的方法
+     * @param {String} actionKey 事件的类型
+     */
+    touchCtrlAction(actionKey){
+        if(this.ctrlActionList[actionKey])
+        for(var i=this.ctrlActionList[actionKey].length-1;i>=0;--i){
+            this.ctrlActionList[actionKey][i].call(this.ctrl);
         }
     }
 }
@@ -277,6 +289,7 @@ class ExCtrl extends CtrlLib{
         childCtrl:"ctrl-child_ctrl",
         childCtrlData:"ctrl-child_ctrl_datafnc",
         proxyEventBefore:"pa-",
+        ctrlEventBefore:"ca-",
         // element resize 
         proxyResizeEvent:"pa-resize",
         // 按下按键事件 (组合键)
@@ -312,7 +325,7 @@ class ExCtrl extends CtrlLib{
      * @returns {Number} 返回运算完成后的ves下标
      */
     attrHandle(key,elements,ves,i,_attrVal,tname,k,forkey){
-        var tgt=elements[ves[i].ctrlID];
+        var tgt=elements[tname];
         var attrVal=templateStringRender(_attrVal,this,[tgt]).str,//htmlToCode(_attrVal),
          k=k, that=this;
         switch(key){
@@ -357,6 +370,11 @@ class ExCtrl extends CtrlLib{
                 else if(key.indexOf(ExCtrl.attrKeyStr.proxyEventBefore)==0){
                     elements[tname].addEventListener(key.slice(ExCtrl.attrKeyStr.proxyEventBefore.length),function(e){
                         (new Function(["e","tgt"],attrVal)).call(that,e,this);
+                    });
+                }
+                else if(key.indexOf(ExCtrl.attrKeyStr.ctrlEventBefore)==0){
+                    this.ctrlActionList[key.slice(ExCtrl.attrKeyStr.ctrlEventBefore.length)].push(function(e){
+                        (new Function(["e","tgt"],attrVal)).call(that,e,tgt);
                     });
                 }
                 else{
