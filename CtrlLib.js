@@ -542,11 +542,17 @@ class ExCtrl extends CtrlLib{
                 dHash[ves[i].depth-1].appendChild(this.stringRender(ves[i].before,tname,"before",1,forkey,dHash[ves[i].depth-1]));
                 if(!elements[tname].hidden)dHash[ves[i].depth-1].appendChild(elements[tname]);
             }
+            
             if(!ves[i+1]||ves[i+1].depth<=ves[i].depth){// 如果下一个不是这一个的子
-                if(ves[i].innerEnd){
-                    elements[tname].appendChild(this.stringRender(ves[i].innerEnd,tname,"innerEnd",1,forkey,elements[tname]));
-                }
+                var ti=i;
+                do{
+                    if(ves[ti].innerEnd){
+                        elements[ves[ti].ctrlID+nameEX].appendChild(this.stringRender(ves[ti].innerEnd,tname,"innerEnd",1,forkey,elements[tname]));
+                    }
+                    --ti;
+                }while((ves[ti])&&(ves[ti].depth<ves[i].depth));
             }
+
             dHash[ves[i].depth]=elements[tname];
 
             if(ves[i].depth<minD){// 刷新最小深度
