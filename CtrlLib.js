@@ -56,7 +56,7 @@ class CtrlLib{
     /**
      * 重新渲染完成后的回调
      */
-    // reRender_callback:function(){}
+    reRender_callback(){}
     /**
      * 卸载控件
      */
@@ -663,7 +663,7 @@ class ExCtrl extends CtrlLib{
                 }
             }
         }
-        if(this.reRender_callback)this.reRender_callback();
+        this.reRender_callback();
     }
     // render 的 方法集; 给 stringRender 处理的内容
     // 加在元素前面的东西
