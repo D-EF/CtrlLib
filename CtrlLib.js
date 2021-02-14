@@ -373,9 +373,14 @@ class ExCtrl extends CtrlLib{
                     });
                 }
                 else if(key.indexOf(ExCtrl.attrKeyStr.ctrlEventBefore)==0){
-                    this.ctrlActionList[key.slice(ExCtrl.attrKeyStr.ctrlEventBefore.length)].push(function(e){
-                        (new Function(["e","tgt"],attrVal)).call(that,e,tgt);
-                    });
+                    if(forkey){
+                        console.warn("不允许在 ctrl-for 的内容里添加 ctrlAction");
+                    }
+                    else{
+                        this.ctrlActionList[key.slice(ExCtrl.attrKeyStr.ctrlEventBefore.length)].push(function(e){
+                            (new Function(["e","tgt"],attrVal)).call(that,e,tgt);
+                        });
+                    }
                 }
                 else{
                     elements[tname].setAttribute(key,this.stringRender(htmlToCode(_attrVal),tname,"attr",0,key,tgt));
