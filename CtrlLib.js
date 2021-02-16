@@ -231,11 +231,21 @@ class DEF_StyleVE{
      */
     addString(cssString){
         if(!cssString) return;
-        var i=0,j=0;
-        for(i=cssString.slice(i).indexOf('}');(i<cssString)&&(i!=-1);i=cssString.slice(i).indexOf('}')){
-            this.styleList.push(new DEF_StyleVEItem(cssString.slice(j,i)));
-            ++i;
-            j=i;
+        var p,q,d;
+        
+        for(p=q=d=0;p<cssString.length;++p){
+            if(cssString[p]=='{'){
+                if(cssString[p-1]!='$'){
+                    this.styleList.push(new DEF_StyleVEItem(cssString.slice(q,p)));
+                    q=p;
+                }else{
+                    d=p;
+                }
+            }
+            else if(cssString[p]=='}'){
+
+
+            }
         }
     }
     /**
