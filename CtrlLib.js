@@ -2,11 +2,13 @@
  * 控件的基类
  */
 class CtrlLib{
+    static idIndex=0;
     /**
      * @param {Object} data
      */
     constructor(data){
         this.name;
+        this.ctrlLibID=CtrlLib.idIndex++;
         this.data=data||{};
         this.rootNodes=[];
         this.parentNode;
@@ -93,10 +95,12 @@ class DEF_VirtualElementList{
     /**
      * @param {Array<DEF_VirtualElement>} ves
      * @param {Number} maxDepth
+     * @param {DEF_StyleVE} style
      */
-    constructor(ves,maxDepth){
+    constructor(ves,maxDepth,style){
         this.ves=ves;
         this.maxDepth=maxDepth;
+        this.style=styleObj;
     }
     getByCtrlID(ctrlID){
         for(var i=this.ves.length-1;i>=0;--i){
@@ -116,13 +120,14 @@ class DEF_VirtualElementList{
             xmlStr=xmlStr.replace(/<!--(.|[\r\n])*?-->/,"");//去除注释
             xmlStr=xmlStr.replace(/<\?(.|[\r\n])*?\?>/,"");//去除头
         var strleng=xmlStr.length;
-        var i,j,p,q,tempOP,tempED,depth=0,tempTagName,maxDepth=0;
+        var i,j,p,q,tempOP,tempED,depth=0,tempTagName,maxDepth=0,tDepth=0;
         var lastStrP,strFlag=0;
-        var ves=[],attributes=[];
+        var ves=[],attributes=[],style=new DEF_StyleVE();
     
         for(i=0;i<strleng;++i){
             if(xmlStr[i]=='<'&&!strFlag){
-                tempOP=i;attributes=[];
+                tempOP=i;
+                attributes=[];
                 for(j=tempOP+1;xmlStr[j]&&xmlStr[j]!='>'&&xmlStr[j]!=" ";++j);
                 tempTagName=xmlStr.slice(tempOP+1,j);
                 for(j;xmlStr[j]!='>';++j){      //属性
@@ -151,9 +156,16 @@ class DEF_VirtualElementList{
                 i=j;
             }
             if(xmlStr[i]=='>'&&!strFlag){
-                if(xmlStr[tempOP+1]=='/'){
+                if(xmlStr[tempOP+1]=='/'){  // 标签结束符号
                     // 把 一段文本 添加到上一个这么深的元素
                     for(j=ves.length-1;j>=0;--j){
+                        if(tempTagName=="style"){
+                            var k=i;
+                            i=tempTagName.indexOf("</style>");
+                            style.addString(tempTagName.slice(k,i));
+                            i+="</style>".length;
+                            break;
+                        }
                         if(ves[j].depth==depth){
                             ves[j].innerEnd=xmlStr.slice(tempED+1,tempOP);
                             break;
@@ -199,10 +211,72 @@ class DEF_VirtualElementList{
             ves[i].ctrlID=pName;
             ves[i].setAttribute("ctrl-id",pName);
         }
-        return new DEF_VirtualElementList(ves,maxDepth);
+        return new DEF_VirtualElementList(ves,maxDepth,styles);
+    }
+}
+/**
+ * 给控件添加 style 样式标签
+ */
+class DEF_StyleVE{
+    /**
+     * @param {String} cssString
+     */
+    constructor(cssString){
+        this.styleList=[];
+        this.styleElement=document.createElement("style");
+        this.addString(cssString);
+    }
+    /**
+     * @param {String} cssString
+     */
+    addString(cssString){
+        if(!cssString) return;
+        var i=0,j=0;
+        for(i=cssString.slice(i).indexOf('}');(i<cssString)&&(i!=-1);i=cssString.slice(i).indexOf('}')){
+            this.styleList.push(new DEF_StyleVEItem(cssString.slice(j,i)));
+            ++i;
+            j=i;
+        }
+    }
+    /**
+     * @param {String} ctrlID
+     * @param {CtrlLib} that
+     */
+    render(ctrlID,that){
+        var strs=[];
+        for(var i=0;i<this.styleList.length;++i){
+            strs.push(this.styleList[i].createString(ctrlID,that));
+        }
+        this.styleElement.innerHTML=strs.join("");
     }
 }
 
+/**
+ * 一个 style 选择器和样式 的对象
+ */
+class DEF_StyleVEItem{
+    /**
+     * @param {Array<String>} selectors 选择器的数组
+     * @param {String} cssString css 的内容 
+     */
+    constructor(selectors,cssString){
+        this.selectors=selectors;
+        this.cssString=cssString;
+    }
+    /**
+     * @param {String} ctrlID
+     * @param {CtrlLib} that
+     */
+    createString(ctrlID,that){
+        var rtn=[];
+        for(var i=0;i<this.selectors.length;++i){
+            rtn.push(ctrlID+this.selectors[i]);
+            
+        }
+        
+        return rtn.join('');
+    }
+}
 /**供 htmlToControl 处理xml字符串
  * @param {String}  tagName     标签名
  * @param {Number}  depth       深度
@@ -524,7 +598,7 @@ class ExCtrl extends CtrlLib{
      */
     renderChildCtrl(element,ve,childCtrlType){
         var dataStr=ve.getAttribute(ExCtrl.attrKeyStr.childCtrlData);
-        var then=this;
+        var that=this;
         if(!dataStr){
             getDataCallback();
             return;
@@ -533,9 +607,9 @@ class ExCtrl extends CtrlLib{
             (new Function(["callback"],dataStr)).call(this,getDataCallback);
         }
         function getDataCallback(data){
-            var childCtrl=new then.childCtrlType[childCtrlType](data);
-            then.childCtrl[ve.ctrlID]=childCtrl;
-            then.childCtrl[ve.ctrlID].parentCtrl=this;
+            var childCtrl=new that.childCtrlType[childCtrlType](data);
+            that.childCtrl[ve.ctrlID]=childCtrl;
+            that.childCtrl[ve.ctrlID].parentCtrl=this;
             childCtrl.addend(element);
         }
     }
