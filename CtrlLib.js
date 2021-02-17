@@ -100,7 +100,7 @@ class DEF_VirtualElementList{
     constructor(ves,maxDepth,style){
         this.ves=ves;
         this.maxDepth=maxDepth;
-        this.style=styleObj;
+        this.style=style;
     }
     getByCtrlID(ctrlID){
         for(var i=this.ves.length-1;i>=0;--i){
@@ -120,7 +120,7 @@ class DEF_VirtualElementList{
             xmlStr=xmlStr.replace(/<!--(.|[\r\n])*?-->/,"");//去除注释
             xmlStr=xmlStr.replace(/<\?(.|[\r\n])*?\?>/,"");//去除头
         var strleng=xmlStr.length;
-        var i,j,p,q,tempOP,tempED,depth=0,tempTagName,maxDepth=0,tDepth=0;
+        var i,j,p,q,tempOP,tempED,depth=0,tempTagName,maxDepth=0,tDepth=0,styleFlag=false;
         var lastStrP,strFlag=0;
         var ves=[],attributes=[],style=new DEF_StyleVE();
     
@@ -157,28 +157,31 @@ class DEF_VirtualElementList{
             }
             if(xmlStr[i]=='>'&&!strFlag){
                 if(xmlStr[tempOP+1]=='/'){  // 标签结束符号
-                    // 把 一段文本 添加到上一个这么深的元素
-                    for(j=ves.length-1;j>=0;--j){
-                        if(tempTagName=="style"){
-                            var k=i;
-                            i=tempTagName.indexOf("</style>");
-                            style.addString(tempTagName.slice(k,i));
-                            i+="</style>".length;
-                            break;
-                        }
-                        if(ves[j].depth==depth){
-                            ves[j].innerEnd=xmlStr.slice(tempED+1,tempOP);
-                            break;
+                    if(tempTagName=="/style"){
+                        style.addString(xmlStr.slice(tempED+1,tempOP));
+                        styleFlag=false;
+                    }else{
+                        // 把 一段文本 添加到上一个这么深的元素
+                        for(j=ves.length-1;j>=0;--j){
+                            if(ves[j].depth==depth){
+                                ves[j].innerEnd=xmlStr.slice(tempED+1,tempOP);
+                                break;
+                            }
                         }
                     }
                     tempED=i;
                     --depth;
                 }
                 else{
-                    ++depth;
-                    if(depth>maxDepth)maxDepth=depth;
-                    var ve=new DEF_VirtualElement(tempTagName,depth,attributes,xmlStr.slice(tempED+1,tempOP));
-                    ves.push(ve);
+                ++depth;
+                if(depth>maxDepth)maxDepth=depth;
+                    if(styleFlag)continue;
+                    if(tempTagName=="style"){
+                        styleFlag=true;
+                    }else{
+                        var ve=new DEF_VirtualElement(tempTagName,depth,attributes,xmlStr.slice(tempED+1,tempOP));
+                        ves.push(ve);
+                    }
                     tempED=i;
                     if(DEF_VirtualElementList.voidElementsTagName.includes(tempTagName)){
                         --depth;
@@ -211,7 +214,7 @@ class DEF_VirtualElementList{
             ves[i].ctrlID=pName;
             ves[i].setAttribute("ctrl-id",pName);
         }
-        return new DEF_VirtualElementList(ves,maxDepth,styles);
+        return new DEF_VirtualElementList(ves,maxDepth,style);
     }
 }
 /**
@@ -231,22 +234,22 @@ class DEF_StyleVE{
      */
     addString(cssString){
         if(!cssString) return;
-        var p,q,d;
+        var p,q,d,b,k,depth=0;
         
         for(p=q=d=0;p<cssString.length;++p){
-            if(cssString[p]=='{'){
-                if(cssString[p-1]!='$'){
-                    this.styleList.push(new DEF_StyleVEItem(cssString.slice(q,p)));
-                    q=p;
-                }else{
-                    d=p;
-                }
+            // 跳过模板字符串的格式 ${x}
+            while(cssString[p]=='{'&&cssString[p-1]=='$'){
+                p=cssString.indexOf('}',p+1);
             }
-            else if(cssString[p]=='}'){
+            if(cssString[p]=='{'){
 
+                ++depth;
+            }else if(cssString[p]=='}'){
 
+                --depth;
             }
         }
+        
     }
     /**
      * @param {String} ctrlID
@@ -268,19 +271,23 @@ class DEF_StyleVEItem{
     /**
      * @param {Array<String>} selectors 选择器的数组
      * @param {String} cssString css 的内容 
+     * @param {Number} depth 深度
      */
-    constructor(selectors,cssString){
+    constructor(selectors,cssString,depth){
         this.selectors=selectors;
         this.cssString=cssString;
+        this.depth=depth;
     }
     /**
-     * @param {String} ctrlID
-     * @param {CtrlLib} that
+     * @param {String} _ctrlID
+     * @param {CtrlLib} _that
      */
-    createString(ctrlID,that){
+    toString(_ctrlID,_that){
         var rtn=[];
+        var ctrlID=ctrlID+' ',
+            that=_that===undefined?window:_that;
         for(var i=0;i<this.selectors.length;++i){
-            rtn.push(ctrlID+this.selectors[i]);
+            rtn.push(ctrlID+(this.selectors[i]));
             
         }
         
@@ -650,14 +657,26 @@ class ExCtrl extends CtrlLib{
                 if(!elements[tname].hidden)dHash[ves[i].depth-1].appendChild(elements[tname]);
             }
             
-            if(!ves[i+1]||ves[i+1].depth<=ves[i].depth){// 如果下一个不是这一个的子
-                var ti=i;
+            if(!ves[i+1]||ves[i+1].depth<ves[i].depth){// 如果下一个不存在或下一个比这个浅
+                var ti=i,tnd=ves[i+1]?ves[i+1].depth:0;
+                //tnd : 下一个元素的深度
                 do{
-                    if(ves[ti].innerEnd){
-                        elements[ves[ti].ctrlID+nameEX].appendChild(this.stringRender(ves[ti].innerEnd,tname,"innerEnd",1,forkey,elements[tname]));
+                    if(ves[ti].innerEnd&&(ves[ti].depth<ves[i].depth)){
+                        var tempdoc=this.stringRender(ves[ti].innerEnd,ves[ti].ctrlID+nameEX,"innerEnd",1,forkey,elements[ves[ti].ctrlID+nameEX]);
+                        if(!tempdoc){
+                            console.wran(tempdoc);
+                        }
+                        elements[ves[ti].ctrlID+nameEX].appendChild(tempdoc);
                     }
                     --ti;
-                }while((ves[ti])&&(ves[ti].depth<ves[i].depth));
+                }while((ves[ti])&&(ves[ti].depth>=tnd));
+                if(ves[i].innerEnd){
+                    elements[ves[i].ctrlID+nameEX].appendChild(this.stringRender(ves[i].innerEnd,tname,"innerEnd",1,forkey,elements[tname]));
+                }
+            }else if(ves[i+1].depth==ves[i].depth){ // 如果下一个和这个的深度相同
+                if(ves[i].innerEnd){
+                    elements[ves[i].ctrlID+nameEX].appendChild(this.stringRender(ves[i].innerEnd,tname,"innerEnd",1,forkey,elements[tname]));
+                }
             }
 
             dHash[ves[i].depth]=elements[tname];
