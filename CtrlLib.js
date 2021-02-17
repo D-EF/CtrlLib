@@ -95,7 +95,7 @@ class DEF_VirtualElementList{
     /**
      * @param {Array<DEF_VirtualElement>} ves
      * @param {Number} maxDepth
-     * @param {DEF_StyleVE} style
+     * @param {DEF_CSSVE} style
      */
     constructor(ves,maxDepth,style){
         this.ves=ves;
@@ -122,7 +122,7 @@ class DEF_VirtualElementList{
         var strleng=xmlStr.length;
         var i,j,p,q,tempOP,tempED,depth=0,tempTagName,maxDepth=0,tDepth=0,styleFlag=false;
         var lastStrP,strFlag=0;
-        var ves=[],attributes=[],style=new DEF_StyleVE();
+        var ves=[],attributes=[],style=new DEF_CSSVE();
     
         for(i=0;i<strleng;++i){
             if(xmlStr[i]=='<'&&!strFlag){
@@ -216,16 +216,29 @@ class DEF_VirtualElementList{
         }
         return new DEF_VirtualElementList(ves,maxDepth,style);
     }
+    /**
+     * 向前寻找目标深度的 ves item
+     * @param {Number} start 起点
+     * @param {Number} depth 目标 深度
+     * @returns {Number} 返回目标的下标
+     */
+    getByLastDepth(start,depth){
+        for(var i=start;i>=0;--i){
+            if(this.ves[i].depth==depth)return i;
+        }
+        console.warn("找不到目标深度的 ves's item");
+        return;
+    }
 }
 /**
  * 给控件添加 style 样式标签
  */
-class DEF_StyleVE{
+class DEF_CSSVE{
     /**
      * @param {String} cssString
      */
     constructor(cssString){
-        this.styleList=[];
+        this.cssList=[];
         this.styleElement=document.createElement("style");
         this.addString(cssString);
     }
@@ -234,22 +247,32 @@ class DEF_StyleVE{
      */
     addString(cssString){
         if(!cssString) return;
+        console.log(cssString)
+        // p 右指针, q 左指针, d cssList的最后一个的下标
         var p,q,d,b,k,depth=0;
+        var tempSelector,tempString;
         
-        for(p=q=d=0;p<cssString.length;++p){
+        for(p=q=0;p<cssString.length;++p){
             // 跳过模板字符串的格式 ${x}
             while(cssString[p]=='{'&&cssString[p-1]=='$'){
-                p=cssString.indexOf('}',p+1);
+                p=cssString.indexOf('}',p+1)+1;
             }
             if(cssString[p]=='{'){
-
+                tempSelector=cssString.slice(q,p).split(',');
+                console.log(cssString.slice(q,p),"selectors");
+                d=this.cssList.push(new DEF_CSSVEItem(tempSelector,'',depth))-1;
+                q=p+1;
                 ++depth;
             }else if(cssString[p]=='}'){
-
+                tempString=cssString.slice(q,p);
+                if(!this.cssList[d].cssString){
+                    this.cssList[d].cssString=tempString;
+                }
+                console.log(cssString.slice(q,p),"css");
+                q=p+1;
                 --depth;
             }
         }
-        
     }
     /**
      * @param {String} ctrlID
@@ -257,17 +280,30 @@ class DEF_StyleVE{
      */
     render(ctrlID,that){
         var strs=[];
-        for(var i=0;i<this.styleList.length;++i){
-            strs.push(this.styleList[i].createString(ctrlID,that));
+        for(var i=0;i<this.cssList.length;++i){
+            strs.push(this.cssList[i].createString(ctrlID,that));
         }
         this.styleElement.innerHTML=strs.join("");
+    }
+    /**
+     * 向前寻找目标深度的 cssList's item
+     * @param {Number} start 起点
+     * @param {Number} depth 目标 深度
+     * @returns {Number} 返回目标的下标
+     */
+    getByLastDepth(start,depth){
+        for(var i=start;i>=0;--i){
+            if(this.cssList[i].depth==depth)return i;
+        }
+        console.warn("找不到目标深度的 cssList's item");
+        return;
     }
 }
 
 /**
  * 一个 style 选择器和样式 的对象
  */
-class DEF_StyleVEItem{
+class DEF_CSSVEItem{
     /**
      * @param {Array<String>} selectors 选择器的数组
      * @param {String} cssString css 的内容 
