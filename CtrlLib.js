@@ -16,6 +16,7 @@ class CtrlLib{
         this.dataLinks={};
         this.childCtrl={};
         this.elements={};
+        /** 控件触发事件 */
         this.ctrlActionList={callback:[]};
     }
     /**
@@ -296,7 +297,6 @@ class DEF_CSSVE{
      */
     addString(cssString){
         if(!cssString) return;
-        console.log(cssString)
         // p 右指针, q 左指针, d cssList的最后一个的下标
         var p,q,d,b,k,depth=0;
         var tempSelector,tempString;
@@ -330,16 +330,15 @@ class DEF_CSSVE{
         var strs=[],tempDepth=0;
         for(var i=0;i<this.cssList.length;++i){
             if(this.cssList[i].depth<tempDepth){
-                strs.push('\n}\n');
+                strs.push('}');
             }
-            strs.push(this.cssList[i].toString(ctrlLibID,that)+'\n');
+            strs.push(this.cssList[i].toString(ctrlLibID,that));
 
             tempDepth=this.cssList[i].depth+1;
         }
         do{
             strs.push('}');
         }while((--tempDepth)>0);
-        console.log(strs.join(''));
         return strs.join('');
     }
     /**
@@ -422,6 +421,11 @@ class ExCtrl extends CtrlLib{
     constructor(data){
         super(data);
     }
+    addend(_parentNode,...surplusArgument){
+        CtrlLib.prototype.addend.call(this,_parentNode,...surplusArgument);
+        this.renderString();
+        this.renderStyle();
+    }
     createContent(){
         var temp=this.itemVEToElement(this.bluePrint.ves);
         this.elements=temp.elements;
@@ -429,7 +433,6 @@ class ExCtrl extends CtrlLib{
         if(this.bluePrint.style.cssList.length){
             this.styleElement=document.createElement("style");
             document.head.appendChild(this.styleElement);
-            this.renderStyle();
         }
     }
     /**
@@ -501,24 +504,28 @@ class ExCtrl extends CtrlLib{
             break;
             default:
                 if(key.indexOf(ExCtrl.attrKeyStr.keyDownEventBefore)==0){
+                    var eventFnc=new Function(['e',"tgt",],attrVal);
                     addKeyEvent(tgt,true,
                         (key.slice(ExCtrl.attrKeyStr.keyDownEventBefore.length,key.lastIndexOf(ExCtrl.attrKeyStr.keyDownEventAfter)))
                         .split(ExCtrl.attrKeyStr.keyDownEventCilpKey),
                         function(e){
-                            (new Function(["e","tgt"],attrVal)).call(that,e,this)
+                            eventFnc.call(that,e,this)
                         },false);
                 }
                 else if(key.indexOf(ExCtrl.attrKeyStr.keyUpEventBefore)==0){
+                    var eventFnc=new Function(['e',"tgt",],attrVal);
                     addKeyEvent(tgt,true,
                         (key.slice(ExCtrl.attrKeyStr.keyUpEventBefore.length,key.lastIndexOf(ExCtrl.attrKeyStr.keyUpEventAfter))).split(ExCtrl.attrKeyStr.keyUpEventCilpKey),
                         function(e){
-                            (new Function(["e","tgt"],attrVal)).call(that,e,this)
+                            eventFnc.call(that,e,this)
                         },true);
                 }
                 else if(key==ExCtrl.attrKeyStr.proxyResizeEvent){
+                    var eventFnc=new Function(['e',"tgt",],attrVal);
                     addResizeEvent(tgt,function(e){
-                        (new Function(['e',"tgt",],attrVal)).call(that,e,tgt)
+                        eventFnc.call(that,e,tgt);
                     });
+                    this.ctrlActionList.callback.push(function(){addResizeEvent.reResize(tgt)});
                 }
                 else if(key.indexOf(ExCtrl.attrKeyStr.proxyEventBefore)==0){
                     elements[tname].addEventListener(key.slice(ExCtrl.attrKeyStr.proxyEventBefore.length),function(e){
