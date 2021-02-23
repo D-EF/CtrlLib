@@ -864,7 +864,7 @@ class ExCtrl extends CtrlLib{
     // render 的 方法集; 给影响自身内部的属性 "ctrl-for" "ctrl-if" 等
     reRenderAttrCtrl={
         "ctrl-for":function(bluePrint,tgtElem){
-            var ves=bluePrint.vas;
+            var ves=bluePrint.ves;
             var tgtve=this.bluePrint.getByCtrlID(tgtElem.ctrlID);
             tgtElem.innerHTML="";
             this.renderFor(this.elements,ves,tgtElem.vesIndex,tgtve.getAttribute("ctrl-for"),tgtElem.ctrlID);
@@ -875,7 +875,7 @@ class ExCtrl extends CtrlLib{
          */
         "ctrl-if":function(bluePrint,tgtElem){
             if((new Function(["tgt"],"return ("+tgtElem.ctrlAttr["ctrl-if"]+")")).call(this,tgtElem)){
-                // 先找到要插入的位置
+                // 先找到要插入的位置 todo
                 var tp=bluePrint.getByCtrlID(tgtElem.ctrlID);
                 var td=bluePrint.ves[tp].depth;
                 var ti=bluePrint.getByLastDepth(tp,td,td-1);
