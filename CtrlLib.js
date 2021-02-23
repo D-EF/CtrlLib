@@ -224,11 +224,18 @@ class DEF_VirtualElementList{
      * 向前寻找目标深度的 ves item
      * @param {Number} start 起点
      * @param {Number} depth 目标 深度
-     * @returns {Number} 返回目标的下标
+     * @param {Number} min   最小深度, 如果超过限制将返回最小深度的下标
+     * @returns {Number} 返回目标的下标, 如果超过最小深度限制，将在返回中添加一个属性
      */
-    getByLastDepth(start,depth){
+    getByLastDepth(start,depth,min=0){
         for(var i=start;i>=0;--i){
-            if(this.ves[i].depth==depth)return i;
+            if(this.ves[i].depth==depth){
+                return i;
+            }else if(this.ves[i].depth<=min){
+                var rtn=new Number(i);
+                rtn.flag=true;
+                return rtn;
+            }
         }
         console.warn("找不到目标深度的 ves's item");
         return;
@@ -483,7 +490,10 @@ class ExCtrl extends CtrlLib{
     attrHandle(key,elements,ves,i,_attrVal,tname,k,forkey){
         var tgt=elements[tname];
         var attrVal=templateStringRender(_attrVal,this,[tgt]).str,//htmlToCode(_attrVal),
-         k=k, that=this;
+            k=k, that=this;
+
+        if(!tgt.ctrlAttr)tgt.ctrlAttr={};
+        tgt.ctrlAttr[key]=attrVal;
         switch(key){
             case ExCtrl.attrKeyStr.ctrlID:
             break;
@@ -544,6 +554,7 @@ class ExCtrl extends CtrlLib{
                 }
                 else{
                     elements[tname].setAttribute(key,this.stringRender(htmlToCode(_attrVal),tname,"attr",0,key,tgt));
+                    delete tgt.ctrlAttr[key];
                 }
             break;
         }
@@ -684,6 +695,7 @@ class ExCtrl extends CtrlLib{
             that.childCtrl[ve.ctrlID]=childCtrl;
             that.childCtrl[ve.ctrlID].parentCtrl=this;
             childCtrl.addend(element);
+            return childCtrl;
         }
     }
     /**
@@ -818,7 +830,7 @@ class ExCtrl extends CtrlLib{
             for(j=tempVE.attribute.length-1;j>=0;--j){
                 attrKey=tempVE.attribute[j].key;
                 if(this.reRenderAttrCtrl[attrKey]){
-                    this.reRenderAttrCtrl[attrKey].call(this,bluePrint.ves,tgtElem);
+                    this.reRenderAttrCtrl[attrKey].call(this,bluePrint,tgtElem);
                 }
             }
         }
@@ -851,40 +863,28 @@ class ExCtrl extends CtrlLib{
     }
     // render 的 方法集; 给影响自身内部的属性 "ctrl-for" "ctrl-if" 等
     reRenderAttrCtrl={
-        "ctrl-for":function(ves,tgtElem){
+        "ctrl-for":function(bluePrint,tgtElem){
+            var ves=bluePrint.vas;
             var tgtve=this.bluePrint.getByCtrlID(tgtElem.ctrlID);
             tgtElem.innerHTML="";
             this.renderFor(this.elements,ves,tgtElem.vesIndex,tgtve.getAttribute("ctrl-for"),tgtElem.ctrlID);
         },
-        "ctrl-if":function(ves,tgtElem){
-            if(eval(tgtElem.ctrlAttr["ctrl-if"])){
-                var j;
-                var tgtParentNode;
-                if(ves[tgtElem.vesIndex].depth){
-                    for(j=tgtElem.vesIndex-1;j>=0;--j){// 向前寻找父元素
-                        if(ves[j].depth+1==ves[tgtElem.vesIndex].depth){
-                            tgtParentNode=this.elements[ves[j].ctrlID];
-                            break;
-                        }
-                    }
-                }
-                else{
-                    // 深度为0 为rootnode
-                    tgtParentNode=this.parentNode;
-                }
-                for(j=tgtElem.vesIndex;j<ves.length;++j){
-                    if(ves[tgtElem.vesIndex].depth==ves[j]){
-                        // 有next element
-                        tgtParentNode.insertBefore(tgtElem,this.elements[ves[j].ctrlID]);
-                    }
-                    if(ves[tgtElem.vesIndex].depth>ves[j]||!(ves[j+1])){
-                        // 这个是同深度的最后一个元素
-                        tgtParentNode.appendChild(tgtElem);
-                    }
+        /**
+         * @param {DEF_VirtualElementList} bluePrint
+         * @param {Element} tgtElem
+         */
+        "ctrl-if":function(bluePrint,tgtElem){
+            if((new Function(["tgt"],"return ("+tgtElem.ctrlAttr["ctrl-if"]+")")).call(this,tgtElem)){
+                // 先找到要插入的位置
+                var tp=bluePrint.getByCtrlID(tgtElem.ctrlID);
+                var td=bluePrint.ves[tp].depth;
+                var ti=bluePrint.getByLastDepth(tp,td,td-1);
+                if(ti.flag){
+
                 }
             }
             else{
-                tgtElem.remove();
+                if(tgtElem)tgtElem.remove();
             }
         },
         "ctrl-child_ctrl":function(ves,tgtElem){
