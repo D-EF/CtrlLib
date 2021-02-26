@@ -106,12 +106,80 @@ class DEF_VirtualElementList{
         this.maxDepth=maxDepth;
         this.style=style;
     }
+    /**
+     * 根据 ctrlID 寻找 项 
+     * @param {String} ctrlID 
+     * @returns {DEF_VirtualElement} 返回目标
+     */
     getByCtrlID(ctrlID){
         for(var i=this.ves.length-1;i>=0;--i){
             if(this.ves[i].ctrlID==ctrlID){
                 return this.ves[i];
             }
         }
+    }
+    /**
+     * 根据 ctrlID 寻找 项 
+     * @param {String} ctrlID 
+     * @returns {Number} 返回目标的下标
+     */
+    getIndexByCtrlID(ctrlID){
+        for(var i=this.ves.length-1;i>=0;--i){
+            if(this.ves[i].ctrlID==ctrlID){
+                return i;
+            }
+        }
+    }
+    /**
+     * 向前寻找目标深度的 ves item
+     * @param {Number} start 起点
+     * @param {Number} depth 目标 深度
+     * @param {Number} min   最小深度, 如果超过限制将返回最小深度的下标
+     * @returns {Number} 返回目标的下标, 如果超过最小深度限制，将在返回中添加一个 flag=true 属性
+     */
+    getByLastDepth(start,depth,min=0){
+        for(var i=start;i>=0;--i){
+            if(this.ves[i].depth==depth){
+                return i;
+            }else if(this.ves[i].depth<=min){
+                var rtn=new Number(i);
+                rtn.flag=true;
+                return rtn;
+            }
+        }
+        console.warn("找不到目标深度的 ves's item");
+        return;
+    }
+    /**
+     * 获取子元素
+     * @param {Number}  vesindex ves的下标
+     * @returns {Object} {indexs:[在原蓝图中的下标],ves:[对象],p:Number // p 是下一个同深度或更浅的元素或溢出}
+     */
+    getChild(vesindex){
+        var td=this.ves[vesindex].depth,
+            p=vesindex;
+        var rtnIndex=[],rtnObj=[];
+        for(++p;this.ves[p]&&this.ves[p].depth>td;++p){
+            if(this.ves[p].depth==td+1){    //子元素
+                rtnIndex.push(p);
+                rtnObj.push(this.ves[p]);
+            }
+        }
+        return {indexs:rtnIndex,ves:rtnObj,p};
+    }
+    /**
+     * 获取父元素
+     * @param {Number} vesIndex 子元素在 ves 的下标
+     * @returns {Number} 返回父元素的下标
+     */
+    getParent(vesIndex){
+        var i;
+        for(i=vesIndex;i>=0;--i){
+            if(this.ves[vesIndex].depth>this.ves[i].depth){
+                break;
+            }
+        }
+        return i;
     }
     //所有无内容元素(短标签)的tag name
     static voidElementsTagName=["br","hr","img","input","link","meta","area","base","col","command","embed","keygen","param","source","track","wbr","?xml"];
@@ -219,26 +287,6 @@ class DEF_VirtualElementList{
             ves[i].setAttribute("ctrl-id",pName);
         }
         return new DEF_VirtualElementList(ves,maxDepth,style);
-    }
-    /**
-     * 向前寻找目标深度的 ves item
-     * @param {Number} start 起点
-     * @param {Number} depth 目标 深度
-     * @param {Number} min   最小深度, 如果超过限制将返回最小深度的下标
-     * @returns {Number} 返回目标的下标, 如果超过最小深度限制，将在返回中添加一个属性
-     */
-    getByLastDepth(start,depth,min=0){
-        for(var i=start;i>=0;--i){
-            if(this.ves[i].depth==depth){
-                return i;
-            }else if(this.ves[i].depth<=min){
-                var rtn=new Number(i);
-                rtn.flag=true;
-                return rtn;
-            }
-        }
-        console.warn("找不到目标深度的 ves's item");
-        return;
     }
 }
 /**供 htmlToControl 处理xml字符串
@@ -441,6 +489,20 @@ class ExCtrl extends CtrlLib{
             this.styleElement=document.createElement("style");
             document.head.appendChild(this.styleElement);
         }
+    }
+    /**
+     * 获取元素
+     * @param {String} ctrlID
+     * @returns {Array<Element>} 返回元素 包括ctrl-for 的
+     */
+    getElementsByCtrlID(ctrlID){
+        var rtn=[];
+        for(var i in this.elements){
+            if(i.indexOf(ctrlID)==0){
+                rtn.push(i);
+            }
+        }
+        return rtn;
     }
     /**
      * 标签的属性的关键字
@@ -874,20 +936,45 @@ class ExCtrl extends CtrlLib{
          * @param {Element} tgtElem
          */
         "ctrl-if":function(bluePrint,tgtElem){
-            if((new Function(["tgt"],"return ("+tgtElem.ctrlAttr["ctrl-if"]+")")).call(this,tgtElem)){
-                // 先找到要插入的位置 todo
-                var tp=bluePrint.getByCtrlID(tgtElem.ctrlID);
-                var td=bluePrint.ves[tp].depth;
-                var ti=bluePrint.getByLastDepth(tp,td,td-1);
-                if(ti.flag){
-
+            var tp=bluePrint.getIndexByCtrlID(ctrlID);
+            if((new Function(["tgt"],"return ("+bluePrint.getByCtrlID(ctrlID).getAttribute("ctrl-if")+")")).call(this,tgtElem)){
+                if(bluePrint.ves[tp].ctrlIfHidden){
+                    bluePrint.ves[tp].ctrlIfHidden=false;
+                    // 先找到要插入的位置
+                    var ti=bluePrint.getParent(tp);
+                    var cni=0;  // childNodes index
+                    var brother=bluePrint.getChild(ti);
+                    if(bluePrint.ves[ti].getAttribute(ExCtrl.attrKeyStr.proxyResizeEvent)){
+                        // 父元素有 resize 属性 cni 后移 2
+                        cni+=2;
+                    }
+                    var tgtI=brother.indexs.indexOf(tp);
+                    if(tgtI>=0){
+                        // cni 后移当前元素的前驱元素*2
+                        cni+=tgtI*2;
+                        for(var i=0;i<tgtI;++i){
+                            if(brother.ves[i].ctrlIfHidden){
+                                // 如果前驱元素因为 没能渲染, cni前移1
+                                cni-=1;
+                            }
+                            if(!brother.ves[i].before){
+                                // 如果前驱元素的 before 为空, cni前移1
+                                cni-=1;
+                            }
+                        }
+                    }
+                    if(bluePrint.ves[tp].before){
+                        cni+=1;
+                    }
+                    console.log(this.elements[this.bluePrint.ves[ti].ctrlID].child);
                 }
             }
             else{
                 if(tgtElem)tgtElem.remove();
+                bluePrint.ves[tp].ctrlIfHidden=true;
             }
         },
-        "ctrl-child_ctrl":function(ves,tgtElem){
+        "ctrl-child_ctrl":function(bluePrint,tgtElem){
             this.childCtrl[tgtElem.ctrlID].reRender();
         }
     }
