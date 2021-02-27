@@ -728,11 +728,12 @@ class ExCtrl extends CtrlLib{
         if(!eval(attrVal)){
             var k;
             for(k=i+1;k<ves.length&&ves[k].depth>ves[i].depth;++k);
-            elements[tname].hidden=1;
+            // elements[tname].hidden=1;
+            // return k-1; 跳过内部的渲染
             return k-1;
         }
         else{
-            elements[tname].hidden=0;
+            // elements[tname].hidden=0;
             return i;
         }
     }
@@ -764,7 +765,7 @@ class ExCtrl extends CtrlLib{
      * 把 ve 转换成 js 的 Element 对象;
      * @param   {Array<DEF_VirtualElement>} ves   DEF_VirtualElement list
      * @param   {String}     _nameEX    用来添加命名的
-     * @return  {Object{elements,DocumentFragment}}
+     * @return  {Object{elements:{},fragment:DocumentFragment}}
      */
     itemVEToElement(ves,_nameEX,forkey){
         var elements={},
@@ -896,6 +897,8 @@ class ExCtrl extends CtrlLib{
                 }
             }
         }
+        // 重新渲染style标签
+        this.renderStyle();
         this.reRender_callback();
     }
     // render 的 方法集; 给 stringRender 处理的内容
@@ -936,42 +939,60 @@ class ExCtrl extends CtrlLib{
          * @param {Element} tgtElem
          */
         "ctrl-if":function(bluePrint,tgtElem){
-            var tp=bluePrint.getIndexByCtrlID(ctrlID);
-            if((new Function(["tgt"],"return ("+bluePrint.getByCtrlID(ctrlID).getAttribute("ctrl-if")+")")).call(this,tgtElem)){
-                if(bluePrint.ves[tp].ctrlIfHidden){
-                    bluePrint.ves[tp].ctrlIfHidden=false;
-                    // 先找到要插入的位置
-                    var ti=bluePrint.getParent(tp);
-                    var cni=0;  // childNodes index
-                    var brother=bluePrint.getChild(ti);
-                    if(bluePrint.ves[ti].getAttribute(ExCtrl.attrKeyStr.proxyResizeEvent)){
-                        // 父元素有 resize 属性 cni 后移 2
-                        cni+=2;
-                    }
-                    var tgtI=brother.indexs.indexOf(tp);
-                    if(tgtI>=0){
-                        // cni 后移当前元素的前驱元素*2
-                        cni+=tgtI*2;
-                        for(var i=0;i<tgtI;++i){
-                            if(brother.ves[i].ctrlIfHidden){
-                                // 如果前驱元素因为 没能渲染, cni前移1
-                                cni-=1;
-                            }
-                            if(!brother.ves[i].before){
-                                // 如果前驱元素的 before 为空, cni前移1
-                                cni-=1;
-                            }
+            var tp=bluePrint.getIndexByCtrlID(tgtElem.ctrlID);
+            if((new Function(["tgt"],"return ("+bluePrint.getByCtrlID(tgtElem.ctrlID).getAttribute("ctrl-if")+")")).call(this,tgtElem)){
+                // 先找到要插入的位置
+                var ti=bluePrint.getParent(tp);
+                var cni=0;  // childNodes index
+                var brother=bluePrint.getChild(ti);
+                if(bluePrint.ves[ti].getAttribute(ExCtrl.attrKeyStr.proxyResizeEvent)){
+                    // 父元素有 resize 属性 cni 后移 2
+                    cni+=2;
+                }
+                var tgtI=brother.indexs.indexOf(tp);
+                if(tgtI>=0){
+                    // cni 后移当前元素的前驱元素*2
+                    cni+=tgtI*2;
+                    for(var i=0;i<tgtI;++i){
+                        if(brother.ves[i].ctrlIfHidden){
+                            // 如果前驱元素因为 没能渲染, cni前移1
+                            cni-=1;
+                        }
+                        if(!brother.ves[i].before){
+                            // 如果前驱元素的 before 为空, cni前移1
+                            cni-=1;
                         }
                     }
-                    if(bluePrint.ves[tp].before){
-                        cni+=1;
+                }
+                if(bluePrint.ves[tp].before){
+                    cni+=1;
+                }
+                var pNode=this.elements[this.bluePrint.ves[ti].ctrlID];
+                var bortherNodes=pNode.childNodes;
+                if(!tgtElem.innerHTML)
+                {
+                    // 因为被跳过了，所以要重新渲染
+                    var tempVEs=bluePrint.getChild(tp);
+                    var tempElements=this.itemVEToElement(bluePrint.ves.slice(tp+1,tempVEs.p));
+                    tgtElem.appendChild(tempElements.fragment);
+                    Object.assign(this.elements,tempElements.elements);
+                }
+                if(cni<bortherNodes.length){
+                    if(cni>=0){
+                        if(bortherNodes.length){
+                            bortherNodes[0].before(tgtElem);
+                        }else{
+                            pNode.appendChild(tgtElem);
+                        }
+                    }else{
+                        bortherNodes[ti].before(tgtElem);
                     }
-                    console.log(this.elements[this.bluePrint.ves[ti].ctrlID].child);
+                }else{
+                    pNode.appendChild(tgtElem);
                 }
             }
             else{
                 if(tgtElem)tgtElem.remove();
-                bluePrint.ves[tp].ctrlIfHidden=true;
             }
         },
         "ctrl-child_ctrl":function(bluePrint,tgtElem){
