@@ -35,6 +35,7 @@ class CtrlLib{
             }
             this.parentNode.appendChild(tempDocF);
             this.callback(...arguments);
+            this.reRender_callback();
             this.touchCtrlAction("callback");
         }else{
             console.error('Fatal error! This Control have not parentNode!');
@@ -105,6 +106,13 @@ class DEF_VirtualElementList{
         this.ves=ves;
         this.maxDepth=maxDepth;
         this.style=style;
+    }
+    /**
+     * 根据 ves 的下标, 查找ctrlID
+     * @param {Number} index
+     */
+    getCtrlIDByIndex(index){
+        return this.ves[index].ctrlID;
     }
     /**
      * 根据 ctrlID 寻找 项 
@@ -528,6 +536,10 @@ class ExCtrl extends CtrlLib{
     }
     /**
      * 请求 api 并用json反序列化
+     * @param {String} method 请求的方式
+     * @param {String} url  请求的地址
+     * @param {Function} callback 请求完成后的回调
+     * @param {Any} body post 请求的参数
      */
     static getJsonData(method,url,callback,body){
         requestAPI(method,url,
@@ -778,7 +790,6 @@ class ExCtrl extends CtrlLib{
             k=i;
             tname=ves[i].ctrlID+nameEX;
             elements[tname]=document.createElement(ves[i].tagName);
-            elements[tname].vesIndex=i;
             elements[tname].ctrlID=tname;
             for(j=ves[i].attribute.length-1;j>=0;--j){
                 k=this.attrHandle(ves[i].attribute[j].key,elements,ves,i,ves[i].attribute[j].val,tname,k,forkey);
@@ -885,11 +896,12 @@ class ExCtrl extends CtrlLib{
             }
         }
         // 重新渲染 ctrl-attr 内容
-        elementCtrlIDs=Object.keys(this.elements);
-        for(i=0;i<elementCtrlIDs.length;++i){
-            tgtElem=this.elements[elementCtrlIDs[i]];
-            var tempVE=bluePrint.getByCtrlID(elementCtrlIDs[i]),attrKey;
-                
+        for(i=0;i<bluePrint.ves.length;++i){
+            var tempVE=bluePrint.ves[i],attrKey;
+                tgtElem=this.elements[tempVE.ctrlID];
+            if(tgtElem===undefined){
+                continue;
+            }
             for(j=tempVE.attribute.length-1;j>=0;--j){
                 attrKey=tempVE.attribute[j].key;
                 if(this.reRenderAttrCtrl[attrKey]){
@@ -900,6 +912,7 @@ class ExCtrl extends CtrlLib{
         // 重新渲染style标签
         this.renderStyle();
         this.reRender_callback();
+        this.touchCtrlAction("render");
     }
     // render 的 方法集; 给 stringRender 处理的内容
     // 加在元素前面的东西
@@ -928,19 +941,36 @@ class ExCtrl extends CtrlLib{
     }
     // render 的 方法集; 给影响自身内部的属性 "ctrl-for" "ctrl-if" 等
     reRenderAttrCtrl={
+        /**
+         * @param {DEF_VirtualElementList} bluePrint
+         * @param {Element} tgtElem
+         */
         "ctrl-for":function(bluePrint,tgtElem){
-            var ves=bluePrint.ves;
-            var tgtve=this.bluePrint.getByCtrlID(tgtElem.ctrlID);
-            tgtElem.innerHTML="";
-            this.renderFor(this.elements,ves,tgtElem.vesIndex,tgtve.getAttribute("ctrl-for"),tgtElem.ctrlID);
+            var id=tgtElem.ctrlID,ti=bluePrint.getIndexByCtrlID(tgtElem.ctrlID);
+            while(ti){
+                ti=bluePrint.getParent(ti);
+                if(bluePrint.ves[ti].getAttribute(ExCtrl.attrKeyStr.if)&&this.elements[bluePrint.ves[ti].ctrlID].ifFlag){
+                    this.elements[bluePrint.ves[ti].ctrlID].ifFlag=false;
+                    // 因为ctrl-if 会重新渲染，所以跳过
+                    return;
+                }
+            }
+
+            ti=bluePrint.getIndexByCtrlID(tgtElem.ctrlID);
+            var tempVEs=bluePrint.getChild(ti);
+            var tempElements=this.itemVEToElement(bluePrint.ves.slice(ti,tempVEs.p));
+            Object.assign(this.elements,tempElements.elements);
+            tgtElem.before(tempElements.fragment);
+            tgtElem.remove();
         },
         /**
          * @param {DEF_VirtualElementList} bluePrint
          * @param {Element} tgtElem
          */
         "ctrl-if":function(bluePrint,tgtElem){
-            var tp=bluePrint.getIndexByCtrlID(tgtElem.ctrlID);
-            if((new Function(["tgt"],"return ("+bluePrint.getByCtrlID(tgtElem.ctrlID).getAttribute("ctrl-if")+")")).call(this,tgtElem)){
+            var tgtCtrlID=tgtElem.ctrlID;
+            var tp=bluePrint.getIndexByCtrlID(tgtCtrlID);
+            if((new Function(["tgt"],"return ("+bluePrint.getByCtrlID(tgtCtrlID).getAttribute("ctrl-if")+")")).call(this,tgtElem)){
                 // 先找到要插入的位置
                 var ti=bluePrint.getParent(tp);
                 var cni=0;  // childNodes index
@@ -971,24 +1001,24 @@ class ExCtrl extends CtrlLib{
                 var bortherNodes=pNode.childNodes;
                 if(!tgtElem.innerHTML)
                 {
-                    // 因为被跳过了，所以要重新渲染
+                    // 重新渲染
                     var tempVEs=bluePrint.getChild(tp);
-                    var tempElements=this.itemVEToElement(bluePrint.ves.slice(tp+1,tempVEs.p));
-                    tgtElem.appendChild(tempElements.fragment);
+                    var tempElements=this.itemVEToElement(bluePrint.ves.slice(tp,tempVEs.p));
                     Object.assign(this.elements,tempElements.elements);
+                    this.elements[tgtCtrlID].ifFlag=true;
                 }
                 if(cni<bortherNodes.length){
-                    if(cni>=0){
+                    if(cni<=0){
                         if(bortherNodes.length){
-                            bortherNodes[0].before(tgtElem);
+                            bortherNodes[0].before(this.elements[tgtCtrlID]);
                         }else{
-                            pNode.appendChild(tgtElem);
+                            pNode.appendChild(this.elements[tgtCtrlID]);
                         }
                     }else{
-                        bortherNodes[ti].before(tgtElem);
+                        bortherNodes[cni].before(this.elements[tgtCtrlID]);
                     }
                 }else{
-                    pNode.appendChild(tgtElem);
+                    pNode.appendChild(this.elements[tgtCtrlID]);
                 }
             }
             else{
