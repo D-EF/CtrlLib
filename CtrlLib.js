@@ -17,7 +17,9 @@ class CtrlLib{
         this.childCtrl={};
         this.elements={};
         /** 控件触发事件 */
-        this.ctrlActionList={callback:[]};
+        this.ctrlActionList={};
+        /** 子控件事件队列 */
+        this.childCtrlActionList={};
     }
     /**
      * 初始化
@@ -40,6 +42,38 @@ class CtrlLib{
         }else{
             console.error('Fatal error! This Control have not parentNode!');
         }
+    }
+    /**
+     * 呼叫父控件
+     * @param {Function} _fnc 执行的动作
+     * @param {any} surplusArgument 参数
+     */
+    callParent(_fnc,...surplusArgument){
+        if(this.parentCtrl){
+            _fnc.apply(this.parentCtrl,surplusArgument);
+        }else{
+            console.error("这个控件没有父控件");
+        }
+    }
+    /**
+     * 呼叫子控件, 如果子控件没有加载完成将会被挂起
+     * @param {String} childCtrlID 子控件 的父元素 的 ctrlID
+     * @param {Function} _fnc 执行的动作
+     * @param {any} surplusArgument 参数
+     */
+    callChild(childCtrlID,_fnc,surplusArgument){}
+    /**
+     * 呼叫兄弟控件, 如果兄弟控件没有加载完成将会被挂起
+     * @param {String} childCtrlID 控件 在父控件的父元素 的 ctrlID
+     * @param {Function} _fnc 执行的动作
+     * @param {any} surplusArgument 参数
+     */
+    callBrother(childCtrlID,_fnc,...surplusArgument){
+        this.callParent(
+            function(){
+                this.callChild(childCtrlID,_fnc,...surplusArgument);
+            }
+        )
     }
     /**
      * addend刚开始执行的函数,
@@ -484,6 +518,15 @@ class ExCtrl extends CtrlLib{
     constructor(data){
         super(data);
     }
+    /**
+     * 呼叫子控件, 如果子控件没有加载完成将会被挂起
+     * @param {String} childCtrlID 子控件 在父控件的父元素 的 ctrlID
+     */
+    callChild(childCtrlID,_fnc){
+        if(this.bluePrint.getByCtrlID()){
+            
+        }
+    }
     addend(_parentNode,...surplusArgument){
         CtrlLib.prototype.addend.call(this,_parentNode,...surplusArgument);
         this.renderString();
@@ -609,6 +652,7 @@ class ExCtrl extends CtrlLib{
                     addResizeEvent(tgt,function(e){
                         eventFnc.call(that,e,tgt);
                     });
+                    if(this.ctrlActionList.callback===undefined) this.ctrlActionList.callback=[];
                     this.ctrlActionList.callback.push(function(){addResizeEvent.reResize(tgt)});
                 }
                 else if(key.indexOf(ExCtrl.attrKeyStr.proxyEventBefore)==0){
@@ -621,6 +665,9 @@ class ExCtrl extends CtrlLib{
                         console.warn("不允许在 ctrl-for 的内容里添加 ctrlAction");
                     }
                     else{
+                        if(this.ctrlActionList[key.slice(ExCtrl.attrKeyStr.ctrlEventBefore.length)]===undefined){
+                            this.ctrlActionList[key.slice(ExCtrl.attrKeyStr.ctrlEventBefore.length)]=[];
+                        }
                         this.ctrlActionList[key.slice(ExCtrl.attrKeyStr.ctrlEventBefore.length)].push(function(e){
                             (new Function(["e","tgt"],attrVal)).call(that,e,tgt);
                         });
