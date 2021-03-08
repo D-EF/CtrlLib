@@ -22,6 +22,10 @@ class CtrlLib{
         this.childCtrlActionList={};
     }
     /**
+     * 子控件类
+     */
+    childCtrlTyp={};
+    /**
      * 初始化
      * @param {Element} _parentNode
      */
@@ -61,7 +65,9 @@ class CtrlLib{
      * @param {Function} _fnc 执行的动作
      * @param {any} surplusArgument 参数
      */
-    callChild(childCtrlID,_fnc,surplusArgument){}
+    callChild(childCtrlID,_fnc,surplusArgument){
+        // 在派生类里实现
+    }
     /**
      * 呼叫兄弟控件, 如果兄弟控件没有加载完成将会被挂起
      * @param {String} childCtrlID 控件 在父控件的父元素 的 ctrlID
@@ -523,8 +529,21 @@ class ExCtrl extends CtrlLib{
      * @param {String} childCtrlID 子控件 在父控件的父元素 的 ctrlID
      */
     callChild(childCtrlID,_fnc){
-        if(this.bluePrint.getByCtrlID()){
-            
+        var c=this.bluePrint.getByCtrlID(childCtrlID);
+        if(c===undefined){
+            console.error("没有对应的子元素");
+            return;
+        }else if(c.getAttribute(ExCtrl.attrKeyStr.childCtrl)){
+            console.error("该子元素没有子控件");
+            return;
+        }else{
+            // 有子控件
+            if(this.childCtrl[childCtrlID]){
+                // todo
+            }else{
+                // 子控件未加载完成
+
+            }
         }
     }
     addend(_parentNode,...surplusArgument){
