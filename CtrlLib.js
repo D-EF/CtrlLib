@@ -535,6 +535,7 @@ class ExCtrl extends CtrlLib{
         super(data);
         this.dataLinks={};
     }
+    
     /**
      * 呼叫子控件, 如果子控件没有加载完成将会被挂起
      * @param {String} childCtrlID  子控件 在父控件的父元素 的 ctrlID
@@ -588,6 +589,8 @@ class ExCtrl extends CtrlLib{
         }
         return rtn;
     }
+    /** 规定模板字符串能否为 html, 如果启用, 就别在 ctrl-if 的前面放模板字符串，否则可能会导致 ctrl-if 的渲染出错*/
+    templateStringIsHTML=false;
     /**
      * 标签的属性的关键字
      */
@@ -892,7 +895,7 @@ class ExCtrl extends CtrlLib{
                 k=this.attrHandle(ves[i].attribute[j].key,elements,ves,i,ves[i].attribute[j].val,tname,k,forFlag);
             }
             if(dHash[ves[i].depth-1]){ //如果存在上一层
-                dHash[ves[i].depth-1].appendChild(this.stringRender(ves[i].before,tname,"before",1,forFlag,dHash[ves[i].depth-1]));
+                dHash[ves[i].depth-1].appendChild(this.stringRender(ves[i].before,tname,"before",this.templateStringIsHTML,forFlag,dHash[ves[i].depth-1]));
                 if(!elements[tname].hidden)dHash[ves[i].depth-1].appendChild(elements[tname]);
             }
             
@@ -901,7 +904,7 @@ class ExCtrl extends CtrlLib{
                 //tnd : 下一个元素的深度
                 do{
                     if(ves[ti].innerEnd&&(ves[ti].depth<ves[i].depth)){
-                        var tempdoc=this.stringRender(ves[ti].innerEnd,ves[ti].ctrlID+nameEX,"innerEnd",1,forFlag,elements[ves[ti].ctrlID+nameEX]);
+                        var tempdoc=this.stringRender(ves[ti].innerEnd,ves[ti].ctrlID+nameEX,"innerEnd",this.templateStringIsHTML,forFlag,elements[ves[ti].ctrlID+nameEX]);
                         if(!tempdoc){
                             console.wran(tempdoc);
                         }
@@ -910,11 +913,11 @@ class ExCtrl extends CtrlLib{
                     --ti;
                 }while((ves[ti])&&(ves[ti].depth>=tnd));
                 if(ves[i].innerEnd){
-                    elements[ves[i].ctrlID+nameEX].appendChild(this.stringRender(ves[i].innerEnd,tname,"innerEnd",1,forFlag,elements[tname]));
+                    elements[ves[i].ctrlID+nameEX].appendChild(this.stringRender(ves[i].innerEnd,tname,"innerEnd",this.templateStringIsHTML,forFlag,elements[tname]));
                 }
             }else if(ves[i+1].depth==ves[i].depth){ // 如果下一个和这个的深度相同
                 if(ves[i].innerEnd){
-                    elements[ves[i].ctrlID+nameEX].appendChild(this.stringRender(ves[i].innerEnd,tname,"innerEnd",1,forFlag,elements[tname]));
+                    elements[ves[i].ctrlID+nameEX].appendChild(this.stringRender(ves[i].innerEnd,tname,"innerEnd",this.templateStringIsHTML,forFlag,elements[tname]));
                 }
             }
 
@@ -923,11 +926,11 @@ class ExCtrl extends CtrlLib{
             if(ves[i].depth<minD){// 刷新最小深度
                 minD=ves[i].depth;
                 rtnFragment=document.createDocumentFragment();
-                rtnFragment.appendChild(this.stringRender(ves[i].before,tname,"before",1,forFlag,rtnFragment));
+                rtnFragment.appendChild(this.stringRender(ves[i].before,tname,"before",this.templateStringIsHTML,forFlag,rtnFragment));
                 if(!elements[tname].hidden)rtnFragment.appendChild(elements[tname]);//添加到root
             }else{
                 if(ves[i].depth==minD){
-                    rtnFragment.appendChild(this.stringRender(ves[i].before,tname,"before",1,forFlag,rtnFragment));
+                    rtnFragment.appendChild(this.stringRender(ves[i].before,tname,"before",this.templateStringIsHTML,forFlag,rtnFragment));
                     if(!elements[tname].hidden)rtnFragment.appendChild(elements[tname]);
                 }
             }
@@ -971,6 +974,9 @@ class ExCtrl extends CtrlLib{
             if(elementCtrlIDs[i].indexOf("-EX_for-")!=-1){
                 this.elements[elementCtrlIDs[i]].remove();
                 delete this.elements[elementCtrlIDs[i]];
+                if(this.childCtrl[elementCtrlIDs[i]]){
+                    delete this.childCtrl[elementCtrlIDs[i]];
+                }
             }
         }
         //  重新渲染 stringRender 的
@@ -1019,7 +1025,7 @@ class ExCtrl extends CtrlLib{
         do{
             tgtElement.previousSibling.remove();
         }while(!(tgtElement.previousSibling.ctrlID));
-        this.elements[ctrlID].before(this.stringRender(thisVe.before,ctrlID,"before",1));
+        this.elements[ctrlID].before(this.stringRender(thisVe.before,ctrlID,"before",this.templateStringIsHTML));
     }
     //加在元素末尾的内容
     renderCtrl_innerEnd(ctrlID){
@@ -1028,7 +1034,7 @@ class ExCtrl extends CtrlLib{
         do{
             tgtElement.childNodes[tgtElement.childNodes.length-1].remove();
         }while(tgtElement.childNodes[tgtElement.childNodes.length-1]&&tgtElement.childNodes[tgtElement.childNodes.length-1].ctrlID);
-        this.elements[ctrlID].appendChild(this.stringRender(thisVe.innerEnd,ctrlID,"innerEnd",1,tgtElement));
+        this.elements[ctrlID].appendChild(this.stringRender(thisVe.innerEnd,ctrlID,"innerEnd",this.templateStringIsHTML,tgtElement));
     }
     // 渲染 元素 的 控件属性
     renderCtrl_attr(ctrlID,attrkey){
