@@ -359,6 +359,7 @@ class DEF_CSSVEItem{
         this.depth=depth;
     }
     /**
+     * 将对象渲染成css语句
      * @param {String} _ctrlID
      * @param {CtrlLib} _that
      * @returns {String}
@@ -430,8 +431,11 @@ function DataLink(expression,value,link){
      */
     addend(_parentNode,...surplusArgument){
         if(_parentNode){
+            if(this.initialize(...arguments)=="stop"){
+                return;
+            }
+            this.parentNode=_parentNode;
             _parentNode.classList.add("CtrlLib-"+this.ctrlLibID);
-            this.initialize(...arguments);
             this.parentNode=_parentNode;
             if(!this.rootNodes.length)this.createContent(surplusArgument);
             var tempDocF=document.createDocumentFragment();
@@ -483,6 +487,8 @@ function DataLink(expression,value,link){
     /**
      * addend刚开始执行的函数,
      * 能调用到 addend 的 argument
+     * 通过返回字符串 "stop" 可以挂起 addend;
+     * 当然你需要在这个方法中再使用addend
      */
     initialize(...argument){}
     /**
@@ -519,6 +525,7 @@ function DataLink(expression,value,link){
             this.rootNodes[i].remove();
             delete this.rootNodes[i];
         }
+        this.parentNode.classList.remove("CtrlLib-"+this.ctrlLibID);
     }
     /**
      * 触发控件事件的方法
@@ -527,7 +534,7 @@ function DataLink(expression,value,link){
     touchCtrlAction(actionKey){
         if(this.ctrlActionList[actionKey])
         for(var i=this.ctrlActionList[actionKey].length-1;i>=0;--i){
-            this.ctrlActionList[actionKey][i].call(this.ctrl);
+            this.ctrlActionList[actionKey][i].call(this);
         }
     }
 }
@@ -562,6 +569,7 @@ class ExCtrl extends CtrlLib{
                 _fnc.apply(this.childCtrl[childCtrlID],surplusArgument)
             }else{
                 // 子控件未加载完成, 挂起
+                if(this.childCtrlActionList[childCtrlID]==undefined)this.childCtrlActionList[childCtrlID]=[];
                 this.childCtrlActionList[childCtrlID].push(_fnc);
             }
         }
@@ -657,7 +665,10 @@ class ExCtrl extends CtrlLib{
             case ExCtrl.attrKeyStr.ctrlID:
             break;
             case ExCtrl.attrKeyStr.if:
-                return this.ctrlIf(elements,ves,i,attrVal,tname,forFlag);
+                console.log(i,this.absIndex);
+                var rtn=this.ctrlIf(elements,ves,i,attrVal,tname,forFlag);
+                console.log(rtn,this.absIndex);
+                return rtn;
             break;
             case ExCtrl.attrKeyStr.for:
                 k=this.renderFor(elements,ves,i,attrVal,tname,forFlag);
@@ -823,12 +834,12 @@ class ExCtrl extends CtrlLib{
         if(!eval(attrVal)){
             var k;
             for(k=i+1;k<ves.length&&ves[k].depth>ves[i].depth;++k);
-            // elements[tname].hidden=1;
+            elements[tname].hidden=1;
             // return k-1; 跳过内部的渲染
             return k-1;
         }
         else{
-            // elements[tname].hidden=0;
+            elements[tname].hidden=0;
             return i;
         }
     }
@@ -892,8 +903,10 @@ class ExCtrl extends CtrlLib{
             dHash=new Array(ves.length),
             nameEX=_nameEX||"",
             tname,
-            tempNode;
+            tempNode,
+            ifFlag;
         for(i=0;i<ves.length;i=k,++i){
+            ifFlag=true;
             k=i;
             tname=ves[i].ctrlID+nameEX;
             elements[tname]=document.createElement(ves[i].tagName);
@@ -907,7 +920,6 @@ class ExCtrl extends CtrlLib{
                 dHash[ves[i].depth-1].appendChild(tempNode);
                 if(!elements[tname].hidden)dHash[ves[i].depth-1].appendChild(elements[tname]);
             }
-            
             if(!ves[i+1]||ves[i+1].depth<ves[i].depth){// 如果下一个不存在或下一个比这个浅
                 var ti=i,tnd=ves[i+1]?ves[i+1].depth:0;
                 //tnd : 下一个元素的深度
@@ -1125,10 +1137,10 @@ class ExCtrl extends CtrlLib{
                 }
                 var pNode=this.elements[this.bluePrint.ves[ti].ctrlID];
                 var bortherNodes=pNode.childNodes;
-                if(!tgtElem.innerHTML)
+                var tempVEs=bluePrint.getChild(tp);
+                if(tgtElem.children.length<tempVEs.ves.length)
                 {
                     // 重新渲染
-                    var tempVEs=bluePrint.getChild(tp);
                     var tempElements=this.itemVEToElement(bluePrint.ves.slice(tp,tempVEs.p));
                     Object.assign(this.elements,tempElements.elements);
                     this.elements[tgtCtrlID].ifFlag=true;
@@ -1147,9 +1159,11 @@ class ExCtrl extends CtrlLib{
                 }else{
                     pNode.appendChild(this.elements[tgtCtrlID]);
                 }
+                tgtElem.hidden=0;
             }
             else{
                 if(tgtElem)tgtElem.remove();
+                tgtElem.hidden=1;
             }
         },
         "ctrl-child_ctrl":function(bluePrint,tgtElem){
