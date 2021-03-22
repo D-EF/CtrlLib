@@ -631,7 +631,7 @@ class ExCtrl extends CtrlLib{
      * 请求 api 并用json反序列化
      * @param {String} method 请求的方式
      * @param {String} url  请求的地址
-     * @param {Function} callback 请求完成后的回调
+     * @param {Function} callback 请求完成后的回调  callback.call(Response,data);
      * @param {Any} body post 请求的参数
      */
     static getJsonData(method,url,callback,body){
@@ -665,9 +665,7 @@ class ExCtrl extends CtrlLib{
             case ExCtrl.attrKeyStr.ctrlID:
             break;
             case ExCtrl.attrKeyStr.if:
-                console.log(i,this.absIndex);
                 var rtn=this.ctrlIf(elements,ves,i,attrVal,tname,forFlag);
-                console.log(rtn,this.absIndex);
                 return rtn;
             break;
             case ExCtrl.attrKeyStr.for:
