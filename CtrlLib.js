@@ -528,7 +528,7 @@ function DataLink(expression,value,link){
         this.parentNode.classList.remove("CtrlLib-"+this.ctrlLibID);
     }
     /**
-     * 触发控件事件的方法
+     * 触发控件控件事件的方法
      * @param {String} actionKey 事件的类型
      */
     touchCtrlAction(actionKey){
@@ -536,6 +536,19 @@ function DataLink(expression,value,link){
         for(var i=this.ctrlActionList[actionKey].length-1;i>=0;--i){
             this.ctrlActionList[actionKey][i].call(this);
         }
+    }
+    
+    /**
+     * 添加控件事件
+     * @param {String} actionKey 事件的类型
+     * @param {Function} _fnc    事件的执行函数 将会以控件为 this 指针
+     */
+    addCtrlAction(actionKey,_fnc){
+        if(this.ctrlActionList[actionKey]===undefined){
+            // 没有这种类型的事件，将创建
+            this.ctrlActionList[actionKey]=[];
+        }
+        this.ctrlActionList[actionKey].push(_fnc);
     }
 }
 
@@ -639,8 +652,8 @@ class ExCtrl extends CtrlLib{
             function(){
                 var data=JSON.parse(this.response);
                 callback.call(this,data);
-            }
-            ,body);
+            },
+            body);
     }
     /**
      * 控制标签的属性
@@ -712,12 +725,11 @@ class ExCtrl extends CtrlLib{
                     });
                 }
                 else if(key.indexOf(ExCtrl.attrKeyStr.ctrlEventBefore)==0){
-                    if(this.ctrlActionList[key.slice(ExCtrl.attrKeyStr.ctrlEventBefore.length)]===undefined){
-                        this.ctrlActionList[key.slice(ExCtrl.attrKeyStr.ctrlEventBefore.length)]=[];
-                    }
-                    this.ctrlActionList[key.slice(ExCtrl.attrKeyStr.ctrlEventBefore.length)].push(function(e){
-                        (new Function(["e","tgt"],attrVal)).call(that,e,tgt);
-                    });
+                    this.addCtrlAction(key.slice(ExCtrl.attrKeyStr.ctrlEventBefore.length),
+                        function(e){
+                            (new Function(["e","tgt"],attrVal)).call(that,e,tgt);
+                        }
+                    );
                 }
                 else{
                     elements[tname].setAttribute(key,this.stringRender(htmlToCode(_attrVal),tname,"attr",0,key,tgt));
