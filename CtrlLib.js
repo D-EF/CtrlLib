@@ -525,6 +525,7 @@ function DataLink(expression,value,link){
             this.rootNodes[i].remove();
             delete this.rootNodes[i];
         }
+        if(this.parentNode.classList)
         this.parentNode.classList.remove("CtrlLib-"+this.ctrlLibID);
     }
     /**
