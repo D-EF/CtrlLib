@@ -122,7 +122,11 @@
 ### ExCtrl 编辑 bluePrint 的 XML
 
 * 使用 模板字符串 在 内容 或者在 属性的 value 里使用 ${*表达式*} 即可食用。  
-  表达式的this指针指向当前控件
+  表达式的this指针指向当前控件  
+  示例:
+  ``` xml
+  <div class="${this.data.class}"></div>
+  ```
 
 *以下的 bluePrint 的关键字存在于 Exctrl.attrKeyStr中*
 * 使用 循环生成子元素 在父元素中使用属性 "ctrl-for"  值为 for 的体   
