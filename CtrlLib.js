@@ -499,7 +499,7 @@ function DataLink(expression,value,link){
     /** 创建内容
      * 需要把元素赋值到 this.rootNodes 上
      */
-    createContent(){this.nodes=this.rootNodes=[document.createElement("div")]}
+    createContent(surplusArgument){this.nodes=this.rootNodes=[document.createElement("div")]}
     /**
      * 重新渲染
      * 根据data渲染部分需要渲染的内容
@@ -633,11 +633,11 @@ class ExCtrl extends CtrlLib{
         // element resize 
         proxyResizeEvent:"pa-resize",
         // 按下按键事件 (组合键)
-        keyDownEventBefore:"pakeydown[",
+        keyDownEventBefore:"pa-keydown[",
         keyDownEventCilpKey:",",
         keyDownEventAfter:"]",
         // 抬起按键事件
-        keyUpEventBefore:"pakeyup[",
+        keyUpEventBefore:"pa-keyup[",
         keyUpEventCilpKey:",",
         keyUpEventAfter:"]",
     }
