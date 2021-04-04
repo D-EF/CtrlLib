@@ -925,6 +925,7 @@ class ExCtrl extends CtrlLib{
             for(j=ves[i].attribute.length-1;j>=0;--j){
                 k=this.attrHandle(ves[i].attribute[j].key,elements,ves,i,ves[i].attribute[j].value,tname,k,forFlag);
             }
+            tname=ves[i].ctrlID+nameEX;
             if(dHash[ves[i].depth-1]){ //如果存在上一层
                 tempNode=this.stringRender(ves[i].before,tname,"before",this.templateStringIsHTML,forFlag,dHash[ves[i].depth-1]);
                 if(tempNode.constructor==String)tempNode=new Text(tempNode);
@@ -935,27 +936,29 @@ class ExCtrl extends CtrlLib{
                 var ti=i,tnd=ves[i+1]?ves[i+1].depth:0;
                 //tnd : 下一个元素的深度
                 do{
-                    if(ves[ti].innerEnd&&(ves[ti].depth<ves[i].depth)){
+                    if(ves[ti].innerEnd){
                         tempNode=this.stringRender(ves[ti].innerEnd,ves[ti].ctrlID+nameEX,"innerEnd",this.templateStringIsHTML,forFlag,elements[ves[ti].ctrlID+nameEX]);
                         if(tempNode.constructor==String)tempNode=new Text(tempNode);
                         if(!tempNode){
                             console.wran(tempNode);
                         }
                         elements[ves[ti].ctrlID+nameEX].appendChild(tempNode);
+                        elements[ves[ti].ctrlID+nameEX].innerIsRender=true;
                     }
                     --ti;
-                }while((ves[ti])&&(ves[ti].depth>=tnd));
+                }while((ves[ti])&&(ves[ti].depth>=tnd)&&(ves[ti].depth<ves[i].depth));
                 if(ves[i].innerEnd){
                     tempNode=this.stringRender(ves[i].innerEnd,tname,"innerEnd",this.templateStringIsHTML,forFlag,elements[tname]);
                     if(tempNode.constructor==String)tempNode=new Text(tempNode);
-                    elements[ves[i].ctrlID+nameEX].appendChild(tempNode);
+                    if(elements[tname]&&(!elements[tname].innerIsRender)){
+                        elements[tname].appendChild(tempNode);
+                    }
                 }
             }else if(ves[i+1].depth==ves[i].depth){ // 如果下一个和这个的深度相同
                 if(ves[i].innerEnd){
-                    
                     tempNode=this.stringRender(ves[i].innerEnd,tname,"innerEnd",this.templateStringIsHTML,forFlag,elements[tname]);
                     if(tempNode.constructor==String)tempNode=new Text(tempNode);
-                    elements[ves[i].ctrlID+nameEX].appendChild(tempNode);
+                    elements[tname].appendChild(tempNode);
                 }
             }
 
