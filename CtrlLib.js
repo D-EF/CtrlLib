@@ -3,9 +3,9 @@
  */
 class DEF_VirtualElementList{
     /**
-     * @param {Array<DEF_VirtualElement>} ves
-     * @param {Number} maxDepth
-     * @param {DEF_CSSVE} style
+     * @param {Array<DEF_VirtualElement>} ves 序列化的虚拟元素树
+     * @param {Number} maxDepth 最大深度
+     * @param {DEF_CSSVE} style 样式元素
      */
     constructor(ves,maxDepth,style){
         this.ves=ves;
@@ -66,7 +66,7 @@ class DEF_VirtualElementList{
     }
     /**
      * 获取子元素
-     * @param {Number}  vesindex ves的下标
+     * @param {Number} vesindex ves的下标
      * @returns {{indexs:Array<Number>,ves:Array<DEF_VirtualElement>,p:Number}}
      * @return {Array<Number>} indexs 在原蓝图中的下标集合
      * @return {Array<DEF_VirtualElement>} ves 子元素集合
@@ -100,7 +100,8 @@ class DEF_VirtualElementList{
     }
     //所有无内容元素(短标签)的tag name
     static voidElementsTagName=["br","hr","img","input","link","meta","area","base","col","command","embed","keygen","param","source","track","wbr","?xml"];
-    /**把xml转换成DEF_VirtualElement
+    /**
+     * 把xml转换成DEF_VirtualElementList
      * @param {String} xmlStr
      * @return {DEF_VirtualElementList} {ves:Array<VirtualElement>,maxDepth:Number}
      */
@@ -207,7 +208,8 @@ class DEF_VirtualElementList{
         return new DEF_VirtualElementList(ves,maxDepth,style);
     }
 }
-/**供 htmlToControl 处理xml字符串
+/**
+ * 作为虚拟元素树的叶子 供 htmlToControl 处理xml字符串
  * @param {String}  tagName     标签名
  * @param {Number}  depth       深度
  * @param {Array}   attribute   标签的属性  [{key,val}]
@@ -228,6 +230,8 @@ class DEF_VirtualElement{
     }
     /**
      * 存入属性
+     * @param {String} key 属性的 key
+     * @param {String} val 属性的 value
      * @return {Number} 1:join; 2:update
      */
     setAttribute(key,val){
@@ -242,7 +246,8 @@ class DEF_VirtualElement{
     }
     /**
      * 获取属性
-     * @return {String} val
+     * @param {String} key 属性的 key
+     * @return {String} 返回属性的 value
      */
     getAttribute(key){
         for(var i=this.attribute.length-1;i>=0;--i){
@@ -274,14 +279,14 @@ class DEF_VirtualElement{
  */
 class DEF_CSSVE{
     /**
-     * @param {String} cssString
+     * @param {String} cssString css 格式的字符串
      */
     constructor(cssString){
         this.cssList=[];
         this.addString(cssString);
     }
     /**
-     * @param {String} cssString
+     * @param {String} cssString css 格式的字符串
      */
     addString(cssString){
         if(!cssString) return;
@@ -310,7 +315,8 @@ class DEF_CSSVE{
         }
     }
     /**
-     * @param {String} ctrlID
+     * 创建 css 的文本
+     * @param {Number} ctrlLibID 控件的id 而不是控件内元素的id
      * @param {CtrlLib} that
      * @returns {String}
      */
@@ -345,7 +351,7 @@ class DEF_CSSVE{
 }
 
 /**
- * 一个 style 选择器和样式 的对象
+ * 一个 style 选择器和样式
  */
 class DEF_CSSVEItem{
     /**
@@ -603,7 +609,7 @@ class ExCtrl extends CtrlLib{
         }
     }
     /**
-     * 获取元素
+     * 通过 ctrlID 获取元素
      * @param {String} ctrlID
      * @returns {Array<Element>} 返回元素 包括ctrl-for 的
      */
@@ -620,6 +626,7 @@ class ExCtrl extends CtrlLib{
     templateStringIsHTML=false;
     /**
      * 标签的属性的关键字
+     * 保存用于编辑 bluePrint 的 xml 的关键字  
      */
     static attrKeyStr={
         ctrlID:"ctrl-id",
@@ -746,7 +753,7 @@ class ExCtrl extends CtrlLib{
      * @param {String} ctrlID    登记 ID       
      * @param {String} type      登记 类型  
      * @param {Boolean} ishtml   控制返回值, 默认将返回字符串 ，非0 将返回 DocumentFragment
-     * @param {Array<>} attrkey   如果是登记的 标签的属性值 这个是属性的 key
+     * @param {Array<String>} attrkey   如果是登记的 标签的属性值 这个是属性的 key
      * @param {Element} tgt 
      * @return {String||DocumentFragment} 字符串 或 包含内容的文档片段
      */
@@ -833,7 +840,7 @@ class ExCtrl extends CtrlLib{
         return k-1;
     }
     /**
-     * 控制元素是否出现
+     * 用于控制元素是否出现
      * @param {Array<Element>}   elements    
      * @param {Array<DEF_VirtualElement>}   ves         DEF_VirtualElement list
      * @param {Number}  i           当前的ves的索引
@@ -983,6 +990,9 @@ class ExCtrl extends CtrlLib{
 
         return {elements:elements,fragment:rtnFragment};
     }
+    /**
+     * 重新渲染模板字符串内容
+     */
     renderString(){
         var i,j,tempFootprint={},tid,ttype;
         //  重新渲染 stringRender 的
@@ -1063,7 +1073,11 @@ class ExCtrl extends CtrlLib{
         this.touchCtrlAction("render");
     }
     // render 的 方法集; 给 stringRender 处理的内容
-    // 加在元素前面的东西
+    // 
+    /**
+     * 重新渲染模板字符串内容: 加在元素前面的东西
+     * @param {String} 目标的 ctrlID
+     */
     renderCtrl_before(ctrlID){
         var tgtElement=this.elements[ctrlID];
         var thisVe=this.bluePrint.getByCtrlID(ctrlID);
@@ -1074,7 +1088,11 @@ class ExCtrl extends CtrlLib{
         }while(!(tgtElement.previousSibling.ctrlID));
         this.elements[ctrlID].before(tempNode);
     }
-    //加在元素末尾的内容
+    
+    /**
+     * 重新渲染模板字符串内容: 加在元素末尾的内容
+     * @param {String} 目标的 ctrlID
+     */
     renderCtrl_innerEnd(ctrlID){
         var tgtElement=this.elements[ctrlID];
         var thisVe=this.bluePrint.getByCtrlID(ctrlID);
@@ -1085,7 +1103,11 @@ class ExCtrl extends CtrlLib{
         }while(tgtElement.childNodes[tgtElement.childNodes.length-1]&&tgtElement.childNodes[tgtElement.childNodes.length-1].ctrlID);
         this.elements[ctrlID].appendChild(tempNode);
     }
-    // 渲染 元素 的 控件属性
+    /**
+     * 重新渲染模板字符串内容: 元素 的 属性
+     * @param {String} 目标的 ctrlID
+     * @param {String} 目标的属性的 key 
+     */
     renderCtrl_attr(ctrlID,attrkey){
         var tgtElement=this.elements[ctrlID];
         var thisVE=this.bluePrint.getByCtrlID(ctrlID);
