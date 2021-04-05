@@ -26,11 +26,13 @@ constructor(data)
 ### 实例属性  
 ----
 * name  *String*  
-  并没有什么用的属性  
+  就像为什么你叫现在的名字，这个属性并没有什么实际用途用  
   
 * ctrlLibID *Number*  
   用于区分所有控件的唯一id, 会在 new 一个 CtrlLib 或 它的派生类 时自增  
-  ` this.ctrlLibID=CtrlLib.idIndex++; `  
+  ``` javascript
+  this.ctrlLibID=CtrlLib.idIndex++; 
+  ```  
   
 * data *Object*  
   存放数据的地方  
@@ -132,7 +134,8 @@ constructor(data)
 ----
   控件库派生类的基类,需要在派生时添加 **bluePrint** {DEF_VirtualElementList} 原型属性  
   这个类继承了 CtrlLib 类 的 所有属性和方法   
-
+  #### 构造函数 constructor(data)
+    @param {Object} data 存入的数据
 ----
 ## ExCtrl 属性  
 ----
@@ -150,8 +153,9 @@ constructor(data)
 
 * bluePrint **虚属性**
   储存渲染用的蓝图。在实际用的派生类中一定要加入这个属性
-
+---
 ### 实例属性  
+---
 * dataLinks {{}} 用于登记模板字符串的属性   
   
 ----
