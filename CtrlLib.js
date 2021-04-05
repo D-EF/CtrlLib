@@ -884,9 +884,8 @@ class ExCtrl extends CtrlLib{
             dataStr=templateStringRender(dataStr,this).str;
             (new Function(["callback"],dataStr)).call(this,getDataCallback);
         }
-        function getDataCallback(data){
-            var childCtrl=new that.childCtrlType[childCtrlType](data);
-
+        function getDataCallback(){
+            var childCtrl=new that.childCtrlType[childCtrlType](...arguments);
             for(var i=chcoArray.length-1;i>=0;--i){
                 // 加入 childCtrlOption (子控件属性)
                 childCtrl[chcoArray[i].key]=strToVar(chcoArray[i].value);
