@@ -347,6 +347,7 @@ constructor(data)
   * attribute   标签的属性  [{key,val}]
   * before      在标签前的内容
   * innerEnd    最后一段内容
+  * ctrlID      标签在这组xml中的唯一标识, 可以在编辑编辑xml时用标签的 ctrl-id 属性控制
   ---
   ## DEF_VirtualElement 原型方法
   * setAttribute(key,val)  
