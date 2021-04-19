@@ -1,6 +1,8 @@
  这个文档编写 CtrlLib 的 文档  
 <!-- 最后编辑于 2021/04/05  -by Darth_Eternalfaith -->  
-  
+# 框架必须先引用我的一个函数库才能正常使用
+[Basics.js](https://gitee.com/darth_ef/def-web/blob/master/js/Basics.js)
+因为我把渲染模板字符串的函数放在那个库里面了
 ----
 # CtrlLib 基类  
 该基类包含 CtrlLib 的部分功能实现和声明虚方法  
@@ -280,8 +282,6 @@ constructor(data)
     树的最大深度
   * style {DEF_CSSVE}   
     存储控件的样式的蓝本
-  * elements {HTMLElement}
-    以 ctrlID 为索引的 控件的 子元素的集合
   ---
   ## DEF_VirtualElementList 静态属性
   ---
