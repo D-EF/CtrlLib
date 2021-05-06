@@ -457,6 +457,14 @@ function DataLink(expression,value,link){
         }
     }
     /**
+     * 将目标元素替换为控件 那个元素会从页面中清除
+     * 绝大部分过程和addend相同
+     * @param {Element} _parentNode 指定的父dom元素
+     */
+    possess(_parentNode,...surplusArgument){
+
+    }
+    /**
      * 呼叫父控件
      * @param {Function} _fnc 执行的动作
      * @param {any} surplusArgument 参数
