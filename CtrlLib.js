@@ -583,10 +583,12 @@ function DataLink(expression,value,link){
     }
 }
 
+/**
+ * 自定义属性控制器
+ */
 class AttrKeyStrCtrl{
     /**
-     * 
-     * @param {Function} ctrlFuc    控制的函数 ctrlFuc({String})
+     * @param {Function} ctrlFuc    控制的函数 ctrlFuc({String}) 如果返回 true 将 执行 actFnc
      * @param {Function} actFuc     执行的函数 actFuc(Element tgt , String key , String value)  this 指针指向 控件实例
      */
     constructor(ctrlFuc,actFuc){
