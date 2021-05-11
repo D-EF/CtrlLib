@@ -459,10 +459,26 @@ function DataLink(expression,value,link){
     /**
      * 将目标元素替换为控件 那个元素会从页面中清除
      * 绝大部分过程和addend相同
-     * @param {Element} _parentNode 指定的父dom元素
+     * @param {Node} tgtNode 指定被替换的dom元素
      */
-    possess(_parentNode,...surplusArgument){
-
+    possess(tgtNode,...surplusArgument){
+        if(tgtNode){
+            var parentNode=this.parentNode=tgtNode.parentNode;
+            parentNode.classList.add("CtrlLib-"+this.ctrlLibID);
+            if(!this.rootNodes.length)this.createContent(surplusArgument);
+            var tempDocF=document.createDocumentFragment();
+            for(var i=this.rootNodes.length-1;i>=0;--i){
+                tempDocF.prepend(this.rootNodes[i]);
+            }
+            tgtNode.before(tempDocF);
+            tgtNode.remove();
+            this.callback(...arguments);
+            this.reRender_callback();
+            this.touchCtrlAction("callback");
+        }
+        else{
+            console.error('Fatal error! This Control have not target!');
+        }
     }
     /**
      * 呼叫父控件
@@ -567,6 +583,29 @@ function DataLink(expression,value,link){
     }
 }
 
+class AttrKeyStrCtrl{
+    /**
+     * 
+     * @param {Function} ctrlFuc    控制的函数 ctrlFuc({String})
+     * @param {Function} actFuc     执行的函数 actFuc(Element tgt , String key , String value)  this 指针指向 控件实例
+     */
+    constructor(ctrlFuc,actFuc){
+        this.ctrlFuc=ctrlFuc;
+        this.actFuc=actFuc;
+    }
+    /**
+     * 进行并且执行操作
+     * @param {Element} tgt     目标元素
+     * @param {String} key      属性 key
+     * @param {String} value    属性 value
+     */
+    handle(tgt,key,value,ctrlLib){
+        if(this.ctrlFuc(key)){
+            this.actFuc.call(ctrlLib,tgt,key,value);
+        }
+    }
+}
+
 /**
  * 控件库派生类的基类,需要在派生时添加 bluePrint {DEF_VirtualElementList} 属性
  */
@@ -656,6 +695,14 @@ class ExCtrl extends CtrlLib{
         keyUpEventCilpKey:",",
         keyUpEventAfter:"]",
     }
+
+    /**
+     * 原型中的属性控制器 请自己编辑自定义属性
+     * 派生时注意要复制一份数组
+     * @type {Array<>}
+     */
+    attrKeyStr=[]
+
     /**
      * 请求 api 并用json反序列化
      * @param {String} method 请求的方式
