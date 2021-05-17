@@ -428,10 +428,6 @@ function DataLink(expression,value,link){
         this.childCtrlActionList={};
     }
     /**
-     * 子控件类
-     */
-    childCtrlType={};
-    /**
      * 将控件加入到指定的dom元素内
      * @param {Element} _parentNode 指定的父dom元素
      */
@@ -582,6 +578,11 @@ function DataLink(expression,value,link){
         this.ctrlActionList[actionKey].push(_fnc);
     }
 }
+/**
+ * 子控件类
+ */
+CtrlLib.prototype.childCtrlType={};
+
 
 /**
  * 自定义属性控制器
@@ -701,7 +702,7 @@ class ExCtrl extends CtrlLib{
     /**
      * 原型中的属性控制器 请自己编辑自定义属性
      * 派生时注意要复制一份数组
-     * @type {Array<>}
+     * @type {Array<AttrKeyStrCtrl>}
      */
     attrKeyStr=[]
 
@@ -1169,99 +1170,6 @@ class ExCtrl extends CtrlLib{
         var thisVE=this.bluePrint.getByCtrlID(ctrlID);
         this.elements[ctrlID].setAttribute(attrkey,this.stringRender(thisVE.getAttribute(attrkey),ctrlID,"attr",0,attrkey,tgtElement));
     }
-    // render 的 方法集; 给影响自身内部的属性 "ctrl-for" "ctrl-if" 等
-    reRenderAttrCtrl={
-        /**
-         * @param {DEF_VirtualElementList} bluePrint
-         * @param {Element} tgtElem
-         */
-        "ctrl-for":function(bluePrint,tgtElem){
-            var id=tgtElem.ctrlID,ti=bluePrint.getIndexByCtrlID(tgtElem.ctrlID);
-            while(ti){
-                ti=bluePrint.getParent(ti);
-                if(bluePrint.ves[ti].getAttribute(ExCtrl.attrKeyStr.if)&&this.elements[bluePrint.ves[ti].ctrlID].ifFlag){
-                    this.elements[bluePrint.ves[ti].ctrlID].ifFlag=false;
-                    // 因为ctrl-if 会重新渲染，所以跳过
-                    return;
-                }
-            }
-
-            ti=bluePrint.getIndexByCtrlID(tgtElem.ctrlID);
-            var tempVEs=bluePrint.getChild(ti);
-            var tempElements=this.itemVEToElement(bluePrint.ves.slice(ti,tempVEs.p));
-            Object.assign(this.elements,tempElements.elements);
-            tgtElem.before(tempElements.fragment);
-            tgtElem.remove();
-        },
-        /**
-         * @param {DEF_VirtualElementList} bluePrint
-         * @param {Element} tgtElem
-         */
-        "ctrl-if":function(bluePrint,tgtElem){
-            var tgtCtrlID=tgtElem.ctrlID;
-            var tp=bluePrint.getIndexByCtrlID(tgtCtrlID);
-            if((new Function(["tgt"],"return ("+bluePrint.getByCtrlID(tgtCtrlID).getAttribute("ctrl-if")+")")).call(this,tgtElem)){
-                // 先找到要插入的位置
-                var ti=bluePrint.getParent(tp);
-                var cni=0;  // childNodes index
-                var brother=bluePrint.getChild(ti);
-                if(bluePrint.ves[ti].getAttribute(ExCtrl.attrKeyStr.proxyResizeEvent)){
-                    // 父元素有 resize 属性 cni 后移 2
-                    cni+=2;
-                }
-                var tgtI=brother.indexs.indexOf(tp);
-                if(tgtI>=0){
-                    // cni 后移当前元素的前驱元素*2
-                    cni+=tgtI*2;
-                    for(var i=0;i<tgtI;++i){
-                        if(brother.ves[i].ctrlIfHidden){
-                            // 如果前驱元素因为 没能渲染, cni前移1
-                            cni-=1;
-                        }
-                        if(!brother.ves[i].before){
-                            // 如果前驱元素的 before 为空, cni前移1
-                            cni-=1;
-                        }
-                    }
-                }
-                if(bluePrint.ves[tp].before){
-                    cni+=1;
-                }
-                var pNode=this.elements[this.bluePrint.ves[ti].ctrlID];
-                var bortherNodes=pNode.childNodes;
-                var tempVEs=bluePrint.getChild(tp);
-                if(tgtElem.children.length<tempVEs.ves.length)
-                {
-                    // 重新渲染
-                    var tempElements=this.itemVEToElement(bluePrint.ves.slice(tp,tempVEs.p));
-                    Object.assign(this.elements,tempElements.elements);
-                    this.elements[tgtCtrlID].ifFlag=true;
-                }
-                // 插入目标
-                if(cni<bortherNodes.length){
-                    if(cni<=0){
-                        if(bortherNodes.length){
-                            bortherNodes[0].before(this.elements[tgtCtrlID]);
-                        }else{
-                            pNode.appendChild(this.elements[tgtCtrlID]);
-                        }
-                    }else{
-                        bortherNodes[cni].before(this.elements[tgtCtrlID]);
-                    }
-                }else{
-                    pNode.appendChild(this.elements[tgtCtrlID]);
-                }
-                tgtElem.hidden=0;
-            }
-            else{
-                if(tgtElem)tgtElem.remove();
-                tgtElem.hidden=1;
-            }
-        },
-        "ctrl-child_ctrl":function(bluePrint,tgtElem){
-            this.childCtrl[tgtElem.ctrlID].reRender();
-        }
-    }
     /**
      * 渲染styleElement内容
      */
@@ -1284,6 +1192,98 @@ class ExCtrl extends CtrlLib{
         return xmlEXCtrl;
     }
 }
+// render 的 方法集; 给影响自身内部的属性 "ctrl-for" "ctrl-if" 等
+ExCtrl.prototype.reRenderAttrCtrl={
+    /**
+     * @param {DEF_VirtualElementList} bluePrint
+     * @param {Element} tgtElem
+     */
+    "ctrl-for":function(bluePrint,tgtElem){
+        var id=tgtElem.ctrlID,ti=bluePrint.getIndexByCtrlID(tgtElem.ctrlID);
+        while(ti){
+            ti=bluePrint.getParent(ti);
+            if(bluePrint.ves[ti].getAttribute(ExCtrl.attrKeyStr.if)&&this.elements[bluePrint.ves[ti].ctrlID].ifFlag){
+                this.elements[bluePrint.ves[ti].ctrlID].ifFlag=false;
+                // 因为ctrl-if 会重新渲染，所以跳过
+                return;
+            }
+        }
 
+        ti=bluePrint.getIndexByCtrlID(tgtElem.ctrlID);
+        var tempVEs=bluePrint.getChild(ti);
+        var tempElements=this.itemVEToElement(bluePrint.ves.slice(ti,tempVEs.p));
+        Object.assign(this.elements,tempElements.elements);
+        tgtElem.before(tempElements.fragment);
+        tgtElem.remove();
+    },
+    /**
+     * @param {DEF_VirtualElementList} bluePrint
+     * @param {Element} tgtElem
+     */
+    "ctrl-if":function(bluePrint,tgtElem){
+        var tgtCtrlID=tgtElem.ctrlID;
+        var tp=bluePrint.getIndexByCtrlID(tgtCtrlID);
+        if((new Function(["tgt"],"return ("+bluePrint.getByCtrlID(tgtCtrlID).getAttribute("ctrl-if")+")")).call(this,tgtElem)){
+            // 先找到要插入的位置
+            var ti=bluePrint.getParent(tp);
+            var cni=0;  // childNodes index
+            var brother=bluePrint.getChild(ti);
+            if(bluePrint.ves[ti].getAttribute(ExCtrl.attrKeyStr.proxyResizeEvent)){
+                // 父元素有 resize 属性 cni 后移 2
+                cni+=2;
+            }
+            var tgtI=brother.indexs.indexOf(tp);
+            if(tgtI>=0){
+                // cni 后移当前元素的前驱元素*2
+                cni+=tgtI*2;
+                for(var i=0;i<tgtI;++i){
+                    if(brother.ves[i].ctrlIfHidden){
+                        // 如果前驱元素因为 没能渲染, cni前移1
+                        cni-=1;
+                    }
+                    if(!brother.ves[i].before){
+                        // 如果前驱元素的 before 为空, cni前移1
+                        cni-=1;
+                    }
+                }
+            }
+            if(bluePrint.ves[tp].before){
+                cni+=1;
+            }
+            var pNode=this.elements[this.bluePrint.ves[ti].ctrlID];
+            var bortherNodes=pNode.childNodes;
+            var tempVEs=bluePrint.getChild(tp);
+            if(tgtElem.children.length<tempVEs.ves.length)
+            {
+                // 重新渲染
+                var tempElements=this.itemVEToElement(bluePrint.ves.slice(tp,tempVEs.p));
+                Object.assign(this.elements,tempElements.elements);
+                this.elements[tgtCtrlID].ifFlag=true;
+            }
+            // 插入目标
+            if(cni<bortherNodes.length){
+                if(cni<=0){
+                    if(bortherNodes.length){
+                        bortherNodes[0].before(this.elements[tgtCtrlID]);
+                    }else{
+                        pNode.appendChild(this.elements[tgtCtrlID]);
+                    }
+                }else{
+                    bortherNodes[cni].before(this.elements[tgtCtrlID]);
+                }
+            }else{
+                pNode.appendChild(this.elements[tgtCtrlID]);
+            }
+            tgtElem.hidden=0;
+        }
+        else{
+            if(tgtElem)tgtElem.remove();
+            tgtElem.hidden=1;
+        }
+    },
+    "ctrl-child_ctrl":function(bluePrint,tgtElem){
+        this.childCtrl[tgtElem.ctrlID].reRender();
+    }
+}
 // todo: ? 能不能把render for 优化, 再次渲染时能否只影响部分dom？
 // 但是要这必须用 for in 或其他的指令, 非常呃呃

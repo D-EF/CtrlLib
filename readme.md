@@ -2,7 +2,7 @@
 <!-- 最后编辑于 2021/04/05  -by Darth_Eternalfaith -->  
 # 框架必须先引用我的一个函数库才能正常使用
 [Basics.js](https://gitee.com/darth_ef/def-web/blob/master/js/Basics.js)
-因为我把渲染模板字符串的函数放在那个库里面了
+因为我把渲染模板字符串等重要的函数放在那个库里面了
 ----
 # CtrlLib 基类  
 该基类包含 CtrlLib 的部分功能实现和声明虚方法  
@@ -62,12 +62,6 @@ constructor(data)
   被挂起的子控件动作  
   因为子控件加载不一定是瞬间加载完成的(可能需要等待http请求完成后才能加载)  
   所以动作会被挂起  
-  
-----
-## CtrlLib 原型属性  
-----
-* childCtrlType \< Object \>  
-  子控件 类的集合  
   
 ----
 ## CtrlLib 方法  
