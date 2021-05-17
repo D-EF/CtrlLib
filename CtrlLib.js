@@ -1192,7 +1192,9 @@ class ExCtrl extends CtrlLib{
         return xmlEXCtrl;
     }
 }
-// render 的 方法集; 给影响自身内部的属性 "ctrl-for" "ctrl-if" 等
+/**
+ * render 的 方法集; 给影响自身内部的属性 "ctrl-for" "ctrl-if" 等
+ */
 ExCtrl.prototype.reRenderAttrCtrl={
     /**
      * @param {DEF_VirtualElementList} bluePrint
