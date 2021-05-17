@@ -605,7 +605,18 @@ class AttrKeyStrCtrl{
     handle(tgt,key,value,ctrlLib){
         if(this.ctrlFuc(key)){
             this.actFuc.call(ctrlLib,tgt,key,value);
+            return true;
         }
+    }
+}
+class AttrKeyStrCtrlEx extends AttrKeyStrCtrl{
+    /**
+     * @param {RegExp} regexp       属性正则表达式 如果可匹配 将 执行 actFnc
+     * @param {Function} actFuc     执行的函数 actFuc(Element tgt , String key , String value)  this 指针指向 控件实例
+     */
+     constructor(ctrlFuc,actFuc){
+        this.ctrlFuc=ctrlFuc;
+        this.actFuc=actFuc;
     }
 }
 
