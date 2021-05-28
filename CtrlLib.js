@@ -589,8 +589,9 @@ CtrlLib.prototype.childCtrlType={};
  */
 class AttrKeyStrCtrl{
     /**
-     * @param {Function} ctrlFuc    控制的函数 ctrlFuc({String}) 如果返回 true 将 执行 actFnc
-     * @param {Function} actFuc     执行的函数 actFuc(Element tgt , String key , String value)  this 指针指向 控件实例
+     * @param {Function} ctrlFuc    控制的函数 ctrlFuc({String}) 如果返回 非0 将 执行 actFnc
+     * @param {Function} actFuc     执行的函数 actFuc(Number i(元素在蓝图中的索引) , Element tgt , String key , String value , Any ctrlFucRtn)  this 指针指向 控件实例
+     * 注意，actFnc需要返回 跳过蓝图后的 目标索引
      */
     constructor(ctrlFuc,actFuc){
         this.ctrlFuc=ctrlFuc;
@@ -598,28 +599,64 @@ class AttrKeyStrCtrl{
     }
     /**
      * 进行并且执行操作
+     * @param {Number} i        元素在蓝图中的索引
      * @param {Element} tgt     目标元素
      * @param {String} key      属性 key
      * @param {String} value    属性 value
+     * @returns {{isTouch:Boolean,tgti:Number}}
+     * isTouch表示是否被触发了
      */
-    handle(tgt,key,value,ctrlLib){
-        if(this.ctrlFuc(key)){
-            this.actFuc.call(ctrlLib,tgt,key,value);
-            return true;
+    handle(i,tgt,key,value,ctrlLib){
+        var ctrlFucRtn=this.ctrlFuc(key);
+        if(ctrlFucRtn){
+            var tgti=this.actFuc?this.actFuc.call(ctrlLib,i,tgt,key,value,ctrlFucRtn):i;
+            return {isTouch:true,tgti:tgti};
+        }
+        else{
+            return {isTouch:false,tgti:tgti};
         }
     }
 }
+/**
+ * 使用正则表达式 的 属性控制器
+ */
 class AttrKeyStrCtrlEx extends AttrKeyStrCtrl{
     /**
      * @param {RegExp} regexp       属性正则表达式 如果可匹配 将 执行 actFnc
-     * @param {Function} actFuc     执行的函数 actFuc(Element tgt , String key , String value)  this 指针指向 控件实例
      */
-     constructor(ctrlFuc,actFuc){
-        this.ctrlFuc=ctrlFuc;
+     constructor(regexp,actFuc){
+         /**
+          * @param {String} str 
+          */
+        this.ctrlFuc=function(str){
+            return regexp.exec(str);
+        }
         this.actFuc=actFuc;
     }
 }
 
+var attrKeyStrCtrls=[
+    new AttrKeyStrCtrlEx(/ctrl-id/),
+    new AttrKeyStrCtrlEx(/ctrl-if/,function(i,tgt,key,value,ctrlFucRtn){
+        this.ctrlIf(this.elements,this.bluePrint.ves,i,attrVal,tname,forFlag);
+    }),
+    for:"ctrl-for",
+    childCtrl:"ctrl-child_ctrl",
+    childCtrlData:"ctrl-child_ctrl_datafnc",
+    childCtrlOptionBefore:"chco-",   //  给子控件添加控件属性
+    proxyEventBefore:"pa-",
+    ctrlEventBefore:"ca-",
+    // element resize 
+    proxyResizeEvent:"pa-resize",
+    // 按下按键事件 (组合键)
+    keyDownEventBefore:"pa-keydown[",
+    keyDownEventCilpKey:",",
+    keyDownEventAfter:"]",
+    // 抬起按键事件
+    keyUpEventBefore:"pa-keyup[",
+    keyUpEventCilpKey:",",
+    keyUpEventAfter:"]",
+]
 /**
  * 控件库派生类的基类,需要在派生时添加 bluePrint {DEF_VirtualElementList} 属性
  */
