@@ -589,27 +589,45 @@ CtrlLib.prototype.childCtrlType={};
  */
 class AttrKeyStrCtrl{
     /**
-     * @param {Function} ctrlFuc    控制的函数 ctrlFuc({String}) 如果返回 非0 将 执行 actFnc
-     * @param {Function} actFuc     执行的函数 actFuc(Number i(元素在蓝图中的索引) , Element tgt , String key , String value , Any ctrlFucRtn)  this 指针指向 控件实例
+     * @param {Function} ctrlFuc    控制的函数 ctrlFuc(String key) 应返回处理后的key值{Array<String>} 首项应为原始 key , 返回 undefined 将不会执行 actFuc
+     * @param {Function} actFuc     执行的函数 actFuc
      * 注意，actFnc需要返回 跳过蓝图后的 目标索引
      */
     constructor(ctrlFuc,actFuc){
         this.ctrlFuc=ctrlFuc;
+        /**
+         * @this  {ExCtrl} this 指向 ExCtrl实例
+         * @param {Array<String>} key 处理后的属性的 key 首项应为原始 key 
+         * @param {Array<Element>} elements 实例的 elements 的引用，用于添加新的子元素
+         * @param {Array<DEF_VirtualElement>} ves DEF_VirtualElement 的数组
+         * @param {Number} i 当前的ves的下标
+         * @param {String} _attrVal 属性值
+         * @param {String} tname 临时的元素名称，用作实例的 elements 当前的索引
+         * @param {Number} k 当前的ves的下标
+         * @param {String} forFlag 表示是不是 for 的
+         * @returns {Number} 返回运算完成后的ves下标
+         */
         this.actFuc=actFuc;
+        // key,elements,ves,i,_attrVal,tname,k,forFlag
     }
     /**
      * 进行并且执行操作
-     * @param {Number} i        元素在蓝图中的索引
-     * @param {Element} tgt     目标元素
-     * @param {String} key      属性 key
-     * @param {String} value    属性 value
+     * @param {ExCtrl} ctrlLib ExCtrl实例
+     * @param {Array} key 属性的key
+     * @param {Array<Element>} elements 实例的 elements 的引用，用于添加新的子元素
+     * @param {Array<DEF_VirtualElement>} ves DEF_VirtualElement 的数组
+     * @param {Number} i 当前的ves的下标
+     * @param {String} _attrVal 属性值
+     * @param {String} tname 临时的元素名称，用作实例的 elements 当前的索引
+     * @param {Number} k 当前的ves的下标
+     * @param {String} forFlag 表示是不是 for 的
      * @returns {{isTouch:Boolean,tgti:Number}}
      * isTouch表示是否被触发了
      */
-    handle(i,tgt,key,value,ctrlLib){
+    handle(ctrlLib,elements,ves,i,_attrVal,tname,k,forFlag){
         var ctrlFucRtn=this.ctrlFuc(key);
         if(ctrlFucRtn){
-            var tgti=this.actFuc?this.actFuc.call(ctrlLib,i,tgt,key,value,ctrlFucRtn):i;
+            var tgti=this.actFuc?this.actFuc.call(ctrlLib,ctrlFucRtn,elements,ves,i,_attrVal,tname,k,forFlag):i;
             return {isTouch:true,tgti:tgti};
         }
         else{
@@ -623,6 +641,7 @@ class AttrKeyStrCtrl{
 class AttrKeyStrCtrlEx extends AttrKeyStrCtrl{
     /**
      * @param {RegExp} regexp       属性正则表达式 如果可匹配 将 执行 actFnc
+     * @param {Function} actFuc     执行的函数 actFuc
      */
      constructor(regexp,actFuc){
          /**
@@ -635,28 +654,6 @@ class AttrKeyStrCtrlEx extends AttrKeyStrCtrl{
     }
 }
 
-var attrKeyStrCtrls=[
-    new AttrKeyStrCtrlEx(/ctrl-id/),
-    new AttrKeyStrCtrlEx(/ctrl-if/,function(i,tgt,key,value,ctrlFucRtn){
-        this.ctrlIf(this.elements,this.bluePrint.ves,i,attrVal,tname,forFlag);
-    }),
-    for:"ctrl-for",
-    childCtrl:"ctrl-child_ctrl",
-    childCtrlData:"ctrl-child_ctrl_datafnc",
-    childCtrlOptionBefore:"chco-",   //  给子控件添加控件属性
-    proxyEventBefore:"pa-",
-    ctrlEventBefore:"ca-",
-    // element resize 
-    proxyResizeEvent:"pa-resize",
-    // 按下按键事件 (组合键)
-    keyDownEventBefore:"pa-keydown[",
-    keyDownEventCilpKey:",",
-    keyDownEventAfter:"]",
-    // 抬起按键事件
-    keyUpEventBefore:"pa-keyup[",
-    keyUpEventCilpKey:",",
-    keyUpEventAfter:"]",
-]
 /**
  * 控件库派生类的基类,需要在派生时添加 bluePrint {DEF_VirtualElementList} 属性
  */
@@ -720,8 +717,81 @@ class ExCtrl extends CtrlLib{
         }
         return rtn;
     }
+    
     /** 规定模板字符串能否为 html, 如果启用, 就别在 ctrl-if 的前面放模板字符串，否则可能会导致 ctrl-if 的渲染出错*/
     templateStringIsHTML=false;
+
+    /**
+     * 预设的 自定义属性控制器集合
+     */
+    static attrKeyStrCtrls=[
+        new AttrKeyStrCtrlEx(/^ctrl-id$/),  //ctrlID 无操作
+        // 循环填充数据
+        new AttrKeyStrCtrlEx(/^ctrl-for$/,
+            function(key,elements,ves,i,_attrVal,tname,k,forFlag){
+                var k=k;
+                k=this.renderFor(elements,ves,i,attrVal,tname,forFlag);
+                elements[tname].forVesOP=i;
+                elements[tname].forVesED=k;
+            }
+        ),
+        // 生成子控件 tudo 生成参数处理
+        new AttrKeyStrCtrlEx(/^ctrl-child_ctrl$/,
+            function(key,elements,ves,i,attrVal,tname,k,forFlag){
+                this.renderChildCtrl(elements[ves[k].ctrlID],ves[k],attrVal);
+            }
+        ),
+        // dom 绑定事件
+        new AttrKeyStrCtrlEx(/^pa-(.+)$/,function(key,elements,ves,i,attrVal,tname,k,forFlag){
+            var temp=key[1],that=this;
+            elements[tname].addEventListener(temp,function(e){
+                (new Function(["e","tgt"],attrVal)).call(that,e,this);
+            });
+        }),
+        // 添加控件事件
+        new AttrKeyStrCtrlEx(/^ca-(.+)$/,function(key,elements,ves,i,attrVal,tname,k,forFlag){
+            var tgt=elements[tname];
+            var that=this;
+            this.addCtrlAction(key[1],
+                function(e){
+                    (new Function(["e","tgt"],attrVal)).call(that,e,tgt);
+                }
+            );
+        }),
+        // element resize 
+        new AttrKeyStrCtrlEx(/^pa-resize$/,function(key,elements,ves,i,attrVal,tname,k,forFlag){
+            var tgt=elements[tname];
+            var eventFnc=new Function(['e',"tgt",],attrVal),that=this;
+            addResizeEvent(tgt,function(e){
+                eventFnc.call(that,e,tgt);
+            });
+            if(this.ctrlActionList.callback===undefined) this.ctrlActionList.callback=[];
+            this.ctrlActionList.callback.push(function(){addResizeEvent.reResize(tgt)});
+        }),
+        
+        // 按下按键事件 (组合键)
+        new AttrKeyStrCtrlEx(/^pa-keydown\[(.+)\]$/,function(key,elements,ves,i,attrVal,tname,k,forFlag){
+            var that=this;
+            var eventFnc=new Function(['e',"tgt",],attrVal);
+            addKeyEvent(tgt,true,key.split(','),
+                function(e){
+                    eventFnc.call(that,e,this)
+                },false);
+        }),
+        // 抬起按键事件
+        new AttrKeyStrCtrlEx(/^pa-keyup\[(.+)\]$/,function(key,elements,ves,i,attrVal,tname,k,forFlag){
+            var that=this;
+            var eventFnc=new Function(['e',"tgt",],attrVal);
+            addKeyEvent(tgt,true,key.split(','),
+                function(e){
+                    eventFnc.call(that,e,this)
+                },true);
+        }),
+        new AttrKeyStrCtrlEx(/ctrl-if/,function(key,elements,ves,i,attrVal,tname,k,forFlag){
+            return this.ctrlIf(elements,ves,i,attrVal,tname,forFlag);
+        })
+    ]
+
     /**
      * 标签的属性的关键字
      * 保存用于编辑 bluePrint 的 xml 的关键字  
