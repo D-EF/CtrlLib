@@ -2,7 +2,7 @@
 <!-- 最后编辑于 2021/04/05  -by Darth_Eternalfaith -->  
 改动很大，文档是过时的。但是直接使用是可以用的 --- 2021/05/30
 # 框架必须先引用我的一个函数库才能正常使用
-[Basics.js](https://gitee.com/darth_ef/basics)
+[Basics.js](https://gitee.com/darth_ef/basics) 
 因为我把渲染模板字符串等重要的函数放在那个库里面了
 ----
 # CtrlLib 基类  
