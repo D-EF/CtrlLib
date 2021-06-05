@@ -644,9 +644,10 @@ class AttrKeyStrCtrlEx extends AttrKeyStrCtrl{
      * @param {Function} actFuc     执行的函数 actFuc
      */
      constructor(regexp,actFuc){
-         /**
-          * @param {String} str 
-          */
+        super(regexp,actFuc);
+        /**
+         * @param {String} str 
+         */
         this.ctrlFuc=function(str){
             return regexp.exec(str);
         }
