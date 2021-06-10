@@ -931,7 +931,7 @@ class ExCtrl extends CtrlLib{
                     );
                 }
                 else{
-                    elements[tname].setAttribute(key,this.stringRender(htmlToCode(_attrVal),tname,"attr",0,key,tgt));
+                    elements[tname].setAttribute(key,this.stringRender(decodeHTML(_attrVal),tname,"attr",0,key,tgt));
                     delete tgt.ctrlAttr[key];
                 }
             break;
