@@ -433,6 +433,7 @@ function DataLink(expression,value,link){
      */
     addend(_parentNode,...surplusArgument){
         if(_parentNode){
+            this.isready=true;
             if(this.initialize(...arguments)=="stop"){
                 return;
             }
@@ -539,6 +540,7 @@ function DataLink(expression,value,link){
      * 卸载控件
      */
     removeCtrl(){
+        this.isready=false;
         for(var i in this.childCtrl){
             this.childCtrl[i].removeCtrl();
             delete this.childCtrl[i];
@@ -553,6 +555,10 @@ function DataLink(expression,value,link){
         }
         if(this.parentNode.classList)
         this.parentNode.classList.remove("CtrlLib-"+this.ctrlLibID);
+        if(this.styleElement){
+            this.styleElement.remove();
+            delete this.styleElement;
+        }
     }
     /**
      * 触发控件控件事件的方法
@@ -729,6 +735,7 @@ class ExCtrl extends CtrlLib{
         new AttrKeyStrCtrlEx(/^ctrl-id$/),  //ctrlID 无操作
         // 循环填充数据
         new AttrKeyStrCtrlEx(/^ctrl-for$/,
+            /**@this {ExCtrl}*/
             function(key,elements,ves,i,_attrVal,tname,k,forFlag){
                 var k=k;
                 k=this.renderFor(elements,ves,i,attrVal,tname,forFlag);
@@ -738,19 +745,22 @@ class ExCtrl extends CtrlLib{
         ),
         // 生成子控件 tudo 生成参数处理
         new AttrKeyStrCtrlEx(/^ctrl-child_ctrl$/,
+            /**@this {ExCtrl}*/
             function(key,elements,ves,i,attrVal,tname,k,forFlag){
                 this.renderChildCtrl(elements[ves[k].ctrlID],ves[k],attrVal);
             }
         ),
         // dom 绑定事件
-        new AttrKeyStrCtrlEx(/^pa-(.+)$/,function(key,elements,ves,i,attrVal,tname,k,forFlag){
+        new AttrKeyStrCtrlEx(/^pa-(.+)$/,
+        /**@this {ExCtrl}*/function(key,elements,ves,i,attrVal,tname,k,forFlag){
             var temp=key[1],that=this;
             elements[tname].addEventListener(temp,function(e){
                 (new Function(["e","tgt"],attrVal)).call(that,e,this);
             });
         }),
         // 添加控件事件
-        new AttrKeyStrCtrlEx(/^ca-(.+)$/,function(key,elements,ves,i,attrVal,tname,k,forFlag){
+        new AttrKeyStrCtrlEx(/^ca-(.+)$/,
+        /**@this {ExCtrl}*/function(key,elements,ves,i,attrVal,tname,k,forFlag){
             var tgt=elements[tname];
             var that=this;
             this.addCtrlAction(key[1],
@@ -760,7 +770,8 @@ class ExCtrl extends CtrlLib{
             );
         }),
         // element resize 
-        new AttrKeyStrCtrlEx(/^pa-resize$/,function(key,elements,ves,i,attrVal,tname,k,forFlag){
+        new AttrKeyStrCtrlEx(/^pa-resize$/,
+            /**@this {ExCtrl}*/function(key,elements,ves,i,attrVal,tname,k,forFlag){
             var tgt=elements[tname];
             var eventFnc=new Function(['e',"tgt",],attrVal),that=this;
             addResizeEvent(tgt,function(e){
@@ -771,7 +782,8 @@ class ExCtrl extends CtrlLib{
         }),
         
         // 按下按键事件 (组合键)
-        new AttrKeyStrCtrlEx(/^pa-keydown\[(.+)\]$/,function(key,elements,ves,i,attrVal,tname,k,forFlag){
+        new AttrKeyStrCtrlEx(/^pa-keydown\[(.+)\]$/,
+        /**@this {ExCtrl}*/function(key,elements,ves,i,attrVal,tname,k,forFlag){
             var that=this;
             var eventFnc=new Function(['e',"tgt",],attrVal);
             addKeyEvent(tgt,true,key.split(','),
@@ -780,7 +792,8 @@ class ExCtrl extends CtrlLib{
                 },false);
         }),
         // 抬起按键事件
-        new AttrKeyStrCtrlEx(/^pa-keyup\[(.+)\]$/,function(key,elements,ves,i,attrVal,tname,k,forFlag){
+        new AttrKeyStrCtrlEx(/^pa-keyup\[(.+)\]$/,
+        /**@this {ExCtrl}*/function(key,elements,ves,i,attrVal,tname,k,forFlag){
             var that=this;
             var eventFnc=new Function(['e',"tgt",],attrVal);
             addKeyEvent(tgt,true,key.split(','),
@@ -788,7 +801,8 @@ class ExCtrl extends CtrlLib{
                     eventFnc.call(that,e,this)
                 },true);
         }),
-        new AttrKeyStrCtrlEx(/ctrl-if/,function(key,elements,ves,i,attrVal,tname,k,forFlag){
+        new AttrKeyStrCtrlEx(/ctrl-if/,
+            /**@this {ExCtrl}*/function(key,elements,ves,i,attrVal,tname,k,forFlag){
             return this.ctrlIf(elements,ves,i,attrVal,tname,forFlag);
         })
     ]
@@ -917,7 +931,7 @@ class ExCtrl extends CtrlLib{
                     );
                 }
                 else{
-                    elements[tname].setAttribute(key,this.stringRender(htmlToCode(_attrVal),tname,"attr",0,key,tgt));
+                    elements[tname].setAttribute(key,this.stringRender(decodeHTML(_attrVal),tname,"attr",0,key,tgt));
                     delete tgt.ctrlAttr[key];
                 }
             break;
@@ -1041,8 +1055,8 @@ class ExCtrl extends CtrlLib{
     /**
      * 渲染子控件
      * @param {Element} element         加载子控件的元素
-     * @param {DEF_VirtualElement} ve   
-     * @param {String} childCtrlType  控件的类型
+     * @param {DEF_VirtualElement} ve   字控件的虚拟元素
+     * @param {String} childCtrlType    控件的类型
      */
     renderChildCtrl(element,ve,childCtrlType){
         var dataStr=ve.getAttribute(ExCtrl.attrKeyStr.childCtrlData);
@@ -1054,7 +1068,7 @@ class ExCtrl extends CtrlLib{
         }
         var that=this;
         if(!dataStr){
-            getDataCallback();
+            getDataCallback.call(this);
             return;
         }
         else{
@@ -1062,12 +1076,12 @@ class ExCtrl extends CtrlLib{
             (new Function(["callback"],dataStr)).call(this,getDataCallback);
         }
         function getDataCallback(){
+            if(!(that.isready))return;
             var childCtrl=new that.childCtrlType[childCtrlType](...arguments);
             for(var i=chcoArray.length-1;i>=0;--i){
                 // 加入 childCtrlOption (子控件属性)
                 childCtrl[chcoArray[i].key]=strToVar(chcoArray[i].value);
             }
-
             that.childCtrl[element.ctrlID]=childCtrl;
             that.childCtrl[element.ctrlID].parentCtrl=that;
 
