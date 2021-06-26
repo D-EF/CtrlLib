@@ -27,7 +27,7 @@ class DEF_VirtualElementList{
      */
     getByCtrlID(ctrlID){
         for(var i=this.ves.length-1;i>=0;--i){
-            if(this.ves[i].ctrlID==ctrlID){
+            if(this.ves[i].ctrlID===ctrlID){
                 return this.ves[i];
             }
         }
@@ -39,7 +39,7 @@ class DEF_VirtualElementList{
      */
     getIndexByCtrlID(ctrlID){
         for(var i=this.ves.length-1;i>=0;--i){
-            if(this.ves[i].ctrlID==ctrlID){
+            if(this.ves[i].ctrlID===ctrlID){
                 return i;
             }
         }
@@ -53,7 +53,7 @@ class DEF_VirtualElementList{
      */
     getByLastDepth(start,depth,min=0){
         for(var i=start;i>=0;--i){
-            if(this.ves[i].depth==depth){
+            if(this.ves[i].depth===depth){
                 return i;
             }else if(this.ves[i].depth<=min){
                 var rtn=new Number(i);
@@ -77,7 +77,7 @@ class DEF_VirtualElementList{
             p=vesindex;
         var rtnIndex=[],rtnObj=[];
         for(++p;this.ves[p]&&this.ves[p].depth>td;++p){
-            if(this.ves[p].depth==td+1){    //子元素
+            if(this.ves[p].depth===td+1){    //子元素
                 rtnIndex.push(p);
                 rtnObj.push(this.ves[p]);
             }
@@ -115,26 +115,26 @@ class DEF_VirtualElementList{
         var ves=[],attributes=[],style=new DEF_CSSVE();
     
         for(i=0;i<strleng;++i){
-            if(xmlStr[i]=='<'&&!strFlag){
+            if(xmlStr[i]==='<'&&!strFlag){
                 tempOP=i;
                 attributes=[];
-                for(j=tempOP+1;xmlStr[j]&&xmlStr[j]!='>'&&xmlStr[j]!=" ";++j);
+                for(j=tempOP+1;xmlStr[j]&&xmlStr[j]!=='>'&&xmlStr[j]!==" ";++j);
                 tempTagName=xmlStr.slice(tempOP+1,j);
-                for(j;xmlStr[j]!='>';++j){      //属性
+                for(j;xmlStr[j]!=='>';++j){      //属性
                     if(!strFlag){
-                        if(xmlStr[j]==' '){
+                        if(xmlStr[j]===' '){
                             p=j+1;
                         }
-                        else if(xmlStr[j]=='='){
+                        else if(xmlStr[j]==='='){
                             q=j;
                         }
-                        if(xmlStr[j]=="'"||xmlStr[j]=='"'){
+                        if(xmlStr[j]==="'"||xmlStr[j]==='"'){
                             strFlag=1;
                             lastStrP=j;
                         }
                     }else{
                         while(strFlag){
-                            if(xmlStr[j]==xmlStr[lastStrP]&&xmlStr[j-1]!='\\'){
+                            if(xmlStr[j]===xmlStr[lastStrP]&&xmlStr[j-1]!=='\\'){
                                 strFlag=0;
                                 // mark: 是否需要区分大小写
                                 attributes.push({key:xmlStr.slice(p,q)/* .toLowerCase() */,value:xmlStr.slice(lastStrP+1,j)});
@@ -146,15 +146,15 @@ class DEF_VirtualElementList{
                 }
                 i=j;
             }
-            if(xmlStr[i]=='>'&&!strFlag){
-                if(xmlStr[tempOP+1]=='/'){  // 标签结束符号
-                    if(tempTagName=="/style"){
+            if(xmlStr[i]==='>'&&!strFlag){
+                if(xmlStr[tempOP+1]==='/'){  // 标签结束符号
+                    if(tempTagName==="/style"){
                         style.addString(xmlStr.slice(tempED+1,tempOP));
                         styleFlag=false;
                     }else{
                         // 把 一段文本 添加到上一个这么深的元素
                         for(j=ves.length-1;j>=0;--j){
-                            if(ves[j].depth==depth){
+                            if(ves[j].depth===depth){
                                 ves[j].innerEnd=xmlStr.slice(tempED+1,tempOP);
                                 break;
                             }
@@ -167,7 +167,7 @@ class DEF_VirtualElementList{
                 ++depth;
                 if(depth>maxDepth)maxDepth=depth;
                     if(styleFlag)continue;
-                    if(tempTagName=="style"){
+                    if(tempTagName==="style"){
                         styleFlag=true;
                     }else{
                         var ve=new DEF_VirtualElement(tempTagName,depth,attributes,xmlStr.slice(tempED+1,tempOP));
@@ -199,7 +199,7 @@ class DEF_VirtualElementList{
             tempCountDepth[ves[i].depth-1]+=1;
             if(!pName){
                 for(j=0;j<ves[i].depth;++j){
-                    pName+=tempCountDepth[j]+(j==ves[i].depth-1?"":"_");
+                    pName+=tempCountDepth[j]+(j===ves[i].depth-1?"":"_");
                 }
             }
             ves[i].ctrlID=pName;
@@ -236,7 +236,7 @@ class DEF_VirtualElement{
      */
     setAttribute(key,val){
         for(var i=this.attribute.length-1;i>=0;--i){
-            if(key==this.attribute[i].key){
+            if(key===this.attribute[i].key){
                 this.attribute[i].value=val;
                 return 2;
             }
@@ -251,7 +251,7 @@ class DEF_VirtualElement{
      */
     getAttribute(key){
         for(var i=this.attribute.length-1;i>=0;--i){
-            if(key==this.attribute[i].key){
+            if(key===this.attribute[i].key){
                 return this.attribute[i].value;
             }
         }
@@ -266,7 +266,7 @@ class DEF_VirtualElement{
     getAttributesByKeyBA(before="",after=""){
         var rtn=[];
         for(var i=this.attribute.length-1;i>=0;--i){
-            if((this.attribute[i].key.indexOf(before)==0)&&(this.attribute[i].key.lastIndexOf(after)==this.attribute[i].key.length-after.length)){
+            if((this.attribute[i].key.indexOf(before)===0)&&(this.attribute[i].key.lastIndexOf(after)===this.attribute[i].key.length-after.length)){
                 rtn.push(this.attribute[i]);
             }
         }
@@ -296,15 +296,15 @@ class DEF_CSSVE{
         
         for(p=q=0;p<cssString.length;++p){
             // 跳过模板字符串的格式 ${x}
-            while(cssString[p]=='{'&&cssString[p-1]=='$'){
+            while(cssString[p]==='{'&&cssString[p-1]==='$'){
                 p=cssString.indexOf('}',p+1)+1;
             }
-            if(cssString[p]=='{'){
+            if(cssString[p]==='{'){
                 tempSelector=cssString.slice(q,p).split(',');
                 d=this.cssList.push(new DEF_CSSVEItem(tempSelector,'',depth))-1;
                 q=p+1;
                 ++depth;
-            }else if(cssString[p]=='}'){
+            }else if(cssString[p]==='}'){
                 tempString=cssString.slice(q,p);
                 if(!this.cssList[d].cssString){
                     this.cssList[d].cssString=tempString;
@@ -343,7 +343,7 @@ class DEF_CSSVE{
      */
     getByLastDepth(start,depth){
         for(var i=start;i>=0;--i){
-            if(this.cssList[i].depth==depth)return i;
+            if(this.cssList[i].depth===depth)return i;
         }
         console.warn("找不到目标深度的 cssList's item");
         return;
@@ -376,7 +376,7 @@ class DEF_CSSVEItem{
             that=(_that===undefined)?window:_that;
         for(var i=0;i<this.selectors.length;++i){
             if(i) rtn.push(',');
-            rtn.push((this.selectors[i][0]=='@'?'':ctrlLibID)+templateStringRender((this.selectors[i]),that).str);
+            rtn.push((this.selectors[i][0]==='@'?'':ctrlLibID)+templateStringRender((this.selectors[i]),that).str);
         }
         rtn.push('{');
         rtn.push(templateStringRender(this.cssString,that).str);
@@ -434,7 +434,7 @@ function DataLink(expression,value,link){
     addend(_parentNode,...surplusArgument){
         if(_parentNode){
             this.isready=true;
-            if(this.initialize(...arguments)=="stop"){
+            if(this.initialize(...arguments)==="stop"){
                 return;
             }
             this.parentNode=_parentNode;
@@ -691,7 +691,7 @@ class ExCtrl extends CtrlLib{
                 _fnc.apply(this.childCtrl[childCtrlID],surplusArgument)
             }else{
                 // 子控件未加载完成, 挂起
-                if(this.childCtrlActionList[childCtrlID]==undefined)this.childCtrlActionList[childCtrlID]=[];
+                if(this.childCtrlActionList[childCtrlID]===undefined)this.childCtrlActionList[childCtrlID]=[];
                 this.childCtrlActionList[childCtrlID].push(_fnc);
             }
         }
@@ -718,7 +718,7 @@ class ExCtrl extends CtrlLib{
     getElementsByCtrlID(ctrlID){
         var rtn=[];
         for(var i in this.elements){
-            if(i.indexOf(ctrlID)==0){
+            if(i.indexOf(ctrlID)===0){
                 rtn.push(i);
             }
         }
@@ -893,7 +893,7 @@ class ExCtrl extends CtrlLib{
                 // 实现在 renderChildCtrl() 里
             break;
             default:
-                if(key.indexOf(ExCtrl.attrKeyStr.keyDownEventBefore)==0){
+                if(key.indexOf(ExCtrl.attrKeyStr.keyDownEventBefore)===0){
                     var eventFnc=new Function(['e',"tgt",],attrVal);
                     addKeyEvent(tgt,true,
                         (key.slice(ExCtrl.attrKeyStr.keyDownEventBefore.length,key.lastIndexOf(ExCtrl.attrKeyStr.keyDownEventAfter)))
@@ -902,7 +902,7 @@ class ExCtrl extends CtrlLib{
                             eventFnc.call(that,e,this)
                         },false);
                 }
-                else if(key.indexOf(ExCtrl.attrKeyStr.keyUpEventBefore)==0){
+                else if(key.indexOf(ExCtrl.attrKeyStr.keyUpEventBefore)===0){
                     var eventFnc=new Function(['e',"tgt",],attrVal);
                     addKeyEvent(tgt,true,
                         (key.slice(ExCtrl.attrKeyStr.keyUpEventBefore.length,key.lastIndexOf(ExCtrl.attrKeyStr.keyUpEventAfter))).split(ExCtrl.attrKeyStr.keyUpEventCilpKey),
@@ -910,7 +910,7 @@ class ExCtrl extends CtrlLib{
                             eventFnc.call(that,e,this)
                         },true);
                 }
-                else if(key==ExCtrl.attrKeyStr.proxyResizeEvent){
+                else if(key===ExCtrl.attrKeyStr.proxyResizeEvent){
                     var eventFnc=new Function(['e',"tgt",],attrVal);
                     addResizeEvent(tgt,function(e){
                         eventFnc.call(that,e,tgt);
@@ -918,12 +918,12 @@ class ExCtrl extends CtrlLib{
                     if(this.ctrlActionList.callback===undefined) this.ctrlActionList.callback=[];
                     this.ctrlActionList.callback.push(function(){addResizeEvent.reResize(tgt)});
                 }
-                else if(key.indexOf(ExCtrl.attrKeyStr.proxyEventBefore)==0){
+                else if(key.indexOf(ExCtrl.attrKeyStr.proxyEventBefore)===0){
                     elements[tname].addEventListener(key.slice(ExCtrl.attrKeyStr.proxyEventBefore.length),function(e){
                         (new Function(["e","tgt"],attrVal)).call(that,e,this);
                     });
                 }
-                else if(key.indexOf(ExCtrl.attrKeyStr.ctrlEventBefore)==0){
+                else if(key.indexOf(ExCtrl.attrKeyStr.ctrlEventBefore)===0){
                     this.addCtrlAction(key.slice(ExCtrl.attrKeyStr.ctrlEventBefore.length),
                         function(e){
                             (new Function(["e","tgt"],attrVal)).call(that,e,tgt);
@@ -953,26 +953,26 @@ class ExCtrl extends CtrlLib{
         var temp=templateStringRender(str,this,[tgt]);
         var fragment=document.createDocumentFragment(),tempElement=document.createElement("div");
         if(temp.hit.length 
-            && ctrlID&&ctrlID.indexOf("-EX_for-")==-1
+            && ctrlID&&ctrlID.indexOf("-EX_for-")===-1
             ){
             // 有模版字符串,添加一条datalink
             for(var i=temp.hit.length-1;i>=0;--i){
                 if(this.dataLinks[temp.hit[i].expression]){
                     var f=1;
                     for(var j=this.dataLinks[temp.hit[i].expression].length-1;(j>=0)&&(f);--j){
-                        if(this.dataLinks[temp.hit[i].expression].link[j].ctrlID==ctrlID&&
-                            this.dataLinks[temp.hit[i].expression].link[j].type==type){
+                        if(this.dataLinks[temp.hit[i].expression].link[j].ctrlID===ctrlID&&
+                            this.dataLinks[temp.hit[i].expression].link[j].type===type){
                             f=0;
                             break;
                         }
                     }
                     if(!f){
                         // 有被登记过的元素
-                        if(type=="attr"&&attrkey)
+                        if(type==="attr"&&attrkey)
                         this.dataLinks[temp.hit[i].expression].link.push({ctrlID:ctrlID,type:type,attrkey:attrkey});
                     }else{
                         // 未被登记过的元素
-                        if(type=="attr"&&attrkey){
+                        if(type==="attr"&&attrkey){
                             this.dataLinks[temp.hit[i].expression].link.push({ctrlID:ctrlID,type:type,attrkey:attrkey});
                         }else{
                             this.dataLinks[temp.hit[i].expression].link.push({ctrlID:ctrlID,type:type});
@@ -983,7 +983,7 @@ class ExCtrl extends CtrlLib{
                 }
                 else{
                     this.dataLinks[temp.hit[i].expression]=new DataLink(temp.hit[i].expression,temp.hit[i].value,{ctrlID:ctrlID,type:type});
-                    if(type=="attr"&&attrkey){
+                    if(type==="attr"&&attrkey){
                         this.dataLinks[temp.hit[i].expression].link[0].attrkey=attrkey;
                     }
                 }
@@ -1125,7 +1125,7 @@ class ExCtrl extends CtrlLib{
             tname=ves[i].ctrlID+nameEX;
             if(dHash[ves[i].depth-1]){ //如果存在上一层
                 tempNode=this.stringRender(ves[i].before,tname,"before",this.templateStringIsHTML,forFlag,dHash[ves[i].depth-1]);
-                if(tempNode.constructor==String)tempNode=new Text(tempNode);
+                if(tempNode.constructor===String)tempNode=new Text(tempNode);
                 dHash[ves[i].depth-1].appendChild(tempNode);
                 if(!elements[tname].hidden)dHash[ves[i].depth-1].appendChild(elements[tname]);
             }
@@ -1135,7 +1135,7 @@ class ExCtrl extends CtrlLib{
                 do{
                     if(ves[ti].innerEnd){
                         tempNode=this.stringRender(ves[ti].innerEnd,ves[ti].ctrlID+nameEX,"innerEnd",this.templateStringIsHTML,forFlag,elements[ves[ti].ctrlID+nameEX]);
-                        if(tempNode.constructor==String)tempNode=new Text(tempNode);
+                        if(tempNode.constructor===String)tempNode=new Text(tempNode);
                         if(!tempNode){
                             console.wran(tempNode);
                         }
@@ -1146,15 +1146,15 @@ class ExCtrl extends CtrlLib{
                 }while((ves[ti])&&(ves[ti].depth>=tnd)&&(ves[ti].depth<ves[i].depth));
                 if(ves[i].innerEnd){
                     tempNode=this.stringRender(ves[i].innerEnd,tname,"innerEnd",this.templateStringIsHTML,forFlag,elements[tname]);
-                    if(tempNode.constructor==String)tempNode=new Text(tempNode);
+                    if(tempNode.constructor===String)tempNode=new Text(tempNode);
                     if(elements[tname]&&(!elements[tname].innerIsRender)){
                         elements[tname].appendChild(tempNode);
                     }
                 }
-            }else if(ves[i+1].depth==ves[i].depth){ // 如果下一个和这个的深度相同
+            }else if(ves[i+1].depth===ves[i].depth){ // 如果下一个和这个的深度相同
                 if(ves[i].innerEnd){
                     tempNode=this.stringRender(ves[i].innerEnd,tname,"innerEnd",this.templateStringIsHTML,forFlag,elements[tname]);
-                    if(tempNode.constructor==String)tempNode=new Text(tempNode);
+                    if(tempNode.constructor===String)tempNode=new Text(tempNode);
                     elements[tname].appendChild(tempNode);
                 }
             }
@@ -1165,13 +1165,13 @@ class ExCtrl extends CtrlLib{
                 minD=ves[i].depth;
                 rtnFragment=document.createDocumentFragment();
                 tempNode=this.stringRender(ves[i].before,tname,"before",this.templateStringIsHTML,forFlag,rtnFragment);
-                if(tempNode.constructor==String)tempNode=new Text(tempNode);
+                if(tempNode.constructor===String)tempNode=new Text(tempNode);
                 rtnFragment.appendChild(tempNode);
                 if(!elements[tname].hidden)rtnFragment.appendChild(elements[tname]);//添加到root
             }else{
-                if(ves[i].depth==minD){
+                if(ves[i].depth===minD){
                     tempNode=this.stringRender(ves[i].before,tname,"before",this.templateStringIsHTML,forFlag,rtnFragment)
-                    if(tempNode.constructor==String)tempNode=new Text(tempNode);
+                    if(tempNode.constructor===String)tempNode=new Text(tempNode);
                     rtnFragment.appendChild(tempNode);
                     if(!elements[tname].hidden)rtnFragment.appendChild(elements[tname]);
                 }
@@ -1190,7 +1190,7 @@ class ExCtrl extends CtrlLib{
             for(j=this.dataLinks[i].link.length-1;j>=0;--j){
                 // todo : 如果在模板文本里有会修改数据的表达式 
                 tid=this.dataLinks[i].link[j].ctrlID;
-                if(this.dataLinks[i].value==this.dataLinks[i].expFnc.call(this,this.elements[tid]))
+                if(this.dataLinks[i].value===this.dataLinks[i].expFnc.call(this,this.elements[tid]))
                 continue;
                 ttype=this.dataLinks[i].link[j].type;
                 for(j=this.dataLinks[i].link.length-1;j>=0;--j){
@@ -1216,7 +1216,7 @@ class ExCtrl extends CtrlLib{
 
         // 清除循环填充的东西
         for(i=elementCtrlIDs.length-1;i>=0;--i){
-            if(elementCtrlIDs[i].indexOf("-EX_for-")!=-1){
+            if(elementCtrlIDs[i].indexOf("-EX_for-")!==-1){
                 this.elements[elementCtrlIDs[i]].remove();
                 delete this.elements[elementCtrlIDs[i]];
                 if(this.childCtrl[elementCtrlIDs[i]]){
@@ -1229,7 +1229,7 @@ class ExCtrl extends CtrlLib{
             for(j=this.dataLinks[i].link.length-1;j>=0;--j){
                 // todo : 如果在模板文本里有会修改数据的表达式 
                 tid=this.dataLinks[i].link[j].ctrlID;
-                if(this.dataLinks[i].value==this.dataLinks[i].expFnc.call(this,this.elements[tid]))
+                if(this.dataLinks[i].value===this.dataLinks[i].expFnc.call(this,this.elements[tid]))
                 continue;
                 ttype=this.dataLinks[i].link[j].type;
                 for(j=this.dataLinks[i].link.length-1;j>=0;--j){
@@ -1272,7 +1272,7 @@ class ExCtrl extends CtrlLib{
         var tgtElement=this.elements[ctrlID];
         var thisVe=this.bluePrint.getByCtrlID(ctrlID);
         var tempNode=this.stringRender(thisVe.before,ctrlID,"before",this.templateStringIsHTML);
-        if(tempNode.constructor==String) tempNode=new Text(tempNode);
+        if(tempNode.constructor===String) tempNode=new Text(tempNode);
         do{
             tgtElement.previousSibling.remove();
         }while(!(tgtElement.previousSibling.ctrlID));
@@ -1287,7 +1287,7 @@ class ExCtrl extends CtrlLib{
         var tgtElement=this.elements[ctrlID];
         var thisVe=this.bluePrint.getByCtrlID(ctrlID);
         var tempNode=this.stringRender(thisVe.before,ctrlID,"before",this.templateStringIsHTML);
-        if(tempNode.constructor==String) tempNode=new Text(tempNode);
+        if(tempNode.constructor===String) tempNode=new Text(tempNode);
         do{
             tgtElement.childNodes[tgtElement.childNodes.length-1].remove();
         }while(tgtElement.childNodes[tgtElement.childNodes.length-1]&&tgtElement.childNodes[tgtElement.childNodes.length-1].ctrlID);
