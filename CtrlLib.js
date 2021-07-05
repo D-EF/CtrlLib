@@ -102,6 +102,7 @@ class DEF_VirtualElementList{
     static voidElementsTagName=["br","hr","img","input","link","meta","area","base","col","command","embed","keygen","param","source","track","wbr","?xml"];
     /**
      * 把xml转换成DEF_VirtualElementList
+     * 注意， 当属性中使用了模板字符串时, 模板字符串中不要有和xml标签属性一样的引号, 不然可能会出错
      * @param {String} xmlStr
      * @return {DEF_VirtualElementList} {ves:Array<VirtualElement>,maxDepth:Number}
      */
