@@ -598,11 +598,13 @@ class AttrKeyStrCtrl{
     /**
      * @param {Function} ctrlFuc    控制的函数 ctrlFuc(String key) 应返回处理后的key值{Array<String>} 首项应为原始 key , 返回 undefined 将不会执行 actFuc
      * @param {Function} actFuc     执行的函数 actFuc
+     * @param {Boolean} stopFlag    表示是否阻塞继续调用控制器, 默认为true阻塞
      * 注意，actFnc需要返回 跳过蓝图后的 目标索引
      */
-    constructor(ctrlFuc,actFuc){
+    constructor(ctrlFuc,actFuc,stopFlag=true){
         this.ctrlFuc=ctrlFuc;
         /**
+         * @type  {Function}
          * @this  {ExCtrl} this 指向 ExCtrl实例
          * @param {Array<String>} key 处理后的属性的 key 首项应为原始 key 
          * @param {Array<Element>} elements 实例的 elements 的引用，用于添加新的子元素
@@ -616,6 +618,7 @@ class AttrKeyStrCtrl{
          */
         this.actFuc=actFuc;
         // key,elements,ves,i,_attrVal,tname,k,forFlag
+        this.stopFlag=stopFlag;
     }
     /**
      * 进行并且执行操作
@@ -628,17 +631,17 @@ class AttrKeyStrCtrl{
      * @param {String} tname 临时的元素名称，用作实例的 elements 当前的索引
      * @param {Number} k 当前的ves的下标
      * @param {String} forFlag 表示是不是 for 的
-     * @returns {{isTouch:Boolean,tgti:Number}}
-     * isTouch表示是否被触发了
+     * @returns {{stopFlag:Boolean,tgti:Number}}
+     * stopFlag表示是否继续调用控制器
      */
-    handle(ctrlLib,elements,ves,i,_attrVal,tname,k,forFlag){
+    handle(ctrlLib,key,elements,ves,i,_attrVal,tname,k,forFlag){
         var ctrlFucRtn=this.ctrlFuc(key);
         if(ctrlFucRtn){
             var tgti=this.actFuc?this.actFuc.call(ctrlLib,ctrlFucRtn,elements,ves,i,_attrVal,tname,k,forFlag):i;
-            return {isTouch:true,tgti:tgti};
+            return {stopFlag:this.stopFlag,tgti:tgti};
         }
         else{
-            return {isTouch:false,tgti:tgti};
+            return {stopFlag:false,tgti:tgti};
         }
     }
 }
@@ -662,6 +665,33 @@ class AttrKeyStrCtrlEx extends AttrKeyStrCtrl{
     }
 }
 
+class AttrKeyStrCtrlList{
+    /**
+     * 
+     * @param {Array<AttrKeyStrCtrl>} list 控制器的数组
+     */
+    constructor(list){
+        this.list=list||[];
+    }
+    /**
+     * 
+     * @param {AttrKeyStrCtrl} _attrKeyStrCtrl 
+     */
+    push(_attrKeyStrCtrl){
+        
+    }
+    /**
+     * 拷贝一个派生, 是浅拷贝
+     */
+    copy(){
+        return new AttrKeyStrCtrlList([].concat(this.list));
+    }
+    handle(ctrlLib,key,elements,ves,i,_attrVal,tname,k,forFlag){
+        for(var i=this.list.length-1;i>=0;--i){
+            // todo
+        }
+    }
+}
 /**
  * 控件库派生类的基类,需要在派生时添加 bluePrint {DEF_VirtualElementList} 属性
  */
@@ -874,69 +904,7 @@ class ExCtrl extends CtrlLib{
 
         if(!tgt.ctrlAttr)tgt.ctrlAttr={};
         tgt.ctrlAttr[key]=attrVal;
-        switch(key){
-            case ExCtrl.attrKeyStr.ctrlID:
-            break;
-            case ExCtrl.attrKeyStr.if:
-                var rtn=this.ctrlIf(elements,ves,i,attrVal,tname,forFlag);
-                return rtn;
-            break;
-            case ExCtrl.attrKeyStr.for:
-                k=this.renderFor(elements,ves,i,attrVal,tname,forFlag);
-                elements[tname].forVesOP=i;
-                elements[tname].forVesED=k;
-            break;
-            case ExCtrl.attrKeyStr.childCtrl:
-                this.renderChildCtrl(elements[ves[k].ctrlID],ves[k],_attrVal);
-            break;
-            case ExCtrl.attrKeyStr.childCtrlData:
-                // 这是给子控件赋 data 的属性， 应为一个表达式;
-                // 实现在 renderChildCtrl() 里
-            break;
-            default:
-                if(key.indexOf(ExCtrl.attrKeyStr.keyDownEventBefore)===0){
-                    var eventFnc=new Function(['e',"tgt",],attrVal);
-                    addKeyEvent(tgt,true,
-                        (key.slice(ExCtrl.attrKeyStr.keyDownEventBefore.length,key.lastIndexOf(ExCtrl.attrKeyStr.keyDownEventAfter)))
-                        .split(ExCtrl.attrKeyStr.keyDownEventCilpKey),
-                        function(e){
-                            eventFnc.call(that,e,this)
-                        },false);
-                }
-                else if(key.indexOf(ExCtrl.attrKeyStr.keyUpEventBefore)===0){
-                    var eventFnc=new Function(['e',"tgt",],attrVal);
-                    addKeyEvent(tgt,true,
-                        (key.slice(ExCtrl.attrKeyStr.keyUpEventBefore.length,key.lastIndexOf(ExCtrl.attrKeyStr.keyUpEventAfter))).split(ExCtrl.attrKeyStr.keyUpEventCilpKey),
-                        function(e){
-                            eventFnc.call(that,e,this)
-                        },true);
-                }
-                else if(key===ExCtrl.attrKeyStr.proxyResizeEvent){
-                    var eventFnc=new Function(['e',"tgt",],attrVal);
-                    addResizeEvent(tgt,function(e){
-                        eventFnc.call(that,e,tgt);
-                    });
-                    if(this.ctrlActionList.callback===undefined) this.ctrlActionList.callback=[];
-                    this.ctrlActionList.callback.push(function(){addResizeEvent.reResize(tgt)});
-                }
-                else if(key.indexOf(ExCtrl.attrKeyStr.proxyEventBefore)===0){
-                    elements[tname].addEventListener(key.slice(ExCtrl.attrKeyStr.proxyEventBefore.length),function(e){
-                        (new Function(["e","tgt"],attrVal)).call(that,e,this);
-                    });
-                }
-                else if(key.indexOf(ExCtrl.attrKeyStr.ctrlEventBefore)===0){
-                    this.addCtrlAction(key.slice(ExCtrl.attrKeyStr.ctrlEventBefore.length),
-                        function(e){
-                            (new Function(["e","tgt"],attrVal)).call(that,e,tgt);
-                        }
-                    );
-                }
-                else{
-                    elements[tname].setAttribute(key,this.stringRender(decodeHTML(_attrVal),tname,"attr",0,key,tgt));
-                    delete tgt.ctrlAttr[key];
-                }
-            break;
-        }
+        
         return k;
     }
     /**
@@ -1421,5 +1389,8 @@ ExCtrl.prototype.reRenderAttrCtrl={
         this.childCtrl[tgtElem.ctrlID].reRender();
     }
 }
+
+ExCtrl.prototype.attrKeyStrCtrls=ExCtrl.attrKeyStrCtrls;
+
 // todo: ? 能不能把render for 优化, 再次渲染时能否只影响部分dom？
 // 但是要这必须用 for in 或其他的指令, 非常呃呃
