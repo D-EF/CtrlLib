@@ -636,8 +636,9 @@ class AttrKeyStrCtrl{
      */
     handle(ctrlLib,key,elements,ves,i,_attrVal,tname,k,forFlag){
         var ctrlFucRtn=this.ctrlFuc(key);
+        var tgti=k;
         if(ctrlFucRtn){
-            var tgti=this.actFuc?this.actFuc.call(ctrlLib,ctrlFucRtn,elements,ves,i,_attrVal,tname,k,forFlag):i;
+            tgti=this.actFuc?this.actFuc.call(ctrlLib,ctrlFucRtn,elements,ves,i,_attrVal,tname,k,forFlag):i;
             return {stopFlag:this.stopFlag,tgti:tgti};
         }
         else{
@@ -674,22 +675,42 @@ class AttrKeyStrCtrlList{
         this.list=list||[];
     }
     /**
-     * 
+     * 添加控制器
      * @param {AttrKeyStrCtrl} _attrKeyStrCtrl 
      */
     push(_attrKeyStrCtrl){
-        
+        this.list.push(_attrKeyStrCtrl);
     }
     /**
-     * 拷贝一个派生, 是浅拷贝
+     * 克隆一个派生, 是浅拷贝
+     * @returns {AttrKeyStrCtrlList}
      */
-    copy(){
+    clone(){
         return new AttrKeyStrCtrlList([].concat(this.list));
     }
-    handle(ctrlLib,key,elements,ves,i,_attrVal,tname,k,forFlag){
+    /**
+     * 进行并且执行操作
+     * @param {ExCtrl} ctrlLib ExCtrl实例
+     * @param {Array} key 属性的key
+     * @param {Array<Element>} elements 实例的 elements 的引用，用于添加新的子元素
+     * @param {Array<DEF_VirtualElement>} ves DEF_VirtualElement 的数组
+     * @param {Number} i 当前的ves的下标
+     * @param {String} _attrVal 属性值
+     * @param {String} tname 临时的元素名称，用作实例的 elements 当前的索引
+     * @param {Number} k 当前的ves的下标
+     * @param {String} forFlag 表示是不是 for 的
+     * @returns {Number} 返回执行完成后的重新定位的ves下标
+     */
+    handle(ctrlLib,key,elements,ves,_i,_attrVal,tname,k,forFlag){
+        var tgti=k,temp;
         for(var i=this.list.length-1;i>=0;--i){
-            // todo
+            temp=this.list[i].handle(ctrlLib,key,elements,ves,_i,_attrVal,tname,k,forFlag);
+            tgti=temp.tgti
+            if(temp.stopFlag){
+                return tgti;
+            }
         }
+        return tgti;
     }
 }
 /**
@@ -700,69 +721,10 @@ class ExCtrl extends CtrlLib{
         super(data);
         this.dataLinks={};
     }
-    
-    /**
-     * 呼叫子控件, 如果子控件没有加载完成将会被挂起
-     * @param {String} childCtrlID  子控件 在父控件的父元素 的 ctrlID
-     * @param {Function} _fnc       需要执行的方法
-     * @param {Any} surplusArgument
-     */
-    callChild(childCtrlID,_fnc,...surplusArgument){
-        var c=this.bluePrint.getByCtrlID(childCtrlID);
-        if(c===undefined){
-            console.error("没有对应的子元素");
-            return;
-        }else if(!c.getAttribute(ExCtrl.attrKeyStr.childCtrl)){
-            console.error("该子元素没有子控件");
-            return;
-        }else{
-            // 有子控件
-            if(this.childCtrl[childCtrlID]){
-                // 子控件已加载, 直接执行
-                _fnc.apply(this.childCtrl[childCtrlID],surplusArgument)
-            }else{
-                // 子控件未加载完成, 挂起
-                if(this.childCtrlActionList[childCtrlID]===undefined)this.childCtrlActionList[childCtrlID]=[];
-                this.childCtrlActionList[childCtrlID].push(_fnc);
-            }
-        }
-    }
-    addend(_parentNode,...surplusArgument){
-        CtrlLib.prototype.addend.call(this,_parentNode,...surplusArgument);
-        this.renderString();
-        this.renderStyle();
-    }
-    createContent(){
-        var temp=this.itemVEToElement(this.bluePrint.ves);
-        this.elements=temp.elements;
-        this.rootNodes=nodeListToArray(temp.fragment.childNodes);
-        if(this.bluePrint.style.cssList.length){
-            this.styleElement=document.createElement("style");
-            document.head.appendChild(this.styleElement);
-        }
-    }
-    /**
-     * 通过 ctrlID 获取元素
-     * @param {String} ctrlID
-     * @returns {Array<Element>} 返回元素 包括ctrl-for 的
-     */
-    getElementsByCtrlID(ctrlID){
-        var rtn=[];
-        for(var i in this.elements){
-            if(i.indexOf(ctrlID)===0){
-                rtn.push(i);
-            }
-        }
-        return rtn;
-    }
-    
-    /** 规定模板字符串能否为 html, 如果启用, 就别在 ctrl-if 的前面放模板字符串，否则可能会导致 ctrl-if 的渲染出错*/
-    templateStringIsHTML=false;
-
     /**
      * 预设的 自定义属性控制器集合
      */
-    static attrKeyStrCtrls=[
+     static attrKeyStrCtrls=[
         new AttrKeyStrCtrlEx(/^ctrl-id$/),  //ctrlID 无操作
         // 循环填充数据
         new AttrKeyStrCtrlEx(/^ctrl-for$/,
@@ -837,6 +799,63 @@ class ExCtrl extends CtrlLib{
             return this.ctrlIf(elements,ves,i,attrVal,tname,forFlag);
         })
     ]
+    /**
+     * 呼叫子控件, 如果子控件没有加载完成将会被挂起
+     * @param {String} childCtrlID  子控件 在父控件的父元素 的 ctrlID
+     * @param {Function} _fnc       需要执行的方法
+     * @param {Any} surplusArgument
+     */
+    callChild(childCtrlID,_fnc,...surplusArgument){
+        var c=this.bluePrint.getByCtrlID(childCtrlID);
+        if(c===undefined){
+            console.error("没有对应的子元素");
+            return;
+        }else if(!c.getAttribute(ExCtrl.attrKeyStr.childCtrl)){
+            console.error("该子元素没有子控件");
+            return;
+        }else{
+            // 有子控件
+            if(this.childCtrl[childCtrlID]){
+                // 子控件已加载, 直接执行
+                _fnc.apply(this.childCtrl[childCtrlID],surplusArgument)
+            }else{
+                // 子控件未加载完成, 挂起
+                if(this.childCtrlActionList[childCtrlID]===undefined)this.childCtrlActionList[childCtrlID]=[];
+                this.childCtrlActionList[childCtrlID].push(_fnc);
+            }
+        }
+    }
+    addend(_parentNode,...surplusArgument){
+        CtrlLib.prototype.addend.call(this,_parentNode,...surplusArgument);
+        this.renderString();
+        this.renderStyle();
+    }
+    createContent(){
+        var temp=this.itemVEToElement(this.bluePrint.ves);
+        this.elements=temp.elements;
+        this.rootNodes=nodeListToArray(temp.fragment.childNodes);
+        if(this.bluePrint.style.cssList.length){
+            this.styleElement=document.createElement("style");
+            document.head.appendChild(this.styleElement);
+        }
+    }
+    /**
+     * 通过 ctrlID 获取元素
+     * @param {String} ctrlID
+     * @returns {Array<Element>} 返回元素 包括ctrl-for 的
+     */
+    getElementsByCtrlID(ctrlID){
+        var rtn=[];
+        for(var i in this.elements){
+            if(i.indexOf(ctrlID)===0){
+                rtn.push(i);
+            }
+        }
+        return rtn;
+    }
+    
+    /** 规定模板字符串能否为 html, 如果启用, 就别在 ctrl-if 的前面放模板字符串，否则可能会导致 ctrl-if 的渲染出错*/
+    templateStringIsHTML=false;
 
     /**
      * 标签的属性的关键字
@@ -865,10 +884,10 @@ class ExCtrl extends CtrlLib{
 
     /**
      * 原型中的属性控制器 请自己编辑自定义属性
-     * 派生时注意要复制一份数组
-     * @type {Array<AttrKeyStrCtrl>}
+     * 派生时注意要克隆一下
+     * @type {AttrKeyStrCtrlList}
      */
-    attrKeyStr=[]
+    attrKeyStr;
 
     /**
      * 请求 api 并用json反序列化
@@ -1390,7 +1409,4 @@ ExCtrl.prototype.reRenderAttrCtrl={
     }
 }
 
-ExCtrl.prototype.attrKeyStrCtrls=ExCtrl.attrKeyStrCtrls;
-
-// todo: ? 能不能把render for 优化, 再次渲染时能否只影响部分dom？
-// 但是要这必须用 for in 或其他的指令, 非常呃呃
+ExCtrl.prototype.attrKeyStrCtrls=new AttrKeyStrCtrlList(ExCtrl.attrKeyStrCtrls);
