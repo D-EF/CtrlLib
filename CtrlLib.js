@@ -605,16 +605,7 @@ class AttrKeyStrCtrl{
         this.ctrlFuc=ctrlFuc;
         /**
          * @type  {Function}
-         * @this  {ExCtrl} this 指向 ExCtrl实例
-         * @param {Array<String>} key 处理后的属性的 key 首项应为原始 key 
-         * @param {Array<Element>} elements 实例的 elements 的引用，用于添加新的子元素
-         * @param {Array<DEF_VirtualElement>} ves DEF_VirtualElement 的数组
-         * @param {Number} i 当前的ves的下标
-         * @param {String} _attrVal 属性值
-         * @param {String} tname 临时的元素名称，用作实例的 elements 当前的索引
-         * @param {Number} k 当前的ves的下标
-         * @param {String} forFlag 表示是不是 for 的
-         * @returns {Number} 返回运算完成后的ves下标
+         * .call(ctrlLib,ctrlFucRtn,elements,ves,i,_attrVal,tname,forFlag)
          */
         this.actFuc=actFuc;
         // key,elements,ves,i,_attrVal,tname,k,forFlag
@@ -623,22 +614,25 @@ class AttrKeyStrCtrl{
     /**
      * 进行并且执行操作
      * @param {ExCtrl} ctrlLib ExCtrl实例
-     * @param {Array} key 属性的key
      * @param {Array<Element>} elements 实例的 elements 的引用，用于添加新的子元素
+     * @param {String} tname 临时的元素名称，用作实例的 elements 当前的索引
      * @param {Array<DEF_VirtualElement>} ves DEF_VirtualElement 的数组
      * @param {Number} i 当前的ves的下标
+     * @param {Number} k 经处理后的ves的下标
+     * @param {Array} key 属性的key
      * @param {String} _attrVal 属性值
-     * @param {String} tname 临时的元素名称，用作实例的 elements 当前的索引
-     * @param {Number} k 当前的ves的下标
      * @param {String} forFlag 表示是不是 for 的
      * @returns {{stopFlag:Boolean,tgti:Number}}
      * stopFlag表示是否继续调用控制器
      */
-    handle(ctrlLib,key,elements,ves,i,_attrVal,tname,k,forFlag){
+    handle(ctrlLib,elements,tname,ves,i,k,key,_attrVal,forFlag){
         var ctrlFucRtn=this.ctrlFuc(key);
         var tgti=k;
-        if(ctrlFucRtn){
-            tgti=this.actFuc?this.actFuc.call(ctrlLib,ctrlFucRtn,elements,ves,i,_attrVal,tname,k,forFlag):i;
+        if(ctrlFucRtn&&ctrlFucRtn.length){
+            tgti=this.actFuc.call(ctrlLib,elements,tname,ves,i,k,ctrlFucRtn,_attrVal,forFlag);
+            if((tgti===undefined)||tgti<k){
+                tgti=k
+            }
             return {stopFlag:this.stopFlag,tgti:tgti};
         }
         else{
@@ -691,20 +685,19 @@ class AttrKeyStrCtrlList{
     /**
      * 进行并且执行操作
      * @param {ExCtrl} ctrlLib ExCtrl实例
-     * @param {Array} key 属性的key
      * @param {Array<Element>} elements 实例的 elements 的引用，用于添加新的子元素
+     * @param {String} tname 临时的元素名称，用作实例的 elements 当前的索引
      * @param {Array<DEF_VirtualElement>} ves DEF_VirtualElement 的数组
      * @param {Number} i 当前的ves的下标
+     * @param {String} key 属性的key
      * @param {String} _attrVal 属性值
-     * @param {String} tname 临时的元素名称，用作实例的 elements 当前的索引
-     * @param {Number} k 当前的ves的下标
      * @param {String} forFlag 表示是不是 for 的
      * @returns {Number} 返回执行完成后的重新定位的ves下标
      */
-    handle(ctrlLib,key,elements,ves,_i,_attrVal,tname,k,forFlag){
+    handle(ctrlLib,elements,tname,ves,i,k,key,_attrVal,forFlag){
         var tgti=k,temp;
-        for(var i=this.list.length-1;i>=0;--i){
-            temp=this.list[i].handle(ctrlLib,key,elements,ves,_i,_attrVal,tname,k,forFlag);
+        for(var j=this.list.length-1;j>=0;--j){
+            temp=this.list[j].handle(ctrlLib,elements,tname,ves,i,k,key,_attrVal,forFlag);
             tgti=temp.tgti
             if(temp.stopFlag){
                 return tgti;
@@ -725,27 +718,32 @@ class ExCtrl extends CtrlLib{
      * 预设的 自定义属性控制器集合
      */
      static attrKeyStrCtrls=[
-        new AttrKeyStrCtrlEx(/^ctrl-id$/),  //ctrlID 无操作
+        new AttrKeyStrCtrl(function(key){return key},
+        function(elements,tname,ves,i,k,key,attrVal,forFlag){
+            elements[tname].setAttribute(key,attrVal);
+        }),  //ctrlID 无操作
+        new AttrKeyStrCtrlEx(/^ctrl-id$/,nullfnc),  //ctrlID 无操作
         // 循环填充数据
         new AttrKeyStrCtrlEx(/^ctrl-for$/,
             /**@this {ExCtrl}*/
-            function(key,elements,ves,i,_attrVal,tname,k,forFlag){
-                var k=k;
+            function(elements,tname,ves,i,k,key,attrVal,forFlag){
+                var k=i;
                 k=this.renderFor(elements,ves,i,attrVal,tname,forFlag);
                 elements[tname].forVesOP=i;
                 elements[tname].forVesED=k;
+                return k;
             }
         ),
         // 生成子控件 tudo 生成参数处理
         new AttrKeyStrCtrlEx(/^ctrl-child_ctrl$/,
             /**@this {ExCtrl}*/
-            function(key,elements,ves,i,attrVal,tname,k,forFlag){
-                this.renderChildCtrl(elements[ves[k].ctrlID],ves[k],attrVal);
+            function(elements,tname,ves,i,k,key,attrVal,forFlag){
+                this.renderChildCtrl(elements[ves[i].ctrlID],ves[i],attrVal);
             }
         ),
         // dom 绑定事件
         new AttrKeyStrCtrlEx(/^pa-(.+)$/,
-        /**@this {ExCtrl}*/function(key,elements,ves,i,attrVal,tname,k,forFlag){
+        /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
             var temp=key[1],that=this;
             elements[tname].addEventListener(temp,function(e){
                 (new Function(["e","tgt"],attrVal)).call(that,e,this);
@@ -753,7 +751,7 @@ class ExCtrl extends CtrlLib{
         }),
         // 添加控件事件
         new AttrKeyStrCtrlEx(/^ca-(.+)$/,
-        /**@this {ExCtrl}*/function(key,elements,ves,i,attrVal,tname,k,forFlag){
+        /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
             var tgt=elements[tname];
             var that=this;
             this.addCtrlAction(key[1],
@@ -764,7 +762,7 @@ class ExCtrl extends CtrlLib{
         }),
         // element resize 
         new AttrKeyStrCtrlEx(/^pa-resize$/,
-            /**@this {ExCtrl}*/function(key,elements,ves,i,attrVal,tname,k,forFlag){
+            /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
             var tgt=elements[tname];
             var eventFnc=new Function(['e',"tgt",],attrVal),that=this;
             addResizeEvent(tgt,function(e){
@@ -776,26 +774,26 @@ class ExCtrl extends CtrlLib{
         
         // 按下按键事件 (组合键)
         new AttrKeyStrCtrlEx(/^pa-keydown\[(.+)\]$/,
-        /**@this {ExCtrl}*/function(key,elements,ves,i,attrVal,tname,k,forFlag){
-            var that=this;
+        /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
+            var that=this,tgt=elements[tname];
             var eventFnc=new Function(['e',"tgt",],attrVal);
-            addKeyEvent(tgt,true,key.split(','),
+            addKeyEvent(tgt,true,key.slice(1),
                 function(e){
                     eventFnc.call(that,e,this)
                 },false);
         }),
         // 抬起按键事件
         new AttrKeyStrCtrlEx(/^pa-keyup\[(.+)\]$/,
-        /**@this {ExCtrl}*/function(key,elements,ves,i,attrVal,tname,k,forFlag){
+        /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
             var that=this;
             var eventFnc=new Function(['e',"tgt",],attrVal);
-            addKeyEvent(tgt,true,key.split(','),
+            addKeyEvent(tgt,true,key.slice(1),
                 function(e){
                     eventFnc.call(that,e,this)
                 },true);
         }),
         new AttrKeyStrCtrlEx(/ctrl-if/,
-            /**@this {ExCtrl}*/function(key,elements,ves,i,attrVal,tname,k,forFlag){
+            /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
             return this.ctrlIf(elements,ves,i,attrVal,tname,forFlag);
         })
     ]
@@ -912,18 +910,14 @@ class ExCtrl extends CtrlLib{
      * @param {Number} i 当前的ves的下标
      * @param {String} _attrVal 属性值
      * @param {String} tname 临时的元素名称，用作实例的 elements 当前的索引
-     * @param {Number} k 当前的ves的下标
      * @param {String} forFlag 表示是不是 for 的
      * @returns {Number} 返回运算完成后的ves下标
      */
-    attrHandle(key,elements,ves,i,_attrVal,tname,k,forFlag){
-        var tgt=elements[tname];
+    attrHandle(key,elements,ves,i,k,_attrVal,tname,forFlag){
+        var tgt=elements[tname],k=k;
         var attrVal=templateStringRender(_attrVal,this,[tgt]).str,//htmlToCode(_attrVal),
-            k=k, that=this;
-
-        if(!tgt.ctrlAttr)tgt.ctrlAttr={};
-        tgt.ctrlAttr[key]=attrVal;
-        
+        that=this;
+        k=this.attrKeyStrCtrls.handle(this,elements,tname,ves,i,k,key,_attrVal,forFlag);
         return k;
     }
     /**
@@ -1108,7 +1102,7 @@ class ExCtrl extends CtrlLib{
             elements[tname]=document.createElement(ves[i].tagName);
             elements[tname].ctrlID=tname;
             for(j=ves[i].attribute.length-1;j>=0;--j){
-                k=this.attrHandle(ves[i].attribute[j].key,elements,ves,i,ves[i].attribute[j].value,tname,k,forFlag);
+                k=this.attrHandle(ves[i].attribute[j].key,elements,ves,i,k,ves[i].attribute[j].value,tname,k,forFlag);
             }
             tname=ves[i].ctrlID+nameEX;
             if(dHash[ves[i].depth-1]){ //如果存在上一层
