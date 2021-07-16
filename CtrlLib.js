@@ -916,8 +916,8 @@ class ExCtrl extends CtrlLib{
     attrHandle(key,elements,ves,i,k,_attrVal,tname,forFlag){
         var tgt=elements[tname],k=k;
         var attrVal=templateStringRender(_attrVal,this,[tgt]).str,//htmlToCode(_attrVal),
-        that=this;
-        k=this.attrKeyStrCtrls.handle(this,elements,tname,ves,i,k,key,_attrVal,forFlag);
+        // that=this;
+        k=this.attrKeyStrCtrls.handle(this,elements,tname,ves,i,k,key,attrVal,forFlag);
         return k;
     }
     /**
