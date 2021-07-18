@@ -1,3 +1,9 @@
+/*
+ * @Author: Darth_Eternalfaith
+ * @LastEditTime: 2021-07-19 02:32:49
+ * @LastEditors: Darth_Eternalfaith
+ */
+
 /**
  * 用来保存蓝本的类
  */
@@ -721,7 +727,7 @@ class ExCtrl extends CtrlLib{
         new AttrKeyStrCtrl(function(key){return key},
         function(elements,tname,ves,i,k,key,attrVal,forFlag){
             elements[tname].setAttribute(key,attrVal);
-        }),  //ctrlID 无操作
+        }),
         new AttrKeyStrCtrlEx(/^ctrl-id$/,nullfnc),  //ctrlID 无操作
         // 循环填充数据
         new AttrKeyStrCtrlEx(/^ctrl-for$/,
@@ -915,10 +921,15 @@ class ExCtrl extends CtrlLib{
      */
     attrHandle(key,elements,ves,i,k,_attrVal,tname,forFlag){
         var tgt=elements[tname],k=k;
-        var attrVal=templateStringRender(_attrVal,this,[tgt]).str,//htmlToCode(_attrVal),
+
+        var attrVal=this.stringRender(decodeHTML(_attrVal),tname,"attr",0,key,tgt);
+
         // that=this;
-        k=this.attrKeyStrCtrls.handle(this,elements,tname,ves,i,k,key,attrVal,forFlag);
+        var k=this.attrKeyStrCtrls.handle(this,elements,tname,ves,i,k,key,attrVal,forFlag);
         return k;
+    }
+    attrHandleR(ctrlid){
+        // todo 
     }
     /**
      * 渲染 模板字符 内容
@@ -1174,7 +1185,6 @@ class ExCtrl extends CtrlLib{
                 tid=this.dataLinks[i].link[j].ctrlID;
                 if(this.dataLinks[i].value===this.dataLinks[i].expFnc.call(this,this.elements[tid]))
                 continue;
-                ttype=this.dataLinks[i].link[j].type;
                 for(j=this.dataLinks[i].link.length-1;j>=0;--j){
                     tid=this.dataLinks[i].link[j].ctrlID;
                     ttype=this.dataLinks[i].link[j].type;
@@ -1268,11 +1278,11 @@ class ExCtrl extends CtrlLib{
     renderCtrl_innerEnd(ctrlID){
         var tgtElement=this.elements[ctrlID];
         var thisVe=this.bluePrint.getByCtrlID(ctrlID);
-        var tempNode=this.stringRender(thisVe.before,ctrlID,"before",this.templateStringIsHTML);
+        var tempNode=this.stringRender(thisVe.innerEnd,ctrlID,"before",this.templateStringIsHTML);
         if(tempNode.constructor===String) tempNode=new Text(tempNode);
         do{
             tgtElement.childNodes[tgtElement.childNodes.length-1].remove();
-        }while(tgtElement.childNodes[tgtElement.childNodes.length-1]&&tgtElement.childNodes[tgtElement.childNodes.length-1].ctrlID);
+        }while(tgtElement.childNodes[tgtElement.childNodes.length-1]&&!tgtElement.childNodes[tgtElement.childNodes.length-1].ctrlID);
         this.elements[ctrlID].appendChild(tempNode);
     }
     /**
