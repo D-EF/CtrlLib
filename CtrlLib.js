@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2021-07-19 02:32:49
+ * @LastEditTime: 2021-09-27 10:38:15
  * @LastEditors: Darth_Eternalfaith
  */
 
@@ -104,8 +104,6 @@ class DEF_VirtualElementList{
         }
         return i;
     }
-    //所有无内容元素(短标签)的tag name
-    static voidElementsTagName=["br","hr","img","input","link","meta","area","base","col","command","embed","keygen","param","source","track","wbr","?xml"];
     /**
      * 把xml转换成DEF_VirtualElementList
      * 注意， 当属性中使用了模板字符串时, 模板字符串中不要有和xml标签属性一样的引号, 不然可能会出错
@@ -215,6 +213,9 @@ class DEF_VirtualElementList{
         return new DEF_VirtualElementList(ves,maxDepth,style);
     }
 }
+//所有无内容元素(短标签)的tag name
+
+DEF_VirtualElementList.voidElementsTagName=["br","hr","img","input","link","meta","area","base","col","command","embed","keygen","param","source","track","wbr","?xml"];
 /**
  * 作为虚拟元素树的叶子 供 htmlToControl 处理xml字符串
  * @param {String}  tagName     标签名
@@ -416,7 +417,6 @@ function DataLink(expression,value,link){
  * 控件的基类
  */
  class CtrlLib{
-    static idIndex=0;
     /**
      * @param {Object} data
      */
@@ -591,6 +591,7 @@ function DataLink(expression,value,link){
         this.ctrlActionList[actionKey].push(_fnc);
     }
 }
+CtrlLib.idIndex=zero;
 /**
  * 子控件类
  */
@@ -719,90 +720,9 @@ class ExCtrl extends CtrlLib{
     constructor(data){
         super(data);
         this.dataLinks={};
+        /** 规定模板字符串能否为 html, 如果启用, 就别在 ctrl-if 的前面放模板字符串，否则可能会导致 ctrl-if 的渲染出错*/
+        this.templateStringIsHTML=false;
     }
-    /**
-     * 预设的 自定义属性控制器集合
-     */
-     static attrKeyStrCtrls=[
-        new AttrKeyStrCtrl(function(key){return key},
-        function(elements,tname,ves,i,k,key,attrVal,forFlag){
-            elements[tname].setAttribute(key,attrVal);
-        }),
-        new AttrKeyStrCtrlEx(/^ctrl-id$/,nullfnc),  //ctrlID 无操作
-        // 循环填充数据
-        new AttrKeyStrCtrlEx(/^ctrl-for$/,
-            /**@this {ExCtrl}*/
-            function(elements,tname,ves,i,k,key,attrVal,forFlag){
-                var k=i;
-                k=this.renderFor(elements,ves,i,attrVal,tname,forFlag);
-                elements[tname].forVesOP=i;
-                elements[tname].forVesED=k;
-                return k;
-            }
-        ),
-        // 生成子控件 tudo 生成参数处理
-        new AttrKeyStrCtrlEx(/^ctrl-child_ctrl$/,
-            /**@this {ExCtrl}*/
-            function(elements,tname,ves,i,k,key,attrVal,forFlag){
-                this.renderChildCtrl(elements[ves[i].ctrlID],ves[i],attrVal);
-            }
-        ),
-        // dom 绑定事件
-        new AttrKeyStrCtrlEx(/^pa-(.+)$/,
-        /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
-            var temp=key[1],that=this;
-            elements[tname].addEventListener(temp,function(e){
-                (new Function(["e","tgt"],attrVal)).call(that,e,this);
-            });
-        }),
-        // 添加控件事件
-        new AttrKeyStrCtrlEx(/^ca-(.+)$/,
-        /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
-            var tgt=elements[tname];
-            var that=this;
-            this.addCtrlAction(key[1],
-                function(e){
-                    (new Function(["e","tgt"],attrVal)).call(that,e,tgt);
-                }
-            );
-        }),
-        // element resize 
-        new AttrKeyStrCtrlEx(/^pa-resize$/,
-            /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
-            var tgt=elements[tname];
-            var eventFnc=new Function(['e',"tgt",],attrVal),that=this;
-            addResizeEvent(tgt,function(e){
-                eventFnc.call(that,e,tgt);
-            });
-            if(this.ctrlActionList.callback===undefined) this.ctrlActionList.callback=[];
-            this.ctrlActionList.callback.push(function(){addResizeEvent.reResize(tgt)});
-        }),
-        
-        // 按下按键事件 (组合键)
-        new AttrKeyStrCtrlEx(/^pa-keydown\[(.+)\]$/,
-        /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
-            var that=this,tgt=elements[tname];
-            var eventFnc=new Function(['e',"tgt",],attrVal);
-            addKeyEvent(tgt,true,key.slice(1),
-                function(e){
-                    eventFnc.call(that,e,this)
-                },false);
-        }),
-        // 抬起按键事件
-        new AttrKeyStrCtrlEx(/^pa-keyup\[(.+)\]$/,
-        /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
-            var that=this;
-            var eventFnc=new Function(['e',"tgt",],attrVal);
-            addKeyEvent(tgt,true,key.slice(1),
-                function(e){
-                    eventFnc.call(that,e,this)
-                },true);
-        }),
-        new AttrKeyStrCtrlEx(/ctrl-if/,
-            /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
-            return this.ctrlIf(elements,ves,i,attrVal,tname,forFlag);
-        })
-    ]
     /**
      * 呼叫子控件, 如果子控件没有加载完成将会被挂起
      * @param {String} childCtrlID  子控件 在父控件的父元素 的 ctrlID
@@ -857,41 +777,6 @@ class ExCtrl extends CtrlLib{
         }
         return rtn;
     }
-    
-    /** 规定模板字符串能否为 html, 如果启用, 就别在 ctrl-if 的前面放模板字符串，否则可能会导致 ctrl-if 的渲染出错*/
-    templateStringIsHTML=false;
-
-    /**
-     * 标签的属性的关键字
-     * 保存用于编辑 bluePrint 的 xml 的关键字  
-     */
-    static attrKeyStr={
-        ctrlID:"ctrl-id",
-        if:"ctrl-if",
-        for:"ctrl-for",
-        childCtrl:"ctrl-child_ctrl",
-        childCtrlData:"ctrl-child_ctrl_datafnc",
-        childCtrlOptionBefore:"chco-",   //  给子控件添加控件属性
-        proxyEventBefore:"pa-",
-        ctrlEventBefore:"ca-",
-        // element resize 
-        proxyResizeEvent:"pa-resize",
-        // 按下按键事件 (组合键)
-        keyDownEventBefore:"pa-keydown[",
-        keyDownEventCilpKey:",",
-        keyDownEventAfter:"]",
-        // 抬起按键事件
-        keyUpEventBefore:"pa-keyup[",
-        keyUpEventCilpKey:",",
-        keyUpEventAfter:"]",
-    }
-
-    /**
-     * 原型中的属性控制器 请自己编辑自定义属性
-     * 派生时注意要克隆一下
-     * @type {AttrKeyStrCtrlList}
-     */
-    attrKeyStr;
 
     /**
      * 请求 api 并用json反序列化
@@ -1317,6 +1202,115 @@ class ExCtrl extends CtrlLib{
         return xmlEXCtrl;
     }
 }
+
+/**
+ * 标签的属性的关键字
+ * 保存用于编辑 bluePrint 的 xml 的关键字  
+ */
+ExCtrl.attrKeyStr={
+    ctrlID:"ctrl-id",
+    if:"ctrl-if",
+    for:"ctrl-for",
+    childCtrl:"ctrl-child_ctrl",
+    childCtrlData:"ctrl-child_ctrl_datafnc",
+    childCtrlOptionBefore:"chco-",   //  给子控件添加控件属性
+    proxyEventBefore:"pa-",
+    ctrlEventBefore:"ca-",
+    // element resize 
+    proxyResizeEvent:"pa-resize",
+    // 按下按键事件 (组合键)
+    keyDownEventBefore:"pa-keydown[",
+    keyDownEventCilpKey:",",
+    keyDownEventAfter:"]",
+    // 抬起按键事件
+    keyUpEventBefore:"pa-keyup[",
+    keyUpEventCilpKey:",",
+    keyUpEventAfter:"]",
+}
+/**
+ * 预设的 自定义属性控制器集合
+ */
+ExCtrl.attrKeyStrCtrls=[
+    new AttrKeyStrCtrl(function(key){return key},
+    function(elements,tname,ves,i,k,key,attrVal,forFlag){
+        elements[tname].setAttribute(key,attrVal);
+    }),
+    new AttrKeyStrCtrlEx(/^ctrl-id$/,nullfnc),  //ctrlID 无操作
+    // 循环填充数据
+    new AttrKeyStrCtrlEx(/^ctrl-for$/,
+        /**@this {ExCtrl}*/
+        function(elements,tname,ves,i,k,key,attrVal,forFlag){
+            var k=i;
+            k=this.renderFor(elements,ves,i,attrVal,tname,forFlag);
+            elements[tname].forVesOP=i;
+            elements[tname].forVesED=k;
+            return k;
+        }
+    ),
+    // 生成子控件 tudo 生成参数处理
+    new AttrKeyStrCtrlEx(/^ctrl-child_ctrl$/,
+        /**@this {ExCtrl}*/
+        function(elements,tname,ves,i,k,key,attrVal,forFlag){
+            this.renderChildCtrl(elements[ves[i].ctrlID],ves[i],attrVal);
+        }
+    ),
+    // dom 绑定事件
+    new AttrKeyStrCtrlEx(/^pa-(.+)$/,
+    /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
+        var temp=key[1],that=this;
+        elements[tname].addEventListener(temp,function(e){
+            (new Function(["e","tgt"],attrVal)).call(that,e,this);
+        });
+    }),
+    // 添加控件事件
+    new AttrKeyStrCtrlEx(/^ca-(.+)$/,
+    /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
+        var tgt=elements[tname];
+        var that=this;
+        this.addCtrlAction(key[1],
+            function(e){
+                (new Function(["e","tgt"],attrVal)).call(that,e,tgt);
+            }
+        );
+    }),
+    // element resize 
+    new AttrKeyStrCtrlEx(/^pa-resize$/,
+        /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
+        var tgt=elements[tname];
+        var eventFnc=new Function(['e',"tgt",],attrVal),that=this;
+        addResizeEvent(tgt,function(e){
+            eventFnc.call(that,e,tgt);
+        });
+        if(this.ctrlActionList.callback===undefined) this.ctrlActionList.callback=[];
+        this.ctrlActionList.callback.push(function(){addResizeEvent.reResize(tgt)});
+    }),
+    
+    // 按下按键事件 (组合键)
+    new AttrKeyStrCtrlEx(/^pa-keydown\[(.+)\]$/,
+    /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
+        var that=this,tgt=elements[tname];
+        var eventFnc=new Function(['e',"tgt",],attrVal);
+        addKeyEvent(tgt,true,key.slice(1),
+            function(e){
+                eventFnc.call(that,e,this)
+            },false);
+    }),
+    // 抬起按键事件
+    new AttrKeyStrCtrlEx(/^pa-keyup\[(.+)\]$/,
+    /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
+        var that=this;
+        var eventFnc=new Function(['e',"tgt",],attrVal);
+        addKeyEvent(tgt,true,key.slice(1),
+            function(e){
+                eventFnc.call(that,e,this)
+            },true);
+    }),
+    new AttrKeyStrCtrlEx(/ctrl-if/,
+        /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
+        return this.ctrlIf(elements,ves,i,attrVal,tname,forFlag);
+    })
+]
+
 /**
  * render 的 方法集; 给影响自身内部的属性 "ctrl-for" "ctrl-if" 等
  */
