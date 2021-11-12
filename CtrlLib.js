@@ -597,7 +597,6 @@ CtrlLib.idIndex=zero;
  */
 CtrlLib.prototype.childCtrlType={};
 
-
 /**
  * 自定义属性控制器
  */

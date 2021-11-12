@@ -107,7 +107,6 @@
   ```   
   此处的 this 指针为控件, 如果需要用当前元素 应该使用 tgt, 并没有e参数  
 
-
 ### **特殊的 dom 事件**  
   控件提供了一些特殊的事件, 这些事件是强化后的 dom 事件  
 * pa-keyup[{Number}] & pa-keydown[{Number}]    
@@ -134,7 +133,6 @@ class EX1 extends ExCtrl{}
  */
 EX1.prototype.bluePrint= bluePrint;
 ```
-
 
 ## 示例 "走马灯"
 

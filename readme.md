@@ -108,7 +108,6 @@ constructor(data)
     根据data渲染部分需要渲染的内容  
     **这个方法在 ExCtrl 中有一个实现**  
 
-
 * reRender_callback() **虚方法**  
     重新渲染完成后的回调  
 
