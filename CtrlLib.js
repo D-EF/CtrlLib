@@ -9,7 +9,7 @@
  */
 class DEF_VirtualElementList{
     /**
-     * @param {Array<DEF_VirtualElement>} ves 序列化的虚拟元素树
+     * @param {DEF_VirtualElement[]} ves 序列化的虚拟元素树
      * @param {Number} maxDepth 最大深度
      * @param {DEF_CSSVE} style 样式元素
      */
@@ -73,9 +73,9 @@ class DEF_VirtualElementList{
     /**
      * 获取子元素
      * @param {Number} vesindex ves的下标
-     * @returns {{indexs:Array<Number>,ves:Array<DEF_VirtualElement>,p:Number}}
-     * @return {Array<Number>} indexs 在原蓝图中的下标集合
-     * @return {Array<DEF_VirtualElement>} ves 子元素集合
+     * @returns {{indexs:Number>,ves:Array<DEF_VirtualElement[],p:Number}}
+     * @return {Number[]} indexs 在原蓝图中的下标集合
+     * @return {DEF_VirtualElement[]} ves 子元素集合
      * @return {Number} p 下一个同级元素的下标
      */
     getChild(vesindex){
@@ -108,7 +108,7 @@ class DEF_VirtualElementList{
      * 把xml转换成DEF_VirtualElementList
      * 注意， 当属性中使用了模板字符串时, 模板字符串中不要有和xml标签属性一样的引号, 不然可能会出错
      * @param {String} xmlStr
-     * @return {DEF_VirtualElementList} {ves:Array<VirtualElement>,maxDepth:Number}
+     * @return {DEF_VirtualElementList} {ves:VirtualElement[],maxDepth:Number}
      */
     static xmlToVE(_xmlStr){
         var xmlStr=_xmlStr.replace(/\ +/g," ").replace(/[\r\n]/g,"");//去除多余的空格和换行
@@ -363,7 +363,7 @@ class DEF_CSSVE{
  */
 class DEF_CSSVEItem{
     /**
-     * @param {Array<String>} selectors 选择器的数组
+     * @param {String[]} selectors 选择器的数组
      * @param {String} cssString css 的内容 
      * @param {Number} depth 深度
      */
@@ -602,7 +602,7 @@ CtrlLib.prototype.childCtrlType={};
  */
 class AttrKeyStrCtrl{
     /**
-     * @param {Function} ctrlFuc    控制的函数 ctrlFuc(String key) 应返回处理后的key值{Array<String>} 首项应为原始 key , 返回 undefined 将不会执行 actFuc
+     * @param {Function} ctrlFuc    控制的函数 ctrlFuc(String key) 应返回处理后的key值{String[]} 首项应为原始 key , 返回 undefined 将不会执行 actFuc
      * @param {Function} actFuc     执行的函数 actFuc
      * @param {Boolean} stopFlag    表示是否阻塞继续调用控制器, 默认为true阻塞
      * 注意，actFnc需要返回 跳过蓝图后的 目标索引
@@ -620,9 +620,9 @@ class AttrKeyStrCtrl{
     /**
      * 进行并且执行操作
      * @param {ExCtrl} ctrlLib ExCtrl实例
-     * @param {Array<Element>} elements 实例的 elements 的引用，用于添加新的子元素
+     * @param {Element[]} elements 实例的 elements 的引用，用于添加新的子元素
      * @param {String} tname 临时的元素名称，用作实例的 elements 当前的索引
-     * @param {Array<DEF_VirtualElement>} ves DEF_VirtualElement 的数组
+     * @param {DEF_VirtualElement[]} ves DEF_VirtualElement 的数组
      * @param {Number} i 当前的ves的下标
      * @param {Number} k 经处理后的ves的下标
      * @param {Array} key 属性的key
@@ -669,7 +669,7 @@ class AttrKeyStrCtrlEx extends AttrKeyStrCtrl{
 class AttrKeyStrCtrlList{
     /**
      * 
-     * @param {Array<AttrKeyStrCtrl>} list 控制器的数组
+     * @param {AttrKeyStrCtrl[]} list 控制器的数组
      */
     constructor(list){
         this.list=list||[];
@@ -691,9 +691,9 @@ class AttrKeyStrCtrlList{
     /**
      * 进行并且执行操作
      * @param {ExCtrl} ctrlLib ExCtrl实例
-     * @param {Array<Element>} elements 实例的 elements 的引用，用于添加新的子元素
+     * @param {Element[]} elements 实例的 elements 的引用，用于添加新的子元素
      * @param {String} tname 临时的元素名称，用作实例的 elements 当前的索引
-     * @param {Array<DEF_VirtualElement>} ves DEF_VirtualElement 的数组
+     * @param {DEF_VirtualElement[]} ves DEF_VirtualElement 的数组
      * @param {Number} i 当前的ves的下标
      * @param {String} key 属性的key
      * @param {String} _attrVal 属性值
@@ -765,7 +765,7 @@ class ExCtrl extends CtrlLib{
     /**
      * 通过 ctrlID 获取元素
      * @param {String} ctrlID
-     * @returns {Array<Element>} 返回元素 包括ctrl-for 的
+     * @returns {Element[]} 返回元素 包括ctrl-for 的
      */
     getElementsByCtrlID(ctrlID){
         var rtn=[];
@@ -795,8 +795,8 @@ class ExCtrl extends CtrlLib{
     /**
      * 控制标签的属性
      * @param {String} key 属性的key
-     * @param {Array<Element>} elements 实例的 elements 的引用，用于添加新的子元素
-     * @param {Array<DEF_VirtualElement>} ves DEF_VirtualElement 的数组
+     * @param {Element[]} elements 实例的 elements 的引用，用于添加新的子元素
+     * @param {DEF_VirtualElement[]} ves DEF_VirtualElement 的数组
      * @param {Number} i 当前的ves的下标
      * @param {String} _attrVal 属性值
      * @param {String} tname 临时的元素名称，用作实例的 elements 当前的索引
@@ -821,7 +821,7 @@ class ExCtrl extends CtrlLib{
      * @param {String} ctrlID    登记 ID       
      * @param {String} type      登记 类型  
      * @param {Boolean} ishtml   控制返回值, 默认将返回字符串 ，非0 将返回 DocumentFragment
-     * @param {Array<String>} attrkey   如果是登记的 标签的属性值 这个是属性的 key
+     * @param {String[]} attrkey   如果是登记的 标签的属性值 这个是属性的 key
      * @param {Element} tgt 
      * @return {String||DocumentFragment} 字符串 或 包含内容的文档片段
      */
@@ -882,8 +882,8 @@ class ExCtrl extends CtrlLib{
     }
     /**
      * 渲染for
-     * @param {Array<Element>}   elements    
-     * @param {Array<DEF_VirtualElement>}   ves         DEF_VirtualElement list
+     * @param {Element[]}   elements    
+     * @param {DEF_VirtualElement[]}   ves         DEF_VirtualElement list
      * @param {Number}  i           当前的ves的索引
      * @param {String}  forStr      属性内容
      * @param {String}  tname       elements的索引
@@ -909,8 +909,8 @@ class ExCtrl extends CtrlLib{
     }
     /**
      * 用于控制元素是否出现
-     * @param {Array<Element>}   elements    
-     * @param {Array<DEF_VirtualElement>}   ves         DEF_VirtualElement list
+     * @param {Element[]}   elements    
+     * @param {DEF_VirtualElement[]}   ves         DEF_VirtualElement list
      * @param {Number}  i           当前的ves的索引
      * @param {String}  attrVal     属性内容
      * @param {String}  tname       elements的索引
@@ -977,7 +977,7 @@ class ExCtrl extends CtrlLib{
     }
     /**
      * 把 ve 转换成 js 的 Element 对象;
-     * @param   {Array<DEF_VirtualElement>} ves   DEF_VirtualElement list
+     * @param   {DEF_VirtualElement[]} ves   DEF_VirtualElement list
      * @param   {String}     _nameEX    用来添加命名的
      * @return  {Object{elements:{},fragment:DocumentFragment}}
      */

@@ -131,7 +131,7 @@ constructor(data)
 ## ExCtrl 属性  
 ### 静态属性  
 
-* attrKeyStrCtrls {Array< AttrKeyStrCtrl >}   
+* attrKeyStrCtrls { AttrKeyStrCtrl []}   
   属性控制器的集合备档   
 
 ----
@@ -160,8 +160,8 @@ constructor(data)
 * attrHandle(key,elements,ves,i,_attrVal,tname,k,forFlag)  
   控制标签的属性  
   @param {String} key 属性的key  
-  @param {Array<Element>} elements 实例的 elements 的引用，用于添加新的子元素  
-  @param {Array<DEF_VirtualElement>} ves DEF_VirtualElement 的数组  
+  @param {Element[]} elements 实例的 elements 的引用，用于添加新的子元素  
+  @param {DEF_VirtualElement[]} ves DEF_VirtualElement 的数组  
   @param {Number} i 当前的ves的下标  
   @param {String} _attrVal 属性值  
   @param {String} tname 临时的元素名称，用作实例的 elements 当前的索引  
@@ -175,14 +175,14 @@ constructor(data)
   @param {String} ctrlID    登记 ID         
   @param {String} type      登记 类型    
   @param {Boolean} ishtml   控制返回值, 默认将返回字符串 ，非0 将返回 DocumentFragment  
-  @param {Array<>} attrkey   如果是登记的 标签的属性值 这个是属性的 key  
+  @param {[]} attrkey   如果是登记的 标签的属性值 这个是属性的 key  
   @param {Element} tgt   
   @return {String||DocumentFragment} 字符串 或 包含内容的文档片段  
   
 * renderFor(elements,ves,i,forStr,tname)  
   渲染for 循环生成内容
-  @param {Array<Element>}   elements      
-  @param {Array<DEF_VirtualElement>}   ves         DEF_VirtualEle  
+  @param {Element[]}   elements      
+  @param {DEF_VirtualElement[]}   ves         DEF_VirtualEle  
   @param {Number}  i           当前的ves的索引  
   @param {String}  forStr      属性内容  
   @param {String}  tname       elements的索引  
@@ -190,8 +190,8 @@ constructor(data)
   
 * ctrlIf(elements,ves,i,attrVal,tname)  
   用于控制元素是否出现  
-  @param {Array<Element>}   elements      
-  @param {Array<DEF_VirtualElement>}   ves         DEF_Virt  
+  @param {Element[]}   elements      
+  @param {DEF_VirtualElement[]}   ves         DEF_Virt  
   @param {Number}  i           当前的ves的索引  
   @param {String}  attrVal     属性内容  
   @param {String}  tname       elements的索引  
@@ -205,7 +205,7 @@ constructor(data)
 
 * itemVEToElement(ves,_nameEX,forFlag)  
   把 ve 转换成 js 的 Element 对象;  
-  @param   {Array<DEF_VirtualElement>} ves   DEF_VirtualElement list  
+  @param   {DEF_VirtualElement[]} ves   DEF_VirtualElement list  
   @param   {String}     _nameEX    用来添加命名的  
   @return  {Object{elements:{},fragment:DocumentFragment}}  
 
@@ -258,7 +258,7 @@ constructor(data)
   这个是用于给 ExCtrl 类保存 蓝图的类  
   采用的是序列化树(数组)的数据结构
   ### 构造函数 constructor(ves,maxDepth,style)
-    @param {Array<DEF_VirtualElement>} ves 序列化的虚拟元素树  
+    @param {DEF_VirtualElement[]} ves 序列化的虚拟元素树  
     @param {Number} maxDepth 最大深度  
     @param {DEF_CSSVE} style 样式元素  
   ---
@@ -303,9 +303,9 @@ constructor(data)
   * getChild(vesindex)
       获取子元素  
       @param {Number} vesindex 目标ves的下标  
-      @returns {{indexs:Array<Number>,ves:Array<<DEF_VirtualElement>,p:Number}}  
-      @return {Array<Number>} indexs 在原蓝图中的下标集合  
-      @return {Array<DEF_VirtualElement>} ves 子元素集合  
+      @returns {{indexs:Number>,ves:Array<<DEF_VirtualElement[],p:Number}}  
+      @return {Number[]} indexs 在原蓝图中的下标集合  
+      @return {DEF_VirtualElement[]} ves 子元素集合  
       @return {Number} p 下一个同级元素的下标  
 
   * getParent(vesIndex)
@@ -318,7 +318,7 @@ constructor(data)
   * xmlToVE(_xmlStr)
     把xml转换成 DEF_VirtualElementList
     @param {String} xmlStr
-    @return {DEF_VirtualElementList} {ves:Array<VirtualElement>,maxDepth:Number}
+    @return {DEF_VirtualElementList} {ves:VirtualElement[],maxDepth:Number}
 ----
 # DEF_VirtualElement 类
   作为虚拟元素树的叶子 供 htmlToControl 处理xml字符串
@@ -399,11 +399,11 @@ constructor(data)
 # DEF_CSSVEItem 类
 一个 style 选择器和样式
   ### 构造函数 constructor(selectors,cssString,depth)
-    @param {Array<String>} selectors 选择器的数组
+    @param {String[]} selectors 选择器的数组
     @param {String} cssString css 的内容 
     @param {Number} depth 深度
   ## DEF_CSSVEItem 属性   
-  selectors {Array<String>} 选择器的数组   
+  selectors {String[]} 选择器的数组   
   cssString {String} css 的内容    
   depth {Number} 深度   
   ## DEF_CSSVEItem 方法   
