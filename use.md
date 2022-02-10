@@ -1,6 +1,6 @@
 <!--
  * @LastEditors: Darth_Eternalfaith
- * @LastEditTime: 2021-07-19 00:41:17
+ * @LastEditTime: 2022-02-10 17:06:39
 -->
 这个文档是 CtrlLib 的使用说明, 由于代码太多了所以不再在文档里更新代码说明了!   
 而且代码中的注释还是挺详细的   
@@ -127,9 +127,7 @@
 ## 派生 ExCtrl 制作一个控件类
 ```javascript
 class EX1 extends ExCtrl{}
-/**
- * @type {DEF_VirtualElementList}
- * 你可以使用 DEF_VirtualElementList.xmlToVE(xmlStr); 来生成 bluePrint.
+/** @type {DEF_VirtualElementList} 你可以使用 DEF_VirtualElementList.xmlToVE(xmlStr); 来生成 bluePrint.
  */
 EX1.prototype.bluePrint= bluePrint;
 ```
@@ -166,16 +164,14 @@ css代码太长了所以不贴上来了
 以下是js代码
 ```javascript
 
-/**
- * 图片轮播?
+/** 图片轮播?
  */
 class ImgList extends ExCtrl{
     constructor(data){
         super(data);
         this.index=0;
     }
-    /**
-     * 步进 index 
+    /** 步进 index 
      * @param {Number} _step 步长
      * @returns {Number} 返回新的 index
      */
@@ -183,8 +179,7 @@ class ImgList extends ExCtrl{
         var tgtIndex=_step+this.index;
         return this.setIndex(tgtIndex);
     }
-    /**
-     * 更改当前 index
+    /** 更改当前 index
      * @param {Number} _index
      */
     setIndex(_index){
