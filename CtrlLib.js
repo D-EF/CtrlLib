@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-02-12 15:28:48
+ * @LastEditTime: 2022-02-14 20:43:40
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -118,7 +118,7 @@ class DEF_VirtualElementList{
     /**
      * 把xml转换成DEF_VirtualElementList
      * 注意， 当属性中使用了模板字符串时, 模板字符串中不要有和xml标签属性一样的引号, 不然可能会出错
-     * @param {String} xmlStr
+     * @param {String} _xmlStr
      * @return {DEF_VirtualElementList} {ves:VirtualElement[],maxDepth:Number}
      */
     static xmlToVE(_xmlStr){
@@ -164,7 +164,7 @@ class DEF_VirtualElementList{
             }
             if(xmlStr[i]==='>'&&!strFlag){
                 if(xmlStr[tempOP+1]==='/'){  // 标签结束符号
-                    if(tempTagName==="/style"){
+                    if(tempTagName==="/style"||tempTagName==="/ctrlstyle"){
                         style.addString(xmlStr.slice(tempED+1,tempOP));
                         styleFlag=false;
                     }else{
@@ -183,7 +183,7 @@ class DEF_VirtualElementList{
                 ++depth;
                 if(depth>maxDepth)maxDepth=depth;
                     if(styleFlag)continue;
-                    if(tempTagName==="style"){
+                    if(tempTagName==="style"||tempTagName==="ctrlstyle"){
                         styleFlag=true;
                     }else{
                         var ve=new DEF_VirtualElement(tempTagName,depth,attributes,xmlStr.slice(tempED+1,tempOP));
@@ -1213,6 +1213,10 @@ class ExCtrl extends CtrlLib{
     }
 }
 
+/** @type {{key:CtrlLib}} 子控件集合*/
+ExCtrl.prototype.childCtrlType;
+/** @type {DEF_VirtualElementList} 原型属性, 用于创建html的蓝本 bluePrint*/
+ExCtrl.prototype.bluePrint;
 /**
  * 标签的属性的关键字
  * 保存用于编辑 bluePrint 的 xml 的关键字  
@@ -1315,7 +1319,7 @@ ExCtrl.attrKeyStrCtrls=[
                 eventFnc.call(that,e,this)
             },true);
     }),
-    new AttrKeyStrCtrlEx(/ctrl-if/,
+    new AttrKeyStrCtrlEx(/^ctrl-if$/,
         /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
         return this.ctrlIf(elements,ves,i,attrVal,tname,forFlag);
     })
@@ -1416,7 +1420,7 @@ ExCtrl.prototype.reRenderAttrCtrl={
         this.childCtrl[tgtElem.ctrlID].reRender();
     }
 }
-
+/** @type {AttrKeyStrCtrlList} 控件的自定义属性控制器 */
 ExCtrl.prototype.attrKeyStrCtrls=new AttrKeyStrCtrlList(ExCtrl.attrKeyStrCtrls);
 
 
