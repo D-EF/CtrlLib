@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-02-14 20:43:40
+ * @LastEditTime: 2022-02-16 17:40:25
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -646,7 +646,7 @@ class AttrKeyStrCtrl{
         var ctrlFucRtn=this.ctrlFuc(key);
         var tgti=k;
         if(ctrlFucRtn&&ctrlFucRtn.length){
-            tgti=this.actFuc.call(ctrlLib,elements,tname,ves,i,k,ctrlFucRtn,_attrVal,forFlag);
+            tgti=this.actFuc&&this.actFuc.call(ctrlLib,elements,tname,ves,i,k,ctrlFucRtn,_attrVal,forFlag);
             if((tgti===undefined)||tgti<k){
                 tgti=k
             }
@@ -943,25 +943,25 @@ class ExCtrl extends CtrlLib{
     /**
      * 渲染子控件
      * @param {Element} element         加载子控件的元素
-     * @param {DEF_VirtualElement} ve   字控件的虚拟元素
+     * @param {DEF_VirtualElement} ve   子控件的虚拟元素
      * @param {String} childCtrlType    控件的类型
      */
     renderChildCtrl(element,ve,childCtrlType){
-        var dataStr=ve.getAttribute(ExCtrl.attrKeyStr.childCtrlData);
+        var dataStr=ve.getAttribute(ExCtrl.attrKeyStr.childCtrl_arguments);
         var chcoArray=ve.getAttributesByKeyBA(ExCtrl.attrKeyStr.childCtrlOptionBefore);
-
-        for(var i=chcoArray.length-1;i>=0;--i){
+        var i;
+        for(i=chcoArray.length-1;i>=0;--i){
             // 渲染 childCtrlOption (子控件属性) 的模板字符串
             chcoArray[i].value=templateStringRender(chcoArray[i].value,this).str;
         }
-        var that=this;
+        var that=this,temp;
         if(!dataStr){
-            getDataCallback.call(this);
+            getDataCallback.call(this);this.actFuc
             return;
         }
         else{
-            dataStr=templateStringRender(dataStr,this).str;
-            (new Function(["callback"],dataStr)).call(this,getDataCallback);
+            temp=(new Function("return ["+dataStr+"];")).call(this);
+            getDataCallback.apply(this,temp);
         }
         function getDataCallback(){
             if(!(that.isready))return;
@@ -1218,15 +1218,14 @@ ExCtrl.prototype.childCtrlType;
 /** @type {DEF_VirtualElementList} 原型属性, 用于创建html的蓝本 bluePrint*/
 ExCtrl.prototype.bluePrint;
 /**
- * 标签的属性的关键字
- * 保存用于编辑 bluePrint 的 xml 的关键字  
+ * 标签的属性的 保留关键字
  */
 ExCtrl.attrKeyStr={
     ctrlID:"ctrl-id",
     if:"ctrl-if",
     for:"ctrl-for",
     childCtrl:"ctrl-child_ctrl",
-    childCtrlData:"ctrl-child_ctrl_datafnc",
+    childCtrl_arguments:"ctrl-child_ctrl_arguments", //子控件构造函数的实参
     childCtrlOptionBefore:"chco-",   //  给子控件添加控件属性
     proxyEventBefore:"pa-",
     ctrlEventBefore:"ca-",
@@ -1261,13 +1260,15 @@ ExCtrl.attrKeyStrCtrls=[
             return k;
         }
     ),
-    // 生成子控件 tudo 生成参数处理
+    // 生成子控件 
     new AttrKeyStrCtrlEx(/^ctrl-child_ctrl$/,
         /**@this {ExCtrl}*/
         function(elements,tname,ves,i,k,key,attrVal,forFlag){
             this.renderChildCtrl(elements[ves[i].ctrlID],ves[i],attrVal);
         }
     ),
+    // 生成子控件时的构造函数的参数的表达式 在生成子控件时实现, 此处不操作
+    new AttrKeyStrCtrlEx(/^ctrl-child_ctrl_arguments$/), 
     // dom 绑定事件
     new AttrKeyStrCtrlEx(/^pa-(.+)$/,
     /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
