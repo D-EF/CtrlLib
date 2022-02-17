@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-02-16 17:40:25
+ * @LastEditTime: 2022-02-17 09:27:01
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -906,7 +906,7 @@ class ExCtrl extends CtrlLib{
         var tgt=this.elements[ves[i].ctrlID];
         var for1Fun=new Function(["tgt"],forStr.slice(0,forStr.indexOf(';'))),
             for2Fun=new Function(["tgt"],"return "+forStr.slice(forStr.indexOf(';')+1,forStr.lastIndexOf(';'))),
-            for3Fun=new Function(["tgt"],forStr.slice(forStr.lastIndexOf(';')));
+            for3Fun=new Function(["tgt"],forStr.slice(forStr.lastIndexOf(';')+1));
         // k=循环后遇到的元素的下标
         for(k=i+1;k<ves.length&&ves[k].depth>ves[i].depth;++k);
         fillInner=ves.slice(i+1,k);
