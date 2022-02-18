@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-02-17 09:27:01
+ * @LastEditTime: 2022-02-18 16:10:00
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -997,11 +997,13 @@ class ExCtrl extends CtrlLib{
             rtnFragment=document.createDocumentFragment(),
             i,j,k,minD=Infinity,
             dHash=new Array(ves.length),
+            dg=[],
             nameEX=_nameEX||"",
             tname,
             tempNode,
             ifFlag;
         for(i=0;i<ves.length;i=k,++i){
+            dg[ves[i].depth]=i;
             ifFlag=true;
             k=i;
             tname=ves[i].ctrlID+nameEX;
@@ -1030,7 +1032,10 @@ class ExCtrl extends CtrlLib{
                         elements[ves[ti].ctrlID+nameEX].appendChild(tempNode);
                         elements[ves[ti].ctrlID+nameEX].innerIsRender=true;
                     }
-                    --ti;
+                    if(this.ctrlLibID,ves[i].innerEnd==='fuck'){
+                        console.log(!ves[ti]);
+                    }
+                    ti=dg[ves[ti].depth-1];
                 }while((ves[ti])&&(ves[ti].depth>=tnd)&&(ves[ti].depth<ves[i].depth));
                 if(ves[i].innerEnd){
                     tempNode=this.stringRender(ves[i].innerEnd,tname,"innerEnd",this.templateStringIsHTML,forFlag,elements[tname]);
