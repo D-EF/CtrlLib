@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-02-18 16:10:00
+ * @LastEditTime: 2022-02-18 18:00:39
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -497,7 +497,7 @@ function DataLink(expression,value,link){
     }
     /**
      * 呼叫父控件
-     * @param {Function} _fnc 执行的动作
+     * @param {Function} _fnc 执行的动作 _fnc.apply(this.parentCtrl,surplusArgument);
      * @param {any} surplusArgument 参数
      */
     callParent(_fnc,...surplusArgument){
