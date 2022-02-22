@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-02-18 18:00:39
+ * @LastEditTime: 2022-02-22 17:21:02
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -8,6 +8,7 @@ import {
     templateStringRender,
     strToVar,
     requestAPI,
+    Delegate
 } from "../basics/Basics.js";
 import {
     nodeListToArray,
@@ -190,7 +191,7 @@ class DEF_VirtualElementList{
                         ves.push(ve);
                     }
                     tempED=i;
-                    if(DEF_VirtualElementList.voidElementsTagName.includes(tempTagName)){
+                    if(xmlStr[i-1]==='/'||DEF_VirtualElementList.voidElementsTagName.includes(tempTagName)){
                         --depth;
                     }
                 }
@@ -440,8 +441,10 @@ function DataLink(expression,value,link){
         this.parentCtrl;
         this.childCtrl={};
         this.elements={};
-        /** 控件触发事件 */
-        this.ctrlActionList={};
+        /** 控件触发事件 
+         * @type {Map<String,Delegate>}
+        */
+        this.ctrlActionList=new Map();
         /** 子控件事件队列 */
         this.childCtrlActionList={};
     }
@@ -583,10 +586,8 @@ function DataLink(expression,value,link){
      * @param {String} actionKey 事件的类型
      */
     touchCtrlAction(actionKey){
-        if(this.ctrlActionList[actionKey])
-        for(var i=this.ctrlActionList[actionKey].length-1;i>=0;--i){
-            this.ctrlActionList[actionKey][i].call(this);
-        }
+        var d=this.ctrlActionList.get(actionKey);
+        d&&d();
     }
     
     /**
@@ -595,11 +596,12 @@ function DataLink(expression,value,link){
      * @param {Function} _fnc    事件的执行函数 将会以控件为 this 指针
      */
     addCtrlAction(actionKey,_fnc){
-        if(this.ctrlActionList[actionKey]===undefined){
+        var temp;
+        if(!(temp=this.ctrlActionList.get(actionKey))){
             // 没有这种类型的事件，将创建
-            this.ctrlActionList[actionKey]=[];
+            this.ctrlActionList.set(actionKey,Delegate.create());
         }
-        this.ctrlActionList[actionKey].push(_fnc);
+        temp.addAct(this,_fnc);
     }
 }
 CtrlLib.idIndex=zero;
@@ -737,7 +739,7 @@ class ExCtrl extends CtrlLib{
      * 呼叫子控件, 如果子控件没有加载完成将会被挂起
      * @param {String} childCtrlID  子控件 在父控件的父元素 的 ctrlID
      * @param {Function} _fnc       需要执行的方法
-     * @param {Any} surplusArgument
+     * @param {Any} surplusArgument 尽量别用, 挂起的时候用不了
      */
     callChild(childCtrlID,_fnc,...surplusArgument){
         var c=this.bluePrint.getByCtrlID(childCtrlID);
@@ -751,7 +753,7 @@ class ExCtrl extends CtrlLib{
             // 有子控件
             if(this.childCtrl[childCtrlID]){
                 // 子控件已加载, 直接执行
-                _fnc.apply(this.childCtrl[childCtrlID],surplusArgument)
+                _fnc.apply(this.childCtrl[childCtrlID],[this,...surplusArgument])
             }else{
                 // 子控件未加载完成, 挂起
                 if(this.childCtrlActionList[childCtrlID]===undefined)this.childCtrlActionList[childCtrlID]=[];
@@ -977,7 +979,7 @@ class ExCtrl extends CtrlLib{
                 // 执行被挂起的动作
                 var l=that.childCtrlActionList[element.ctrlID].length;
                 for(var i=0;i<l;++i){
-                    that.childCtrlActionList[element.ctrlID][i].apply(that.childCtrl[element.ctrlID]);
+                    that.childCtrlActionList[element.ctrlID][i].apply(that.childCtrl[element.ctrlID],that.childCtrl[element.ctrlID]);
                 }
                 delete that.childCtrlActionList[element.ctrlID];
             }
@@ -1301,10 +1303,8 @@ ExCtrl.attrKeyStrCtrls=[
         addResizeEvent(tgt,function(e){
             eventFnc.call(that,e,tgt);
         });
-        if(this.ctrlActionList.callback===undefined) this.ctrlActionList.callback=[];
-        this.ctrlActionList.callback.push(function(){addResizeEvent.reResize(tgt)});
+        this.addCtrlAction("callback",function(){addResizeEvent.reResize(tgt)});
     }),
-    
     // 按下按键事件 (组合键)
     new AttrKeyStrCtrlEx(/^pa-keydown\[(.+)\]$/,
     /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
