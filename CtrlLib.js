@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-02-22 17:21:02
+ * @LastEditTime: 2022-02-22 21:48:28
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -600,6 +600,7 @@ function DataLink(expression,value,link){
         if(!(temp=this.ctrlActionList.get(actionKey))){
             // 没有这种类型的事件，将创建
             this.ctrlActionList.set(actionKey,Delegate.create());
+            temp=this.ctrlActionList.get(actionKey)
         }
         temp.addAct(this,_fnc);
     }
