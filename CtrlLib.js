@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-02-22 21:48:28
+ * @LastEditTime: 2022-02-23 20:22:52
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -959,7 +959,7 @@ class ExCtrl extends CtrlLib{
         }
         var that=this,temp;
         if(!dataStr){
-            getDataCallback.call(this);this.actFuc
+            getDataCallback.call(this);
             return;
         }
         else{
@@ -1311,7 +1311,7 @@ ExCtrl.attrKeyStrCtrls=[
     /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
         var that=this,tgt=elements[tname];
         var eventFnc=new Function(['e',"tgt",],attrVal);
-        addKeyEvent(tgt,true,key.slice(1),
+        addKeyEvent(tgt,true,key.slice(1),1,
             function(e){
                 eventFnc.call(that,e,this)
             },false);
@@ -1321,7 +1321,7 @@ ExCtrl.attrKeyStrCtrls=[
     /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
         var that=this;
         var eventFnc=new Function(['e',"tgt",],attrVal);
-        addKeyEvent(tgt,true,key.slice(1),
+        addKeyEvent(tgt,true,key.slice(1),1,
             function(e){
                 eventFnc.call(that,e,this)
             },true);
