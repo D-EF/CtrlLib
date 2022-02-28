@@ -19,9 +19,9 @@
   ```
 ### 使用特殊的属性来增加控制 
 *这些特殊属性可以在控件类原型中编辑 attrKeyStrCtrls 来修改*
-* 给元素赋值 ctrlID "ctrl-id"    
+* 给元素赋值 ctrl_id "ctrl-id"    
   属性值应为一份字符串   
-  如果没有赋值，蓝图生成器会自动以 dom 结构 分配 ctrlID
+  如果没有赋值，蓝图生成器会自动以 dom 结构 分配 ctrl_id
   示例:
   ``` xml
     <div ctrl-id="root"></div>
@@ -43,7 +43,7 @@
   </div>
   ```
   控制的值一定要写在 this 中，因为运行时的 初始化 和 判读体 和 回调 以及 内容 都是不同上下文的  
-  生成的元素的ctrlID会在末尾带上一段表示该元素是由ctrlfor生成的标志
+  生成的元素的ctrl_id会在末尾带上一段表示该元素是由ctrlfor生成的标志
 
 * 在当前的标签下加入子控件 "ctrl-child_ctrl"
   值应为在 控件的 原型属性的 childCtrlType 中的 key 值; 用于选择子控件的类型

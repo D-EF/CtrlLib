@@ -29,10 +29,10 @@ constructor(data)
 * name  *String*  
   就像为什么你叫现在的名字，这个属性并没有什么实际用途用  
   
-* ctrlLibID *Number*  
+* ctrl_lib_id *Number*  
   用于区分所有控件的唯一id, 会在 new 一个 CtrlLib 或 它的派生类 时自增  
   ``` javascript
-  this.ctrlLibID=CtrlLib.idIndex++; 
+  this.ctrl_lib_id=CtrlLib.idIndex++; 
   ```  
   
 * data *Object*  
@@ -57,7 +57,7 @@ constructor(data)
   控件的动作集合  
   
 * childCtrlActionList *Object*  
-  childCtrlActionList\[ctrlID\] *Array\< Function \>*  
+  childCtrlActionList\[ctrl_id\] *Array\< Function \>*  
   被挂起的子控件动作  
   因为子控件加载不一定是瞬间加载完成的(可能需要等待http请求完成后才能加载)  
   所以动作会被挂起  
@@ -80,14 +80,14 @@ constructor(data)
   
 * callChild(childCtrlID,_fnc,surplusArgument) **虚方法**  
     呼叫子控件, 如果兄弟控件没有加载完成将会被挂起  
-    @param {String} childCtrlID 控件 在父控件的父元素 的 ctrlID  
+    @param {String} childCtrlID 控件 在父控件的父元素 的 ctrl_id  
     @param {Function} _fnc 执行的动作, 动作的this指针是目标控件  
     @param {any} surplusArgument _fnc 执行的参数  
     **这个方法在 ExCtrl 中有一个实现**  
   
 * callBrother(childCtrlID,_fnc,...surplusArgument) **虚方法**  
     呼叫兄弟控件, 如果兄弟控件没有加载完成将会被挂起  
-    @param {String} childCtrlID 控件 在父控件的父元素 的 ctrlID  
+    @param {String} childCtrlID 控件 在父控件的父元素 的 ctrl_id  
     @param {Function} _fnc 执行的动作, 动作的this指针是目标控件  
     @param {any} surplusArgument _fnc 执行的参数  
     **这个函数在 ExCtrl 中有一个实现**  
@@ -152,9 +152,9 @@ constructor(data)
   
 ----
 ## ExCtrl 原型方法  
-* getElementsByCtrlID(ctrlID)    
-  通过 ctrlID 获取元素  
-  @param {String} ctrlID  
+* getElementsByCtrlID(ctrl_id)    
+  通过 ctrl_id 获取元素  
+  @param {String} ctrl_id  
   @returns {Array\< Element \>} 返回元素,包括ctrl-for 的  
 
 * attrHandle(key,elements,ves,i,_attrVal,tname,k,forFlag)  
@@ -169,10 +169,10 @@ constructor(data)
   @param {String} forFlag 表示是不是 for 的  
   @returns {Number} 返回运算完成后的ves下标  
   
-* stringRender(str,ctrlID,type,ishtml,attrkey,tgt)  
+* stringRender(str,ctrl_id,type,ishtml,attrkey,tgt)  
   渲染 模板字符 内容  
   @param {String} str  write TemplateKeyStr  
-  @param {String} ctrlID    登记 ID         
+  @param {String} ctrl_id    登记 ID         
   @param {String} type      登记 类型    
   @param {Boolean} ishtml   控制返回值, 默认将返回字符串 ，非0 将返回 DocumentFragment  
   @param {[]} attrkey   如果是登记的 标签的属性值 这个是属性的 key  
@@ -215,16 +215,16 @@ constructor(data)
 * reRender()  
   根据依赖项重新渲染所有内容 仅有在 stringRender 中登记过才能使用  
 
-* renderCtrl_before(ctrlID)  
+* renderCtrl_before(ctrl_id)  
   重新渲染元素前面的文本  
 
-* renderCtrl_innerEnd(ctrlID)  
+* renderCtrl_innerEnd(ctrl_id)  
   重新渲染模板字符串内容: 加在元素末尾的内容  
-  @param {String} 目标的 ctrlID  
+  @param {String} 目标的 ctrl_id  
 
-* renderCtrl_attr(ctrlID,attrkey)  
+* renderCtrl_attr(ctrl_id,attrkey)  
   重新渲染模板字符串内容: 元素 的 属性  
-  @param {String} 目标的 ctrlID  
+  @param {String} 目标的 ctrl_id  
   @param {String} 目标的属性的 key   
 
 * renderStyle()  
@@ -279,18 +279,18 @@ constructor(data)
   ## DEF_VirtualElementList 原型方法
   ---
   * getCtrlIDByIndex(index)  
-    根据 ves 的下标, 查找ctrlID  
+    根据 ves 的下标, 查找ctrl_id  
     @param {Number} index  
-    @returns {String} ctrlID  
+    @returns {String} ctrl_id  
   
-  * getByCtrlID(ctrlID)  
-    根据 ctrlID 寻找 项   
-    @param {String} ctrlID   
+  * getByCtrlID(ctrl_id)  
+    根据 ctrl_id 寻找 项   
+    @param {String} ctrl_id   
     @returns {DEF_VirtualElement} 返回目标  
 
-  * getIndexByCtrlID(ctrlID){
-      根据 ctrlID 寻找 项 
-      @param {String} ctrlID 
+  * getIndexByCtrlID(ctrl_id){
+      根据 ctrl_id 寻找 项 
+      @param {String} ctrl_id 
       @returns {Number} 返回目标的下标
 
   * getByLastDepth(start,depth,min=0)  
@@ -345,7 +345,7 @@ constructor(data)
   * innerEnd    *String*    
   最后一段内容
   
-  * ctrlID      *String*    
+  * ctrl_id      *String*    
   标签在这组xml中的唯一标识, 可以在编辑编辑xml时用标签的 ctrl-id 属性控制
   
   ---
@@ -382,9 +382,9 @@ constructor(data)
     加入 css 字符串
     @param {String} cssString css 格式的字符串      
    
-  * createCssString(ctrlLibID,that)    
+  * createCssString(ctrl_lib_id,that)    
     创建 css 的文本    
-    @param {Number} ctrlLibID 控件的id   
+    @param {Number} ctrl_lib_id 控件的id   
     @param {CtrlLib} that   
     @returns {String}   
 
@@ -409,7 +409,7 @@ constructor(data)
   ## DEF_CSSVEItem 方法   
   * toString(_ctrlLibID,_that)   
     将对象渲染成css语句   
-    @param {String} _ctrlID   
+    @param {String} _ctrl_id   
     @param {CtrlLib} _that   
     @returns {String}   
 ----

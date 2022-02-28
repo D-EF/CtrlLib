@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-02-23 20:22:52
+ * @LastEditTime: 2022-02-28 17:55:11
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -22,42 +22,42 @@ import {
 class DEF_VirtualElementList{
     /**
      * @param {DEF_VirtualElement[]} ves 序列化的虚拟元素树
-     * @param {Number} maxDepth 最大深度
+     * @param {Number} max_depth 最大深度
      * @param {DEF_CSSVE} style 样式元素
      */
-    constructor(ves,maxDepth,style){
+    constructor(ves,max_depth,style){
         this.ves=ves;
-        this.maxDepth=maxDepth;
+        this.max_depth=max_depth;
         this.style=style;
     }
     /**
-     * 根据 ves 的下标, 查找ctrlID
+     * 根据 ves 的下标, 查找ctrl_id
      * @param {Number} index
-     * @returns {String} ctrlID
+     * @returns {String} ctrl_id
      */
     getCtrlIDByIndex(index){
-        return this.ves[index].ctrlID;
+        return this.ves[index].ctrl_id;
     }
     /**
-     * 根据 ctrlID 寻找 项 
-     * @param {String} ctrlID 
+     * 根据 ctrl_id 寻找 项 
+     * @param {String} ctrl_id 
      * @returns {DEF_VirtualElement} 返回目标
      */
-    getByCtrlID(ctrlID){
+    getByCtrlID(ctrl_id){
         for(var i=this.ves.length-1;i>=0;--i){
-            if(this.ves[i].ctrlID===ctrlID){
+            if(this.ves[i].ctrl_id===ctrl_id){
                 return this.ves[i];
             }
         }
     }
     /**
-     * 根据 ctrlID 寻找 项 
-     * @param {String} ctrlID 
+     * 根据 ctrl_id 寻找 项 
+     * @param {String} ctrl_id 
      * @returns {Number} 返回目标的下标
      */
-    getIndexByCtrlID(ctrlID){
+    getIndexByCtrlID(ctrl_id){
         for(var i=this.ves.length-1;i>=0;--i){
-            if(this.ves[i].ctrlID===ctrlID){
+            if(this.ves[i].ctrl_id===ctrl_id){
                 return i;
             }
         }
@@ -120,14 +120,14 @@ class DEF_VirtualElementList{
      * 把xml转换成DEF_VirtualElementList
      * 注意， 当属性中使用了模板字符串时, 模板字符串中不要有和xml标签属性一样的引号, 不然可能会出错
      * @param {String} _xmlStr
-     * @return {DEF_VirtualElementList} {ves:VirtualElement[],maxDepth:Number}
+     * @return {DEF_VirtualElementList} {ves:VirtualElement[],max_depth:Number}
      */
     static xmlToVE(_xmlStr){
         var xmlStr=_xmlStr.replace(/\ +/g," ").replace(/[\r\n]/g,"");//去除多余的空格和换行
             xmlStr=xmlStr.replace(/<!--(.|[\r\n])*?-->/,"");//去除注释
             xmlStr=xmlStr.replace(/<\?(.|[\r\n])*?\?>/,"");//去除头
         var strleng=xmlStr.length;
-        var i,j,p,q,tempOP,tempED,depth=0,tempTagName,maxDepth=0,tDepth=0,styleFlag=false;
+        var i,j,p,q,tempOP,tempED,depth=0,tempTagName,max_depth=0,tDepth=0,styleFlag=false;
         var lastStrP,strFlag=0;
         var ves=[],attributes=[],style=new DEF_CSSVE();
     
@@ -172,7 +172,7 @@ class DEF_VirtualElementList{
                         // 把 一段文本 添加到上一个这么深的元素
                         for(j=ves.length-1;j>=0;--j){
                             if(ves[j].depth===depth){
-                                ves[j].innerEnd=xmlStr.slice(tempED+1,tempOP);
+                                ves[j].inner_end=xmlStr.slice(tempED+1,tempOP);
                                 break;
                             }
                         }
@@ -182,7 +182,7 @@ class DEF_VirtualElementList{
                 }
                 else{
                 ++depth;
-                if(depth>maxDepth)maxDepth=depth;
+                if(depth>max_depth)max_depth=depth;
                     if(styleFlag)continue;
                     if(tempTagName==="style"||tempTagName==="ctrlstyle"){
                         styleFlag=true;
@@ -202,9 +202,9 @@ class DEF_VirtualElementList{
             // return;
         }
 
-        // 将所有的元素 加上 ctrlID
-        var tempCountDepth=new Array(maxDepth);
-        for(i=maxDepth-1;i>=0;--i){
+        // 将所有的元素 加上 ctrl_id
+        var tempCountDepth=new Array(max_depth);
+        for(i=max_depth-1;i>=0;--i){
             tempCountDepth[i]=0;
         }
         var pName;
@@ -219,10 +219,10 @@ class DEF_VirtualElementList{
                     pName+=tempCountDepth[j]+(j===ves[i].depth-1?"":"_");
                 }
             }
-            ves[i].ctrlID=pName;
+            ves[i].ctrl_id=pName;
             ves[i].setAttribute("ctrl-id",pName);
         }
-        return new DEF_VirtualElementList(ves,maxDepth,style);
+        return new DEF_VirtualElementList(ves,max_depth,style);
     }
 }
 //所有无内容元素(短标签)的tag name
@@ -230,23 +230,23 @@ class DEF_VirtualElementList{
 DEF_VirtualElementList.voidElementsTagName=["br","hr","img","input","link","meta","area","base","col","command","embed","keygen","param","source","track","wbr","?xml"];
 /**
  * 作为虚拟元素树的叶子 供 htmlToControl 处理xml字符串
- * @param {String}  tagName     标签名
+ * @param {String}  tag_name     标签名
  * @param {Number}  depth       深度
  * @param {Array}   attribute   标签的属性  [{key,val}]
  * @param {String}  before      在标签前的内容
- * @param {String}  innerEnd    最后一段内容
+ * @param {String}  inner_end    最后一段内容
  */
 class DEF_VirtualElement{
-    constructor(tagName,depth,attribute,before,innerEnd){
-        this.tagName=tagName;
+    constructor(tag_name,depth,attribute,before,inner_end){
+        this.tag_name=tag_name;
         this.depth=depth;
         this.attribute=[];
         for(var i=attribute.length-1;i>=0;--i){
             this.setAttribute(attribute[i].key,attribute[i].value);
         }
         this.before=before;
-        this.innerEnd=innerEnd;
-        this.ctrlID;
+        this.inner_end=inner_end;
+        this.ctrl_id;
     }
     /**
      * 存入属性
@@ -299,35 +299,35 @@ class DEF_VirtualElement{
  */
 class DEF_CSSVE{
     /**
-     * @param {String} cssString css 格式的字符串
+     * @param {String} css_string css 格式的字符串
      */
-    constructor(cssString){
-        this.cssList=[];
-        this.addString(cssString);
+    constructor(css_string){
+        this.css_list=[];
+        this.addString(css_string);
     }
     /**
-     * @param {String} cssString css 格式的字符串
+     * @param {String} css_string css 格式的字符串
      */
-    addString(cssString){
-        if(!cssString) return;
+    addString(css_string){
+        if(!css_string) return;
         // p 右指针, q 左指针, d cssList的最后一个的下标
         var p,q,d,b,k,depth=0;
         var tempSelector,tempString;
         
-        for(p=q=0;p<cssString.length;++p){
+        for(p=q=0;p<css_string.length;++p){
             // 跳过模板字符串的格式 ${x}
-            while(cssString[p]==='{'&&cssString[p-1]==='$'){
-                p=cssString.indexOf('}',p+1)+1;
+            while(css_string[p]==='{'&&css_string[p-1]==='$'){
+                p=css_string.indexOf('}',p+1)+1;
             }
-            if(cssString[p]==='{'){
-                tempSelector=cssString.slice(q,p).split(',');
-                d=this.cssList.push(new DEF_CSSVEItem(tempSelector,'',depth))-1;
+            if(css_string[p]==='{'){
+                tempSelector=css_string.slice(q,p).split(',');
+                d=this.css_list.push(new DEF_CSSVEItem(tempSelector,'',depth))-1;
                 q=p+1;
                 ++depth;
-            }else if(cssString[p]==='}'){
-                tempString=cssString.slice(q,p);
-                if(!this.cssList[d].cssString){
-                    this.cssList[d].cssString=tempString;
+            }else if(css_string[p]==='}'){
+                tempString=css_string.slice(q,p);
+                if(!this.css_list[d].css_string){
+                    this.css_list[d].css_string=tempString;
                 }
                 q=p+1;
                 --depth;
@@ -336,19 +336,19 @@ class DEF_CSSVE{
     }
     /**
      * 创建 css 的文本
-     * @param {Number} ctrlLibID 控件的id 而不是控件内元素的id
+     * @param {Number} c__ctrl_lib_id 控件的id 而不是控件内元素的id
      * @param {CtrlLib} that
      * @returns {String}
      */
-    createCssString(ctrlLibID,that){
+    createCssString(c__ctrl_lib_id,that){
         var strs=[],tempDepth=0;
-        for(var i=0;i<this.cssList.length;++i){
-            if(this.cssList[i].depth<tempDepth){
+        for(var i=0;i<this.css_list.length;++i){
+            if(this.css_list[i].depth<tempDepth){
                 strs.push('}');
             }
-            strs.push(this.cssList[i].toString(ctrlLibID,that));
+            strs.push(this.css_list[i].toString(c__ctrl_lib_id,that));
 
-            tempDepth=this.cssList[i].depth+1;
+            tempDepth=this.css_list[i].depth+1;
         }
         do{
             strs.push('}');
@@ -356,16 +356,16 @@ class DEF_CSSVE{
         return strs.join('');
     }
     /**
-     * 向前寻找目标深度的 cssList's item
+     * 向前寻找目标深度的 css_list's item
      * @param {Number} start 起点
      * @param {Number} depth 目标 深度
      * @returns {Number} 返回目标的下标
      */
     getByLastDepth(start,depth){
         for(var i=start;i>=0;--i){
-            if(this.cssList[i].depth===depth)return i;
+            if(this.css_list[i].depth===depth)return i;
         }
-        console.warn("找不到目标深度的 cssList's item");
+        console.warn("找不到目标深度的 css_list's item");
         return;
     }
 }
@@ -376,30 +376,30 @@ class DEF_CSSVE{
 class DEF_CSSVEItem{
     /**
      * @param {String[]} selectors 选择器的数组
-     * @param {String} cssString css 的内容 
+     * @param {String} css_string css 的内容 
      * @param {Number} depth 深度
      */
-    constructor(selectors,cssString,depth){
+    constructor(selectors,css_string,depth){
         this.selectors=selectors;
-        this.cssString=cssString;
+        this.css_string=css_string;
         this.depth=depth;
     }
     /**
      * 将对象渲染成css语句
-     * @param {String} _ctrlID
+     * @param {String} _ctrl_id
      * @param {CtrlLib} _that
      * @returns {String}
      */
-    toString(_ctrlLibID,_that){
+    toString(c__ctrl_lib_id,_that){
         var rtn=[];
-        var ctrlLibID=".CtrlLib-"+_ctrlLibID+' ',
+        var c__ctrl_lib_id=".CtrlLib-"+c__ctrl_lib_id+' ',
             that=(_that===undefined)?window:_that;
         for(var i=0;i<this.selectors.length;++i){
             if(i) rtn.push(',');
-            rtn.push((this.selectors[i][0]==='@'?'':ctrlLibID)+templateStringRender((this.selectors[i]),that).str);
+            rtn.push((this.selectors[i][0]==='@'?'':c__ctrl_lib_id)+templateStringRender((this.selectors[i]),that).str);
         }
         rtn.push('{');
-        rtn.push(templateStringRender(this.cssString,that).str);
+        rtn.push(templateStringRender(this.css_string,that).str);
 
         // rtn.push('}');
         // 右花括号由 DEF_CSSVE 的 createCssString控制
@@ -420,7 +420,7 @@ function DataLink(expression,value,link){
     this.value=value;
     this.link=[link];
     // link={
-    //     ctrlID:"id",
+    //     ctrl_id:"id",
     //     type:"type"
     // }
 }
@@ -434,19 +434,19 @@ function DataLink(expression,value,link){
      */
     constructor(data){
         this.name;
-        this.ctrlLibID=CtrlLib.idIndex++;
+        this.c__ctrl_lib_id=CtrlLib.idIndex++;
         this.data=data||{};
-        this.rootNodes=[];
-        this.parentNode;
-        this.parentCtrl;
-        this.childCtrl={};
+        this.root_nodes=[];
+        this.parent_node;
+        this.parent_ctrl;
+        this.child_ctrl={};
         this.elements={};
         /** 控件触发事件 
          * @type {Map<String,Delegate>}
         */
-        this.ctrlActionList=new Map();
+        this.ctrl_action_list=new Map();
         /** 子控件事件队列 */
-        this.childCtrlActionList={};
+        this.child_ctrl_action_list={};
     }
     /**
      * 将控件加入到指定的dom元素内
@@ -458,20 +458,20 @@ function DataLink(expression,value,link){
             if(this.initialize(...arguments)==="stop"){
                 return;
             }
-            this.parentNode=_parentNode;
-            _parentNode.classList.add("CtrlLib-"+this.ctrlLibID);
-            this.parentNode=_parentNode;
-            if(!this.rootNodes.length)this.createContent(surplusArgument);
+            this.parent_node=_parentNode;
+            _parentNode.classList.add("CtrlLib-"+this.c__ctrl_lib_id);
+            this.parent_node=_parentNode;
+            if(!this.root_nodes.length)this.createContent(surplusArgument);
             var tempDocF=document.createDocumentFragment();
-            for(var i=this.rootNodes.length-1;i>=0;--i){
-                tempDocF.prepend(this.rootNodes[i]);
+            for(var i=this.root_nodes.length-1;i>=0;--i){
+                tempDocF.prepend(this.root_nodes[i]);
             }
-            this.parentNode.appendChild(tempDocF);
+            this.parent_node.appendChild(tempDocF);
             this.callback(...arguments);
             this.reRender_callback();
             this.touchCtrlAction("callback");
         }else{
-            console.error('Fatal error! This Control have not parentNode!');
+            console.error('Fatal error! This Control have not parent_node!');
         }
     }
     /**
@@ -481,12 +481,12 @@ function DataLink(expression,value,link){
      */
     possess(tgtNode,...surplusArgument){
         if(tgtNode){
-            var parentNode=this.parentNode=tgtNode.parentNode;
-            parentNode.classList.add("CtrlLib-"+this.ctrlLibID);
-            if(!this.rootNodes.length)this.createContent(surplusArgument);
+            var parent_node=this.parent_node=tgtNode.parentNode;
+            parent_node.classList.add("CtrlLib-"+this.c__ctrl_lib_id);
+            if(!this.root_nodes.length)this.createContent(surplusArgument);
             var tempDocF=document.createDocumentFragment();
-            for(var i=this.rootNodes.length-1;i>=0;--i){
-                tempDocF.prepend(this.rootNodes[i]);
+            for(var i=this.root_nodes.length-1;i>=0;--i){
+                tempDocF.prepend(this.root_nodes[i]);
             }
             tgtNode.before(tempDocF);
             tgtNode.remove();
@@ -500,19 +500,19 @@ function DataLink(expression,value,link){
     }
     /**
      * 呼叫父控件
-     * @param {Function} _fnc 执行的动作 _fnc.apply(this.parentCtrl,surplusArgument);
+     * @param {Function} _fnc 执行的动作 _fnc.apply(this.parent_ctrl,surplusArgument);
      * @param {any} surplusArgument 参数
      */
     callParent(_fnc,...surplusArgument){
-        if(this.parentCtrl){
-            _fnc.apply(this.parentCtrl,surplusArgument);
+        if(this.parent_ctrl){
+            _fnc.apply(this.parent_ctrl,surplusArgument);
         }else{
             console.error("这个控件没有父控件");
         }
     }
     /**
      * 呼叫子控件, 如果子控件没有加载完成将会被挂起
-     * @param {String} childCtrlID 子控件 的父元素 的 ctrlID
+     * @param {String} childCtrlID 子控件 的父元素 的 ctrl_id
      * @param {Function} _fnc 执行的动作
      * @param {any} surplusArgument 参数
      */
@@ -521,7 +521,7 @@ function DataLink(expression,value,link){
     }
     /**
      * 呼叫兄弟控件, 如果兄弟控件没有加载完成将会被挂起
-     * @param {String} childCtrlID 控件 在父控件的父元素 的 ctrlID
+     * @param {String} childCtrlID 控件 在父控件的父元素 的 ctrl_id
      * @param {Function} _fnc 执行的动作
      * @param {any} surplusArgument 参数
      */
@@ -545,9 +545,9 @@ function DataLink(expression,value,link){
      */
     callback(...argument){}
     /** 创建内容
-     * 需要把元素赋值到 this.rootNodes 上
+     * 需要把元素赋值到 this.root_nodes 上
      */
-    createContent(surplusArgument){this.nodes=this.rootNodes=[document.createElement("div")]}
+    createContent(surplusArgument){this.nodes=this.root_nodes=[document.createElement("div")]}
     /**
      * 重新渲染
      * 根据data渲染部分需要渲染的内容
@@ -562,23 +562,23 @@ function DataLink(expression,value,link){
      */
     removeCtrl(){
         this.isready=false;
-        for(var i in this.childCtrl){
-            this.childCtrl[i].removeCtrl();
-            delete this.childCtrl[i];
+        for(var i in this.child_ctrl){
+            this.child_ctrl[i].removeCtrl();
+            delete this.child_ctrl[i];
         }
         for(var i in this.elements){
             this.elements[i].remove();
             delete this.elements[i];
         }
-        for(var i in this.rootNodes){
-            this.rootNodes[i].remove();
-            delete this.rootNodes[i];
+        for(var i in this.root_nodes){
+            this.root_nodes[i].remove();
+            delete this.root_nodes[i];
         }
-        if(this.parentNode.classList)
-        this.parentNode.classList.remove("CtrlLib-"+this.ctrlLibID);
-        if(this.styleElement){
-            this.styleElement.remove();
-            delete this.styleElement;
+        if(this.parent_node.classList)
+        this.parent_node.classList.remove("CtrlLib-"+this.c__ctrl_lib_id);
+        if(this.style_element){
+            this.style_element.remove();
+            delete this.style_element;
         }
     }
     /**
@@ -586,7 +586,7 @@ function DataLink(expression,value,link){
      * @param {String} actionKey 事件的类型
      */
     touchCtrlAction(actionKey){
-        var d=this.ctrlActionList.get(actionKey);
+        var d=this.ctrl_action_list.get(actionKey);
         d&&d();
     }
     
@@ -597,10 +597,10 @@ function DataLink(expression,value,link){
      */
     addCtrlAction(actionKey,_fnc){
         var temp;
-        if(!(temp=this.ctrlActionList.get(actionKey))){
+        if(!(temp=this.ctrl_action_list.get(actionKey))){
             // 没有这种类型的事件，将创建
-            this.ctrlActionList.set(actionKey,Delegate.create());
-            temp=this.ctrlActionList.get(actionKey)
+            this.ctrl_action_list.set(actionKey,Delegate.create());
+            temp=this.ctrl_action_list.get(actionKey)
         }
         temp.addAct(this,_fnc);
     }
@@ -616,20 +616,20 @@ CtrlLib.prototype.childCtrlType={};
  */
 class AttrKeyStrCtrl{
     /**
-     * @param {Function} ctrlFuc    控制的函数 ctrlFuc(String key) 应返回处理后的key值{String[]} 首项应为原始 key , 返回 undefined 将不会执行 actFuc
-     * @param {Function} actFuc     执行的函数 actFuc
-     * @param {Boolean} stopFlag    表示是否阻塞继续调用控制器, 默认为true阻塞
+     * @param {Function} ctrl_fnc    控制的函数 ctrl_fnc(String key) 应返回处理后的key值{String[]} 首项应为原始 key , 返回 undefined 将不会执行 act_fnc
+     * @param {Function} act_fnc     执行的函数 act_fnc
+     * @param {Boolean} stop_flag    表示是否阻塞继续调用控制器, 默认为true阻塞
      * 注意，actFnc需要返回 跳过蓝图后的 目标索引
      */
-    constructor(ctrlFuc,actFuc,stopFlag=true){
-        this.ctrlFuc=ctrlFuc;
+    constructor(ctrl_fnc,act_fnc,stop_flag=true){
+        this.ctrl_fnc=ctrl_fnc;
         /**
          * @type  {Function}
          * .call(ctrlLib,ctrlFucRtn,elements,ves,i,_attrVal,tname,forFlag)
          */
-        this.actFuc=actFuc;
+        this.act_fnc=act_fnc;
         // key,elements,ves,i,_attrVal,tname,k,forFlag
-        this.stopFlag=stopFlag;
+        this.stop_flag=stop_flag;
     }
     /**
      * 进行并且执行操作
@@ -642,41 +642,41 @@ class AttrKeyStrCtrl{
      * @param {Array} key 属性的key
      * @param {String} _attrVal 属性值
      * @param {String} forFlag 表示是不是 for 的
-     * @returns {{stopFlag:Boolean,tgti:Number}}
+     * @returns {{stop_flag:Boolean,tgti:Number}}
      * stopFlag表示是否继续调用控制器
      */
     handle(ctrlLib,elements,tname,ves,i,k,key,_attrVal,forFlag){
-        var ctrlFucRtn=this.ctrlFuc(key);
+        var ctrlFucRtn=this.ctrl_fnc(key);
         var tgti=k;
         if(ctrlFucRtn&&ctrlFucRtn.length){
-            tgti=this.actFuc&&this.actFuc.call(ctrlLib,elements,tname,ves,i,k,ctrlFucRtn,_attrVal,forFlag);
+            tgti=this.act_fnc&&this.act_fnc.call(ctrlLib,elements,tname,ves,i,k,ctrlFucRtn,_attrVal,forFlag);
             if((tgti===undefined)||tgti<k){
                 tgti=k
             }
-            return {stopFlag:this.stopFlag,tgti:tgti};
+            return {stop_flag:this.stop_flag,tgti:tgti};
         }
         else{
-            return {stopFlag:false,tgti:tgti};
+            return {stop_flag:false,tgti:tgti};
         }
     }
 }
 /**
  * 使用正则表达式 的 属性控制器
  */
-class AttrKeyStrCtrlEx extends AttrKeyStrCtrl{
+class AttrKeyStrCtrl__Ex extends AttrKeyStrCtrl{
     /**
      * @param {RegExp} regexp       属性正则表达式 如果可匹配 将 执行 actFnc
-     * @param {Function} actFuc     执行的函数 actFuc
+     * @param {Function} act_fnc     执行的函数 act_fnc
      */
-     constructor(regexp,actFuc){
-        super(regexp,actFuc);
+     constructor(regexp,act_fnc){
+        super(regexp,act_fnc);
         /**
          * @param {String} str 
          */
-        this.ctrlFuc=function(str){
+        this.ctrl_fnc=function(str){
             return regexp.exec(str);
         }
-        this.actFuc=actFuc;
+        this.act_fnc=act_fnc;
     }
 }
 
@@ -719,7 +719,7 @@ class AttrKeyStrCtrlList{
         for(var j=this.list.length-1;j>=0;--j){
             temp=this.list[j].handle(ctrlLib,elements,tname,ves,i,k,key,_attrVal,forFlag);
             tgti=temp.tgti
-            if(temp.stopFlag){
+            if(temp.stop_flag){
                 return tgti;
             }
         }
@@ -734,11 +734,11 @@ class ExCtrl extends CtrlLib{
         super(data);
         this.dataLinks={};
         /** 规定模板字符串能否为 html, 如果启用, 就别在 ctrl-if 的前面放模板字符串，否则可能会导致 ctrl-if 的渲染出错*/
-        this.templateStringIsHTML=false;
+        this.template_string_can_be_HTML=false;
     }
     /**
      * 呼叫子控件, 如果子控件没有加载完成将会被挂起
-     * @param {String} childCtrlID  子控件 在父控件的父元素 的 ctrlID
+     * @param {String} childCtrlID  子控件 在父控件的父元素 的 ctrl_id
      * @param {Function} _fnc       需要执行的方法
      * @param {Any} surplusArgument 尽量别用, 挂起的时候用不了
      */
@@ -747,18 +747,18 @@ class ExCtrl extends CtrlLib{
         if(c===undefined){
             console.error("没有对应的子元素");
             return;
-        }else if(!c.getAttribute(ExCtrl.attrKeyStr.childCtrl)){
+        }else if(!c.getAttribute(ExCtrl.attrKeyStr.child_ctrl)){
             console.error("该子元素没有子控件");
             return;
         }else{
             // 有子控件
-            if(this.childCtrl[childCtrlID]){
+            if(this.child_ctrl[childCtrlID]){
                 // 子控件已加载, 直接执行
-                _fnc.apply(this.childCtrl[childCtrlID],[this,...surplusArgument])
+                _fnc.apply(this.child_ctrl[childCtrlID],[this,...surplusArgument])
             }else{
                 // 子控件未加载完成, 挂起
-                if(this.childCtrlActionList[childCtrlID]===undefined)this.childCtrlActionList[childCtrlID]=[];
-                this.childCtrlActionList[childCtrlID].push(_fnc);
+                if(this.child_ctrl_action_list[childCtrlID]===undefined)this.child_ctrl_action_list[childCtrlID]=[];
+                this.child_ctrl_action_list[childCtrlID].push(_fnc);
             }
         }
     }
@@ -770,21 +770,21 @@ class ExCtrl extends CtrlLib{
     createContent(){
         var temp=this.itemVEToElement(this.bluePrint.ves);
         this.elements=temp.elements;
-        this.rootNodes=nodeListToArray(temp.fragment.childNodes);
-        if(this.bluePrint.style.cssList.length){
-            this.styleElement=document.createElement("style");
-            document.head.appendChild(this.styleElement);
+        this.root_nodes=nodeListToArray(temp.fragment.childNodes);
+        if(this.bluePrint.style.css_list.length){
+            this.style_element=document.createElement("style");
+            document.head.appendChild(this.style_element);
         }
     }
     /**
-     * 通过 ctrlID 获取元素
-     * @param {String} ctrlID
+     * 通过 ctrl_id 获取元素
+     * @param {String} ctrl_id
      * @returns {Element[]} 返回元素 包括ctrl-for 的
      */
-    getElementsByCtrlID(ctrlID){
+    getElementsByCtrlID(ctrl_id){
         var rtn=[];
         for(var i in this.elements){
-            if(i.indexOf(ctrlID)===0){
+            if(i.indexOf(ctrl_id)===0){
                 rtn.push(i);
             }
         }
@@ -832,26 +832,26 @@ class ExCtrl extends CtrlLib{
     /**
      * 渲染 模板字符 内容
      * @param {String} str  write TemplateKeyStr
-     * @param {String} ctrlID    登记 ID       
+     * @param {String} ctrl_id    登记 ID       
      * @param {String} type      登记 类型  
      * @param {Boolean} ishtml   控制返回值, 默认将返回字符串 ，非0 将返回 DocumentFragment
      * @param {String[]} attrkey   如果是登记的 标签的属性值 这个是属性的 key
      * @param {Element} tgt 
      * @return {String||DocumentFragment} 字符串 或 包含内容的文档片段
      */
-    stringRender(str,ctrlID,type,ishtml,attrkey,tgt){
+    stringRender(str,ctrl_id,type,ishtml,attrkey,tgt){
         var tgt=tgt;
         var temp=templateStringRender(str,this,[tgt]);
         var fragment=document.createDocumentFragment(),tempElement=document.createElement("div");
         if(temp.hit.length 
-            && ctrlID&&ctrlID.indexOf("-EX_for-")===-1
+            && ctrl_id&&ctrl_id.indexOf("-EX_for-")===-1
             ){
             // 有模版字符串,添加一条datalink
             for(var i=temp.hit.length-1;i>=0;--i){
                 if(this.dataLinks[temp.hit[i].expression]){
                     var f=1;
                     for(var j=this.dataLinks[temp.hit[i].expression].length-1;(j>=0)&&(f);--j){
-                        if(this.dataLinks[temp.hit[i].expression].link[j].ctrlID===ctrlID&&
+                        if(this.dataLinks[temp.hit[i].expression].link[j].ctrl_id===ctrl_id&&
                             this.dataLinks[temp.hit[i].expression].link[j].type===type){
                             f=0;
                             break;
@@ -860,20 +860,20 @@ class ExCtrl extends CtrlLib{
                     if(!f){
                         // 有被登记过的元素
                         if(type==="attr"&&attrkey)
-                        this.dataLinks[temp.hit[i].expression].link.push({ctrlID:ctrlID,type:type,attrkey:attrkey});
+                        this.dataLinks[temp.hit[i].expression].link.push({ctrl_id:ctrl_id,type:type,attrkey:attrkey});
                     }else{
                         // 未被登记过的元素
                         if(type==="attr"&&attrkey){
-                            this.dataLinks[temp.hit[i].expression].link.push({ctrlID:ctrlID,type:type,attrkey:attrkey});
+                            this.dataLinks[temp.hit[i].expression].link.push({ctrl_id:ctrl_id,type:type,attrkey:attrkey});
                         }else{
-                            this.dataLinks[temp.hit[i].expression].link.push({ctrlID:ctrlID,type:type});
+                            this.dataLinks[temp.hit[i].expression].link.push({ctrl_id:ctrl_id,type:type});
                         }
                     }
                     this.dataLinks[temp.hit[i].expression].value=temp.hit[i].value;
                     // else continue;
                 }
                 else{
-                    this.dataLinks[temp.hit[i].expression]=new DataLink(temp.hit[i].expression,temp.hit[i].value,{ctrlID:ctrlID,type:type});
+                    this.dataLinks[temp.hit[i].expression]=new DataLink(temp.hit[i].expression,temp.hit[i].value,{ctrl_id:ctrl_id,type:type});
                     if(type==="attr"&&attrkey){
                         this.dataLinks[temp.hit[i].expression].link[0].attrkey=attrkey;
                     }
@@ -906,7 +906,7 @@ class ExCtrl extends CtrlLib{
     renderFor(elements,ves,i,forStr,tname){
         var k=i,p,temp,l,ioffset=ioffset||0;
         var fillInner;
-        var tgt=this.elements[ves[i].ctrlID];
+        var tgt=this.elements[ves[i].ctrl_id];
         var for1Fun=new Function(["tgt"],forStr.slice(0,forStr.indexOf(';'))),
             for2Fun=new Function(["tgt"],"return "+forStr.slice(forStr.indexOf(';')+1,forStr.lastIndexOf(';'))),
             for3Fun=new Function(["tgt"],forStr.slice(forStr.lastIndexOf(';')+1));
@@ -957,7 +957,29 @@ class ExCtrl extends CtrlLib{
             // 渲染 childCtrlOption (子控件属性) 的模板字符串
             chcoArray[i].value=templateStringRender(chcoArray[i].value,this).str;
         }
-        var that=this,temp;
+        var that=this,temp,
+        getDataCallback=function (){
+            if(!(that.isready))return;
+            var child_ctrl=new that.childCtrlType[childCtrlType](...arguments);
+            for(var i=chcoArray.length-1;i>=0;--i){
+                // 加入 childCtrlOption (子控件属性)
+                child_ctrl[chcoArray[i].key]=strToVar(chcoArray[i].value);
+            }
+            that.child_ctrl[element.ctrl_id]=child_ctrl;
+            that.child_ctrl[element.ctrl_id].parent_ctrl=that;
+
+            if(that.child_ctrl_action_list[element.ctrl_id]){
+                // 执行被挂起的动作
+                var l=that.child_ctrl_action_list[element.ctrl_id].length;
+                for(var i=0;i<l;++i){
+                    that.child_ctrl_action_list[element.ctrl_id][i].apply(that.child_ctrl[element.ctrl_id],that.child_ctrl[element.ctrl_id]);
+                }
+                delete that.child_ctrl_action_list[element.ctrl_id];
+            }
+
+            child_ctrl.addend(element);
+            return child_ctrl;
+        }
         if(!dataStr){
             getDataCallback.call(this);
             return;
@@ -965,28 +987,6 @@ class ExCtrl extends CtrlLib{
         else{
             temp=(new Function("return ["+dataStr+"];")).call(this);
             getDataCallback.apply(this,temp);
-        }
-        function getDataCallback(){
-            if(!(that.isready))return;
-            var childCtrl=new that.childCtrlType[childCtrlType](...arguments);
-            for(var i=chcoArray.length-1;i>=0;--i){
-                // 加入 childCtrlOption (子控件属性)
-                childCtrl[chcoArray[i].key]=strToVar(chcoArray[i].value);
-            }
-            that.childCtrl[element.ctrlID]=childCtrl;
-            that.childCtrl[element.ctrlID].parentCtrl=that;
-
-            if(that.childCtrlActionList[element.ctrlID]){
-                // 执行被挂起的动作
-                var l=that.childCtrlActionList[element.ctrlID].length;
-                for(var i=0;i<l;++i){
-                    that.childCtrlActionList[element.ctrlID][i].apply(that.childCtrl[element.ctrlID],that.childCtrl[element.ctrlID]);
-                }
-                delete that.childCtrlActionList[element.ctrlID];
-            }
-
-            childCtrl.addend(element);
-            return childCtrl;
         }
     }
     /**
@@ -1009,15 +1009,15 @@ class ExCtrl extends CtrlLib{
             dg[ves[i].depth]=i;
             ifFlag=true;
             k=i;
-            tname=ves[i].ctrlID+nameEX;
-            elements[tname]=document.createElement(ves[i].tagName);
-            elements[tname].ctrlID=tname;
+            tname=ves[i].ctrl_id+nameEX;
+            elements[tname]=document.createElement(ves[i].tag_name);
+            elements[tname].ctrl_id=tname;
             for(j=ves[i].attribute.length-1;j>=0;--j){
                 k=this.attrHandle(ves[i].attribute[j].key,elements,ves,i,k,ves[i].attribute[j].value,tname,k,forFlag);
             }
-            tname=ves[i].ctrlID+nameEX;
+            tname=ves[i].ctrl_id+nameEX;
             if(dHash[ves[i].depth-1]){ //如果存在上一层
-                tempNode=this.stringRender(ves[i].before,tname,"before",this.templateStringIsHTML,forFlag,dHash[ves[i].depth-1]);
+                tempNode=this.stringRender(ves[i].before,tname,"before",this.template_string_can_be_HTML,forFlag,dHash[ves[i].depth-1]);
                 if(tempNode.constructor===String)tempNode=new Text(tempNode);
                 dHash[ves[i].depth-1].appendChild(tempNode);
                 if(!elements[tname].hidden)dHash[ves[i].depth-1].appendChild(elements[tname]);
@@ -1026,30 +1026,30 @@ class ExCtrl extends CtrlLib{
                 var ti=i,tnd=ves[i+1]?ves[i+1].depth:0;
                 //tnd : 下一个元素的深度
                 do{
-                    if(ves[ti].innerEnd){
-                        tempNode=this.stringRender(ves[ti].innerEnd,ves[ti].ctrlID+nameEX,"innerEnd",this.templateStringIsHTML,forFlag,elements[ves[ti].ctrlID+nameEX]);
+                    if(ves[ti].inner_end){
+                        tempNode=this.stringRender(ves[ti].inner_end,ves[ti].ctrl_id+nameEX,"inner_end",this.template_string_can_be_HTML,forFlag,elements[ves[ti].ctrl_id+nameEX]);
                         if(tempNode.constructor===String)tempNode=new Text(tempNode);
                         if(!tempNode){
                             console.wran(tempNode);
                         }
-                        elements[ves[ti].ctrlID+nameEX].appendChild(tempNode);
-                        elements[ves[ti].ctrlID+nameEX].innerIsRender=true;
+                        elements[ves[ti].ctrl_id+nameEX].appendChild(tempNode);
+                        elements[ves[ti].ctrl_id+nameEX].innerIsRender=true;
                     }
-                    if(this.ctrlLibID,ves[i].innerEnd==='fuck'){
+                    if(this.c__ctrl_lib_id,ves[i].inner_end==='fuck'){
                         console.log(!ves[ti]);
                     }
                     ti=dg[ves[ti].depth-1];
                 }while((ves[ti])&&(ves[ti].depth>=tnd)&&(ves[ti].depth<ves[i].depth));
-                if(ves[i].innerEnd){
-                    tempNode=this.stringRender(ves[i].innerEnd,tname,"innerEnd",this.templateStringIsHTML,forFlag,elements[tname]);
+                if(ves[i].inner_end){
+                    tempNode=this.stringRender(ves[i].inner_end,tname,"inner_end",this.template_string_can_be_HTML,forFlag,elements[tname]);
                     if(tempNode.constructor===String)tempNode=new Text(tempNode);
                     if(elements[tname]&&(!elements[tname].innerIsRender)){
                         elements[tname].appendChild(tempNode);
                     }
                 }
             }else if(ves[i+1].depth===ves[i].depth){ // 如果下一个和这个的深度相同
-                if(ves[i].innerEnd){
-                    tempNode=this.stringRender(ves[i].innerEnd,tname,"innerEnd",this.templateStringIsHTML,forFlag,elements[tname]);
+                if(ves[i].inner_end){
+                    tempNode=this.stringRender(ves[i].inner_end,tname,"inner_end",this.template_string_can_be_HTML,forFlag,elements[tname]);
                     if(tempNode.constructor===String)tempNode=new Text(tempNode);
                     elements[tname].appendChild(tempNode);
                 }
@@ -1060,13 +1060,13 @@ class ExCtrl extends CtrlLib{
             if(ves[i].depth<minD){// 刷新最小深度
                 minD=ves[i].depth;
                 rtnFragment=document.createDocumentFragment();
-                tempNode=this.stringRender(ves[i].before,tname,"before",this.templateStringIsHTML,forFlag,rtnFragment);
+                tempNode=this.stringRender(ves[i].before,tname,"before",this.template_string_can_be_HTML,forFlag,rtnFragment);
                 if(tempNode.constructor===String)tempNode=new Text(tempNode);
                 rtnFragment.appendChild(tempNode);
                 if(!elements[tname].hidden)rtnFragment.appendChild(elements[tname]);//添加到root
             }else{
                 if(ves[i].depth===minD){
-                    tempNode=this.stringRender(ves[i].before,tname,"before",this.templateStringIsHTML,forFlag,rtnFragment)
+                    tempNode=this.stringRender(ves[i].before,tname,"before",this.template_string_can_be_HTML,forFlag,rtnFragment)
                     if(tempNode.constructor===String)tempNode=new Text(tempNode);
                     rtnFragment.appendChild(tempNode);
                     if(!elements[tname].hidden)rtnFragment.appendChild(elements[tname]);
@@ -1085,11 +1085,11 @@ class ExCtrl extends CtrlLib{
         for(i in this.dataLinks){
             for(j=this.dataLinks[i].link.length-1;j>=0;--j){
                 // todo : 如果在模板文本里有会修改数据的表达式 
-                tid=this.dataLinks[i].link[j].ctrlID;
+                tid=this.dataLinks[i].link[j].ctrl_id;
                 if(this.dataLinks[i].value===this.dataLinks[i].expFnc.call(this,this.elements[tid]))
                 continue;
                 for(j=this.dataLinks[i].link.length-1;j>=0;--j){
-                    tid=this.dataLinks[i].link[j].ctrlID;
+                    tid=this.dataLinks[i].link[j].ctrl_id;
                     ttype=this.dataLinks[i].link[j].type;
                     if(!tempFootprint[tid+"-"+ttype]){
                         tempFootprint[tid+"-"+ttype]=1;
@@ -1114,8 +1114,8 @@ class ExCtrl extends CtrlLib{
             if(elementCtrlIDs[i].indexOf("-EX_for-")!==-1){
                 this.elements[elementCtrlIDs[i]].remove();
                 delete this.elements[elementCtrlIDs[i]];
-                if(this.childCtrl[elementCtrlIDs[i]]){
-                    delete this.childCtrl[elementCtrlIDs[i]];
+                if(this.child_ctrl[elementCtrlIDs[i]]){
+                    delete this.child_ctrl[elementCtrlIDs[i]];
                 }
             }
         }
@@ -1123,12 +1123,12 @@ class ExCtrl extends CtrlLib{
         for(i in this.dataLinks){
             for(j=this.dataLinks[i].link.length-1;j>=0;--j){
                 // todo : 如果在模板文本里有会修改数据的表达式 
-                tid=this.dataLinks[i].link[j].ctrlID;
+                tid=this.dataLinks[i].link[j].ctrl_id;
                 if(this.dataLinks[i].value===this.dataLinks[i].expFnc.call(this,this.elements[tid]))
                 continue;
                 ttype=this.dataLinks[i].link[j].type;
                 for(j=this.dataLinks[i].link.length-1;j>=0;--j){
-                    tid=this.dataLinks[i].link[j].ctrlID;
+                    tid=this.dataLinks[i].link[j].ctrl_id;
                     ttype=this.dataLinks[i].link[j].type;
                     if(!tempFootprint[tid+"-"+ttype]){
                         tempFootprint[tid+"-"+ttype]=1;
@@ -1141,7 +1141,7 @@ class ExCtrl extends CtrlLib{
         // 重新渲染 ctrl-attr 内容
         for(i=0;i<bluePrint.ves.length;++i){
             var tempVE=bluePrint.ves[i],attrKey;
-                tgtElem=this.elements[tempVE.ctrlID];
+                tgtElem=this.elements[tempVE.ctrl_id];
             if(tgtElem===undefined){
                 continue;
             }
@@ -1161,50 +1161,50 @@ class ExCtrl extends CtrlLib{
     // 
     /**
      * 重新渲染模板字符串内容: 加在元素前面的东西
-     * @param {String} 目标的 ctrlID
+     * @param {String} 目标的 ctrl_id
      */
-    renderCtrl_before(ctrlID){
-        var tgtElement=this.elements[ctrlID];
-        var thisVe=this.bluePrint.getByCtrlID(ctrlID);
-        var tempNode=this.stringRender(thisVe.before,ctrlID,"before",this.templateStringIsHTML);
+    renderCtrl_before(ctrl_id){
+        var tgtElement=this.elements[ctrl_id];
+        var thisVe=this.bluePrint.getByCtrlID(ctrl_id);
+        var tempNode=this.stringRender(thisVe.before,ctrl_id,"before",this.template_string_can_be_HTML);
         if(tempNode.constructor===String) tempNode=new Text(tempNode);
         do{
             tgtElement.previousSibling.remove();
-        }while(!(tgtElement.previousSibling.ctrlID));
-        this.elements[ctrlID].before(tempNode);
+        }while(!(tgtElement.previousSibling.ctrl_id));
+        this.elements[ctrl_id].before(tempNode);
     }
     
     /**
      * 重新渲染模板字符串内容: 加在元素末尾的内容
-     * @param {String} 目标的 ctrlID
+     * @param {String} 目标的 ctrl_id
      */
-    renderCtrl_innerEnd(ctrlID){
-        var tgtElement=this.elements[ctrlID];
-        var thisVe=this.bluePrint.getByCtrlID(ctrlID);
-        var tempNode=this.stringRender(thisVe.innerEnd,ctrlID,"before",this.templateStringIsHTML);
+    renderCtrl_inner_end(ctrl_id){
+        var tgtElement=this.elements[ctrl_id];
+        var thisVe=this.bluePrint.getByCtrlID(ctrl_id);
+        var tempNode=this.stringRender(thisVe.inner_end,ctrl_id,"before",this.template_string_can_be_HTML);
         if(tempNode.constructor===String) tempNode=new Text(tempNode);
         do{
             tgtElement.childNodes[tgtElement.childNodes.length-1].remove();
-        }while(tgtElement.childNodes[tgtElement.childNodes.length-1]&&!tgtElement.childNodes[tgtElement.childNodes.length-1].ctrlID);
-        this.elements[ctrlID].appendChild(tempNode);
+        }while(tgtElement.childNodes[tgtElement.childNodes.length-1]&&!tgtElement.childNodes[tgtElement.childNodes.length-1].ctrl_id);
+        this.elements[ctrl_id].appendChild(tempNode);
     }
     /**
      * 重新渲染模板字符串内容: 元素 的 属性
-     * @param {String} 目标的 ctrlID
+     * @param {String} 目标的 ctrl_id
      * @param {String} 目标的属性的 key 
      */
-    renderCtrl_attr(ctrlID,attrkey){
-        var tgtElement=this.elements[ctrlID];
-        var thisVE=this.bluePrint.getByCtrlID(ctrlID);
-        this.elements[ctrlID].setAttribute(attrkey,this.stringRender(thisVE.getAttribute(attrkey),ctrlID,"attr",0,attrkey,tgtElement));
+    renderCtrl_attr(ctrl_id,attrkey){
+        var tgtElement=this.elements[ctrl_id];
+        var thisVE=this.bluePrint.getByCtrlID(ctrl_id);
+        this.elements[ctrl_id].setAttribute(attrkey,this.stringRender(thisVE.getAttribute(attrkey),ctrl_id,"attr",0,attrkey,tgtElement));
     }
     /**
      * 渲染styleElement内容
      */
     renderStyle(){
-        if(!this.styleElement) return;
-        var styleElement=this.styleElement;
-        styleElement.innerHTML=this.bluePrint.style.createCssString(this.ctrlLibID,this);
+        if(!this.style_element) return;
+        var style_element=this.style_element;
+        style_element.innerHTML=this.bluePrint.style.createCssString(this.c__ctrl_lib_id,this);
     }
     /**
      * 根据html代码, 创建一个 CtrlLib 的派生类
@@ -1229,10 +1229,10 @@ ExCtrl.prototype.bluePrint;
  * 标签的属性的 保留关键字
  */
 ExCtrl.attrKeyStr={
-    ctrlID:"ctrl-id",
+    ctrl_id:"ctrl-id",
     if:"ctrl-if",
     for:"ctrl-for",
-    childCtrl:"ctrl-child_ctrl",
+    child_ctrl:"ctrl-child_ctrl",
     childCtrl_arguments:"ctrl-child_ctrl_arguments", //子控件构造函数的实参
     childCtrlOptionBefore:"chco-",   //  给子控件添加控件属性
     proxyEventBefore:"pa-",
@@ -1256,9 +1256,9 @@ ExCtrl.attrKeyStrCtrls=[
     function(elements,tname,ves,i,k,key,attrVal,forFlag){
         elements[tname].setAttribute(key,attrVal);
     }),
-    new AttrKeyStrCtrlEx(/^ctrl-id$/,nullfnc),  //ctrlID 无操作
+    new AttrKeyStrCtrl__Ex(/^ctrl-id$/,nullfnc),  //ctrl_id 无操作
     // 循环填充数据
-    new AttrKeyStrCtrlEx(/^ctrl-for$/,
+    new AttrKeyStrCtrl__Ex(/^ctrl-for$/,
         /**@this {ExCtrl}*/
         function(elements,tname,ves,i,k,key,attrVal,forFlag){
             var k=i;
@@ -1269,16 +1269,16 @@ ExCtrl.attrKeyStrCtrls=[
         }
     ),
     // 生成子控件 
-    new AttrKeyStrCtrlEx(/^ctrl-child_ctrl$/,
+    new AttrKeyStrCtrl__Ex(/^ctrl-child_ctrl$/,
         /**@this {ExCtrl}*/
         function(elements,tname,ves,i,k,key,attrVal,forFlag){
-            this.renderChildCtrl(elements[ves[i].ctrlID],ves[i],attrVal);
+            this.renderChildCtrl(elements[ves[i].ctrl_id],ves[i],attrVal);
         }
     ),
     // 生成子控件时的构造函数的参数的表达式 在生成子控件时实现, 此处不操作
-    new AttrKeyStrCtrlEx(/^ctrl-child_ctrl_arguments$/), 
+    new AttrKeyStrCtrl__Ex(/^ctrl-child_ctrl_arguments$/), 
     // dom 绑定事件
-    new AttrKeyStrCtrlEx(/^pa-(.+)$/,
+    new AttrKeyStrCtrl__Ex(/^pa-(.+)$/,
     /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
         var temp=key[1],that=this;
         elements[tname].addEventListener(temp,function(e){
@@ -1286,7 +1286,7 @@ ExCtrl.attrKeyStrCtrls=[
         });
     }),
     // 添加控件事件
-    new AttrKeyStrCtrlEx(/^ca-(.+)$/,
+    new AttrKeyStrCtrl__Ex(/^ca-(.+)$/,
     /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
         var tgt=elements[tname];
         var that=this;
@@ -1297,7 +1297,7 @@ ExCtrl.attrKeyStrCtrls=[
         );
     }),
     // element resize 
-    new AttrKeyStrCtrlEx(/^pa-resize$/,
+    new AttrKeyStrCtrl__Ex(/^pa-resize$/,
         /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
         var tgt=elements[tname];
         var eventFnc=new Function(['e',"tgt",],attrVal),that=this;
@@ -1307,7 +1307,7 @@ ExCtrl.attrKeyStrCtrls=[
         this.addCtrlAction("callback",function(){addResizeEvent.reResize(tgt)});
     }),
     // 按下按键事件 (组合键)
-    new AttrKeyStrCtrlEx(/^pa-keydown\[(.+)\]$/,
+    new AttrKeyStrCtrl__Ex(/^pa-keydown\[(.+)\]$/,
     /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
         var that=this,tgt=elements[tname];
         var eventFnc=new Function(['e',"tgt",],attrVal);
@@ -1317,7 +1317,7 @@ ExCtrl.attrKeyStrCtrls=[
             },false);
     }),
     // 抬起按键事件
-    new AttrKeyStrCtrlEx(/^pa-keyup\[(.+)\]$/,
+    new AttrKeyStrCtrl__Ex(/^pa-keyup\[(.+)\]$/,
     /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
         var that=this;
         var eventFnc=new Function(['e',"tgt",],attrVal);
@@ -1326,7 +1326,7 @@ ExCtrl.attrKeyStrCtrls=[
                 eventFnc.call(that,e,this)
             },true);
     }),
-    new AttrKeyStrCtrlEx(/^ctrl-if$/,
+    new AttrKeyStrCtrl__Ex(/^ctrl-if$/,
         /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
         return this.ctrlIf(elements,ves,i,attrVal,tname,forFlag);
     })
@@ -1341,17 +1341,17 @@ ExCtrl.prototype.reRenderAttrCtrl={
      * @param {Element} tgtElem
      */
     "ctrl-for":function(bluePrint,tgtElem){
-        var id=tgtElem.ctrlID,ti=bluePrint.getIndexByCtrlID(tgtElem.ctrlID);
+        var id=tgtElem.ctrl_id,ti=bluePrint.getIndexByCtrlID(tgtElem.ctrl_id);
         while(ti){
             ti=bluePrint.getParent(ti);
-            if(bluePrint.ves[ti].getAttribute(ExCtrl.attrKeyStr.if)&&this.elements[bluePrint.ves[ti].ctrlID].ifFlag){
-                this.elements[bluePrint.ves[ti].ctrlID].ifFlag=false;
+            if(bluePrint.ves[ti].getAttribute(ExCtrl.attrKeyStr.if)&&this.elements[bluePrint.ves[ti].ctrl_id].ifFlag){
+                this.elements[bluePrint.ves[ti].ctrl_id].ifFlag=false;
                 // 因为ctrl-if 会重新渲染，所以跳过
                 return;
             }
         }
 
-        ti=bluePrint.getIndexByCtrlID(tgtElem.ctrlID);
+        ti=bluePrint.getIndexByCtrlID(tgtElem.ctrl_id);
         var tempVEs=bluePrint.getChild(ti);
         var tempElements=this.itemVEToElement(bluePrint.ves.slice(ti,tempVEs.p));
         Object.assign(this.elements,tempElements.elements);
@@ -1363,7 +1363,7 @@ ExCtrl.prototype.reRenderAttrCtrl={
      * @param {Element} tgtElem
      */
     "ctrl-if":function(bluePrint,tgtElem){
-        var tgtCtrlID=tgtElem.ctrlID;
+        var tgtCtrlID=tgtElem.ctrl_id;
         var tp=bluePrint.getIndexByCtrlID(tgtCtrlID);
         if((new Function(["tgt"],"return ("+bluePrint.getByCtrlID(tgtCtrlID).getAttribute("ctrl-if")+")")).call(this,tgtElem)){
             // 先找到要插入的位置
@@ -1392,7 +1392,7 @@ ExCtrl.prototype.reRenderAttrCtrl={
             if(bluePrint.ves[tp].before){
                 cni+=1;
             }
-            var pNode=this.elements[this.bluePrint.ves[ti].ctrlID];
+            var pNode=this.elements[this.bluePrint.ves[ti].ctrl_id];
             var bortherNodes=pNode.childNodes;
             var tempVEs=bluePrint.getChild(tp);
             if(tgtElem.children.length<tempVEs.ves.length)
@@ -1424,7 +1424,7 @@ ExCtrl.prototype.reRenderAttrCtrl={
         }
     },
     "ctrl-child_ctrl":function(bluePrint,tgtElem){
-        this.childCtrl[tgtElem.ctrlID].reRender();
+        this.child_ctrl[tgtElem.ctrl_id].reRender();
     }
 }
 /** @type {AttrKeyStrCtrlList} 控件的自定义属性控制器 */
@@ -1438,7 +1438,7 @@ export{
     DEF_CSSVEItem,
     DataLink,
     AttrKeyStrCtrl,
-    AttrKeyStrCtrlEx,
+    AttrKeyStrCtrl__Ex,
     AttrKeyStrCtrlList,
     CtrlLib,
     ExCtrl
