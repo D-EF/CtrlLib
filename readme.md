@@ -1,6 +1,6 @@
 <!--
  * @LastEditors: Darth_Eternalfaith
- * @LastEditTime: 2021-07-19 00:44:49
+ * @LastEditTime: 2022-03-11 21:13:29
 -->
  这个文档编写 CtrlLib 的 文档  
 # 框架必须先引用我的一个函数库才能正常使用
@@ -177,7 +177,7 @@ constructor(data)
   @param {Boolean} ishtml   控制返回值, 默认将返回字符串 ，非0 将返回 DocumentFragment  
   @param {[]} attrkey   如果是登记的 标签的属性值 这个是属性的 key  
   @param {Element} tgt   
-  @return {String||DocumentFragment} 字符串 或 包含内容的文档片段  
+  @return {String|DocumentFragment} 字符串 或 包含内容的文档片段  
   
 * renderFor(elements,ves,i,forStr,tname)  
   渲染for 循环生成内容
