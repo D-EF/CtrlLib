@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-03-31 17:21:03
+ * @LastEditTime: 2022-03-31 23:55:04
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -1260,7 +1260,7 @@ ExCtrl.attrKeyStrCtrls=[
     new AttrKeyStrCtrl__Ex(/^ctrl-id$/,nullfnc),  //ctrl_id 无操作
     // 循环填充数据
     new AttrKeyStrCtrl__Ex(/^ctrl-for$/,
-        /**@this {ExCtrl}*/
+        
         function(elements,tname,ves,i,k,key,attrVal,forFlag){
             var k=i;
             k=this.renderFor(elements,ves,i,attrVal,tname,forFlag);
@@ -1271,7 +1271,7 @@ ExCtrl.attrKeyStrCtrls=[
     ),
     // 生成子控件 
     new AttrKeyStrCtrl__Ex(/^ctrl-child_ctrl$/,
-        /**@this {ExCtrl}*/
+        
         function(elements,tname,ves,i,k,key,attrVal,forFlag){
             this.renderChildCtrl(elements[ves[i].ctrl_id],ves[i],attrVal);
         }
@@ -1280,7 +1280,7 @@ ExCtrl.attrKeyStrCtrls=[
     new AttrKeyStrCtrl__Ex(/^ctrl-child_ctrl_arguments$/), 
     // dom 绑定事件
     new AttrKeyStrCtrl__Ex(/^pa-(.+)$/,
-    /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
+    function(elements,tname,ves,i,k,key,attrVal,forFlag){
         var temp=key[1],that=this;
         elements[tname].addEventListener(temp,function(e){
             (new Function(["e","tgt"],attrVal)).call(that,e,this);
@@ -1288,7 +1288,7 @@ ExCtrl.attrKeyStrCtrls=[
     }),
     // 添加控件事件
     new AttrKeyStrCtrl__Ex(/^ca-(.+)$/,
-    /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
+    function(elements,tname,ves,i,k,key,attrVal,forFlag){
         var tgt=elements[tname];
         var that=this;
         this.addCtrlAction(key[1],
@@ -1299,7 +1299,7 @@ ExCtrl.attrKeyStrCtrls=[
     }),
     // element resize 
     new AttrKeyStrCtrl__Ex(/^pa-resize$/,
-        /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
+        function(elements,tname,ves,i,k,key,attrVal,forFlag){
         var tgt=elements[tname];
         var eventFnc=new Function(['e',"tgt",],attrVal),that=this;
         addResizeEvent(tgt,function(e){
@@ -1309,17 +1309,17 @@ ExCtrl.attrKeyStrCtrls=[
     }),
     // 按下按键事件 (组合键)
     new AttrKeyStrCtrl__Ex(/^pa-keydown\[(.+)\]$/,
-    /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
+    function(elements,tname,ves,i,k,key,attrVal,forFlag){
         var that=this,tgt=elements[tname];
         var eventFnc=new Function(['e',"tgt",],attrVal);
-        addKeyEvent(tgt,true,key.slice(1),1,
+        addKeyEvent(tgt,true,1,key[1].split(','),
             function(e){
                 eventFnc.call(that,e,this)
             },false);
     }),
     // 抬起按键事件
     new AttrKeyStrCtrl__Ex(/^pa-keyup\[(.+)\]$/,
-    /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
+    function(elements,tname,ves,i,k,key,attrVal,forFlag){
         var that=this;
         var eventFnc=new Function(['e',"tgt",],attrVal);
         addKeyEvent(tgt,true,key.slice(1),1,
@@ -1328,7 +1328,7 @@ ExCtrl.attrKeyStrCtrls=[
             },true);
     }),
     new AttrKeyStrCtrl__Ex(/^ctrl-if$/,
-        /**@this {ExCtrl}*/function(elements,tname,ves,i,k,key,attrVal,forFlag){
+        function(elements,tname,ves,i,k,key,attrVal,forFlag){
         return this.ctrlIf(elements,ves,i,attrVal,tname,forFlag);
     })
 ]
