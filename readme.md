@@ -75,20 +75,20 @@ constructor(data)
   
 * callParent(_fnc,...surplusArgument)  
   呼叫父级控件  
-  @param {Function} _fnc 执行的动作, 动作的this指针是目标控件  
+  @param {function} _fnc 执行的动作, 动作的this指针是目标控件  
   @param {any} surplusArgument _fnc 执行的参数  
   
 * callChild(childCtrlID,_fnc,surplusArgument) **虚方法**  
     呼叫子控件, 如果兄弟控件没有加载完成将会被挂起  
     @param {String} childCtrlID 控件 在父控件的父元素 的 ctrl_id  
-    @param {Function} _fnc 执行的动作, 动作的this指针是目标控件  
+    @param {function} _fnc 执行的动作, 动作的this指针是目标控件  
     @param {any} surplusArgument _fnc 执行的参数  
     **这个方法在 ExCtrl 中有一个实现**  
   
 * callBrother(childCtrlID,_fnc,...surplusArgument) **虚方法**  
     呼叫兄弟控件, 如果兄弟控件没有加载完成将会被挂起  
     @param {String} childCtrlID 控件 在父控件的父元素 的 ctrl_id  
-    @param {Function} _fnc 执行的动作, 动作的this指针是目标控件  
+    @param {function} _fnc 执行的动作, 动作的this指针是目标控件  
     @param {any} surplusArgument _fnc 执行的参数  
     **这个函数在 ExCtrl 中有一个实现**  
       
@@ -118,7 +118,7 @@ constructor(data)
 * addCtrlAction(actionKey,_fnc)  
     添加控件事件  
     @param {String} actionKey 事件的类型  
-    @param {Function} _fnc    事件的执行函数 将会以控件为 this 指针  
+    @param {function} _fnc    事件的执行函数 将会以控件为 this 指针  
 
 ----
 

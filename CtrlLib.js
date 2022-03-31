@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-02-28 17:55:11
+ * @LastEditTime: 2022-03-31 17:21:03
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -438,6 +438,7 @@ function DataLink(expression,value,link){
         this.data=data||{};
         this.root_nodes=[];
         this.parent_node;
+        /** @type {CtrlLib} */
         this.parent_ctrl;
         this.child_ctrl={};
         this.elements={};
@@ -500,7 +501,7 @@ function DataLink(expression,value,link){
     }
     /**
      * 呼叫父控件
-     * @param {Function} _fnc 执行的动作 _fnc.apply(this.parent_ctrl,surplusArgument);
+     * @param {function(this:CtrlLib)} _fnc 执行的动作 _fnc.apply(this.parent_ctrl,surplusArgument);
      * @param {any} surplusArgument 参数
      */
     callParent(_fnc,...surplusArgument){
@@ -513,7 +514,7 @@ function DataLink(expression,value,link){
     /**
      * 呼叫子控件, 如果子控件没有加载完成将会被挂起
      * @param {String} childCtrlID 子控件 的父元素 的 ctrl_id
-     * @param {Function} _fnc 执行的动作
+     * @param {function(this:CtrlLib)} _fnc 执行的动作
      * @param {any} surplusArgument 参数
      */
     callChild(childCtrlID,_fnc,surplusArgument){
@@ -522,7 +523,7 @@ function DataLink(expression,value,link){
     /**
      * 呼叫兄弟控件, 如果兄弟控件没有加载完成将会被挂起
      * @param {String} childCtrlID 控件 在父控件的父元素 的 ctrl_id
-     * @param {Function} _fnc 执行的动作
+     * @param {function(this:CtrlLib)} _fnc 执行的动作
      * @param {any} surplusArgument 参数
      */
     callBrother(childCtrlID,_fnc,...surplusArgument){
@@ -593,7 +594,7 @@ function DataLink(expression,value,link){
     /**
      * 添加控件事件
      * @param {String} actionKey 事件的类型
-     * @param {Function} _fnc    事件的执行函数 将会以控件为 this 指针
+     * @param {function(this:CtrlLib)} _fnc    事件的执行函数 将会以控件为 this 指针
      */
     addCtrlAction(actionKey,_fnc){
         var temp;
@@ -616,15 +617,15 @@ CtrlLib.prototype.childCtrlType={};
  */
 class AttrKeyStrCtrl{
     /**
-     * @param {Function} ctrl_fnc    控制的函数 ctrl_fnc(String key) 应返回处理后的key值{String[]} 首项应为原始 key , 返回 undefined 将不会执行 act_fnc
-     * @param {Function} act_fnc     执行的函数 act_fnc
+     * @param {function(String):(String[]|undefined)} ctrl_fnc    控制的函数 ctrl_fnc(String key) 应返回处理后的key值{String[]} 首项应为原始 key , 返回 undefined 将不会执行 act_fnc
+     * @param {function(this:ExCtrl,Element[],String,DEF_VirtualElement[],Number,Number,*,String)} act_fnc     执行的函数 act_fnc
      * @param {Boolean} stop_flag    表示是否阻塞继续调用控制器, 默认为true阻塞
      * 注意，actFnc需要返回 跳过蓝图后的 目标索引
      */
     constructor(ctrl_fnc,act_fnc,stop_flag=true){
         this.ctrl_fnc=ctrl_fnc;
         /**
-         * @type  {Function}
+         * @type  {function(String)}
          * .call(ctrlLib,ctrlFucRtn,elements,ves,i,_attrVal,tname,forFlag)
          */
         this.act_fnc=act_fnc;
@@ -666,7 +667,7 @@ class AttrKeyStrCtrl{
 class AttrKeyStrCtrl__Ex extends AttrKeyStrCtrl{
     /**
      * @param {RegExp} regexp       属性正则表达式 如果可匹配 将 执行 actFnc
-     * @param {Function} act_fnc     执行的函数 act_fnc
+     * @param {function(this:ExCtrl,Element[],String,DEF_VirtualElement[],Number,Number,*,String)} act_fnc     执行的函数 act_fnc
      */
      constructor(regexp,act_fnc){
         super(regexp,act_fnc);
@@ -739,7 +740,7 @@ class ExCtrl extends CtrlLib{
     /**
      * 呼叫子控件, 如果子控件没有加载完成将会被挂起
      * @param {String} childCtrlID  子控件 在父控件的父元素 的 ctrl_id
-     * @param {Function} _fnc       需要执行的方法
+     * @param {function(this:ExCtrl,ExCtrl)} _fnc       需要执行的方法
      * @param {Any} surplusArgument 尽量别用, 挂起的时候用不了
      */
     callChild(childCtrlID,_fnc,...surplusArgument){
@@ -795,7 +796,7 @@ class ExCtrl extends CtrlLib{
      * 请求 api 并用json反序列化
      * @param {String} method 请求的方式
      * @param {String} url  请求的地址
-     * @param {Function} callback 请求完成后的回调  callback.call(Response,data);
+     * @param {function(this:XMLHttpRequest,Object)} callback 请求完成后的回调  callback.call(Response,data);
      * @param {Any} body post 请求的参数
      */
     static getJsonData(method,url,callback,body){
