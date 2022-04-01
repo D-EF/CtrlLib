@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-03-31 23:55:04
+ * @LastEditTime: 2022-04-01 16:54:54
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -1258,9 +1258,18 @@ ExCtrl.attrKeyStrCtrls=[
         elements[tname].setAttribute(key,attrVal);
     }),
     new AttrKeyStrCtrl__Ex(/^ctrl-id$/,nullfnc),  //ctrl_id 无操作
+    new AttrKeyStrCtrl__Ex(/^ctrl-style$/,function(elements,tname,ves,i,k,key,attrVal,forFlag){
+        /** @type {HTMLElement} */
+        var d=elements[tname];
+        d.style.cssText+=attrVal;
+    }),
+    new AttrKeyStrCtrl__Ex(/^api-attr-(.+)$/,function(elements,tname,ves,i,k,key,attrVal,forFlag){
+        /** @type {HTMLElement} */
+        var d=elements[tname];
+        d[key[1]]=(new Function(['tgt'],"return "+attrVal)).call(this,d);
+    }),
     // 循环填充数据
     new AttrKeyStrCtrl__Ex(/^ctrl-for$/,
-        
         function(elements,tname,ves,i,k,key,attrVal,forFlag){
             var k=i;
             k=this.renderFor(elements,ves,i,attrVal,tname,forFlag);
@@ -1271,7 +1280,6 @@ ExCtrl.attrKeyStrCtrls=[
     ),
     // 生成子控件 
     new AttrKeyStrCtrl__Ex(/^ctrl-child_ctrl$/,
-        
         function(elements,tname,ves,i,k,key,attrVal,forFlag){
             this.renderChildCtrl(elements[ves[i].ctrl_id],ves[i],attrVal);
         }
