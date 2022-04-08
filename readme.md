@@ -407,7 +407,7 @@ constructor(data)
   cssString {String} css 的内容    
   depth {Number} 深度   
   ## DEF_CSSVEItem 方法   
-  * toString(_ctrlLibID,_that)   
+  * toString(_c__ctrl_lib_id,_that)   
     将对象渲染成css语句   
     @param {String} _ctrl_id   
     @param {CtrlLib} _that   

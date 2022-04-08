@@ -15,7 +15,7 @@
   一个控件实例并且渲染时, 父元素禁止拥有子元素
   示例:
   ``` xml
-  <div class="${this.data.class}">${this.ctrlLibID}</div>
+  <div class="${this.data.class}">${this.c__ctrl_lib_id}</div>
   ```
 ### 使用特殊的属性来增加控制 
 *这些特殊属性可以在控件类原型中编辑 attrKeyStrCtrls 来修改*
