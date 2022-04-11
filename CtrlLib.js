@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-04-08 19:28:08
+ * @LastEditTime: 2022-04-11 11:52:00
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -770,6 +770,7 @@ class ExCtrl extends CtrlLib{
     }
     createContent(){
         var temp=this.itemVEToElement(this.bluePrint.ves);
+        /** @type {Object<String,Element>} */
         this.elements=temp.elements;
         this.root_nodes=nodeListToArray(temp.fragment.childNodes);
         if(this.bluePrint.style.css_list.length){
@@ -1230,24 +1231,13 @@ ExCtrl.prototype.bluePrint;
  * 标签的属性的 保留关键字
  */
 ExCtrl.attrKeyStr={
-    ctrl_id:"ctrl-id",
     if:"ctrl-if",
     for:"ctrl-for",
     child_ctrl:"ctrl-child_ctrl",
     childCtrl_arguments:"ctrl-child_ctrl_arguments", //子控件构造函数的实参
     childCtrlOptionBefore:"chco-",   //  给子控件添加控件属性
-    proxyEventBefore:"pa-",
-    ctrlEventBefore:"ca-",
     // element resize 
     proxyResizeEvent:"pa-resize",
-    // 按下按键事件 (组合键)
-    keyDownEventBefore:"pa-keydown[",
-    keyDownEventCilpKey:",",
-    keyDownEventAfter:"]",
-    // 抬起按键事件
-    keyUpEventBefore:"pa-keyup[",
-    keyUpEventCilpKey:",",
-    keyUpEventAfter:"]",
 }
 /**
  * 预设的 自定义属性控制器集合
