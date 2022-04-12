@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-04-11 11:52:00
+ * @LastEditTime: 2022-04-12 17:59:30
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -617,13 +617,13 @@ CtrlLib.prototype.childCtrlType={};
  */
 class AttrKeyStrCtrl{
     /**
-     * @param {function(String):(String[]|undefined)} ctrl_fnc    控制的函数 ctrl_Fnc(String key) 应返回处理后的key值{String[]} 首项应为原始 key , 返回 undefined 将不会执行 act_fnc
+     * @param {function(String):(String[]|undefined)} ctrl_Fnc    控制的函数 ctrl_Fnc(String key) 应返回处理后的key值{String[]} 首项应为原始 key , 返回 undefined 将不会执行 act_fnc
      * @param {function(this:ExCtrl,Element[],String,DEF_VirtualElement[],Number,Number,*,String)} act_fnc     执行的函数 act_fnc
      * @param {Boolean} stop_flag    表示是否阻塞继续调用控制器, 默认为true阻塞
      * 注意，actFnc需要返回 跳过蓝图后的 目标索引
      */
-    constructor(ctrl_fnc,act_fnc,stop_flag=true){
-        this.ctrl_fnc=ctrl_fnc;
+    constructor(ctrl_Fnc,act_fnc,stop_flag=true){
+        this.ctrl_Fnc=ctrl_Fnc;
         /**
          * @type  {function(String)}
          * .call(ctrlLib,ctrlFucRtn,elements,ves,i,_attrVal,tname,forFlag)
@@ -674,7 +674,7 @@ class AttrKeyStrCtrl__Ex extends AttrKeyStrCtrl{
         /**
          * @param {String} str 
          */
-        this.ctrl_fnc=function(str){
+        this.ctrl_Fnc=function(str){
             return regexp.exec(str);
         }
         this.act_fnc=act_fnc;
