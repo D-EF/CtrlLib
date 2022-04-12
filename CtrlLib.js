@@ -469,7 +469,7 @@ function DataLink(expression,value,link){
             }
             this.parent_node.appendChild(tempDocF);
             this.callback(...arguments);
-            this.reRender_callback();
+            this.reRender_Callback();
             this.touchCtrlAction("callback");
         }else{
             console.error('Fatal error! This Control have not parent_node!');
@@ -492,7 +492,7 @@ function DataLink(expression,value,link){
             tgtNode.before(tempDocF);
             tgtNode.remove();
             this.callback(...arguments);
-            this.reRender_callback();
+            this.reRender_Callback();
             this.touchCtrlAction("callback");
         }
         else{
@@ -557,7 +557,7 @@ function DataLink(expression,value,link){
     /**
      * 重新渲染完成后的回调
      */
-    reRender_callback(){}
+    reRender_Callback(){}
     /**
      * 卸载控件
      */
@@ -617,7 +617,7 @@ CtrlLib.prototype.childCtrlType={};
  */
 class AttrKeyStrCtrl{
     /**
-     * @param {function(String):(String[]|undefined)} ctrl_fnc    控制的函数 ctrl_fnc(String key) 应返回处理后的key值{String[]} 首项应为原始 key , 返回 undefined 将不会执行 act_fnc
+     * @param {function(String):(String[]|undefined)} ctrl_fnc    控制的函数 ctrl_Fnc(String key) 应返回处理后的key值{String[]} 首项应为原始 key , 返回 undefined 将不会执行 act_fnc
      * @param {function(this:ExCtrl,Element[],String,DEF_VirtualElement[],Number,Number,*,String)} act_fnc     执行的函数 act_fnc
      * @param {Boolean} stop_flag    表示是否阻塞继续调用控制器, 默认为true阻塞
      * 注意，actFnc需要返回 跳过蓝图后的 目标索引
@@ -647,7 +647,7 @@ class AttrKeyStrCtrl{
      * stopFlag表示是否继续调用控制器
      */
     handle(ctrlLib,elements,tname,ves,i,k,key,_attrVal,forFlag){
-        var ctrlFucRtn=this.ctrl_fnc(key);
+        var ctrlFucRtn=this.ctrl_Fnc(key);
         var tgti=k;
         if(ctrlFucRtn&&ctrlFucRtn.length){
             tgti=this.act_fnc&&this.act_fnc.call(ctrlLib,elements,tname,ves,i,k,ctrlFucRtn,_attrVal,forFlag);
@@ -1156,7 +1156,7 @@ class ExCtrl extends CtrlLib{
         }
         // 重新渲染style标签
         this.renderStyle();
-        this.reRender_callback();
+        this.reRender_Callback();
         this.touchCtrlAction("render");
     }
     // render 的 方法集; 给 stringRender 处理的内容
@@ -1165,7 +1165,7 @@ class ExCtrl extends CtrlLib{
      * 重新渲染模板字符串内容: 加在元素前面的东西
      * @param {String} 目标的 ctrl_id
      */
-    renderCtrl_before(ctrl_id){
+    renderCtrl_Before(ctrl_id){
         var tgtElement=this.elements[ctrl_id];
         var thisVe=this.bluePrint.getByCtrlID(ctrl_id);
         var tempNode=this.stringRender(thisVe.before,ctrl_id,"before",this.template_string_can_be_HTML);
@@ -1180,7 +1180,7 @@ class ExCtrl extends CtrlLib{
      * 重新渲染模板字符串内容: 加在元素末尾的内容
      * @param {String} 目标的 ctrl_id
      */
-    renderCtrl_inner_end(ctrl_id){
+    renderCtrl_inner_End(ctrl_id){
         var tgtElement=this.elements[ctrl_id];
         var thisVe=this.bluePrint.getByCtrlID(ctrl_id);
         var tempNode=this.stringRender(thisVe.inner_end,ctrl_id,"before",this.template_string_can_be_HTML);
@@ -1195,7 +1195,7 @@ class ExCtrl extends CtrlLib{
      * @param {String} 目标的 ctrl_id
      * @param {String} 目标的属性的 key 
      */
-    renderCtrl_attr(ctrl_id,attrkey){
+    renderCtrl_Attr(ctrl_id,attrkey){
         var tgtElement=this.elements[ctrl_id];
         var thisVE=this.bluePrint.getByCtrlID(ctrl_id);
         this.elements[ctrl_id].setAttribute(attrkey,this.stringRender(thisVE.getAttribute(attrkey),ctrl_id,"attr",0,attrkey,tgtElement));

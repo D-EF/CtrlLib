@@ -108,7 +108,7 @@ constructor(data)
     根据data渲染部分需要渲染的内容  
     **这个方法在 ExCtrl 中有一个实现**  
 
-* reRender_callback() **虚方法**  
+* reRender_Callback() **虚方法**  
     重新渲染完成后的回调  
 
 * touchCtrlAction(actionKey)   
@@ -215,14 +215,14 @@ constructor(data)
 * reRender()  
   根据依赖项重新渲染所有内容 仅有在 stringRender 中登记过才能使用  
 
-* renderCtrl_before(ctrl_id)  
+* renderCtrl_Before(ctrl_id)  
   重新渲染元素前面的文本  
 
-* renderCtrl_innerEnd(ctrl_id)  
+* renderCtrl_InnerEnd(ctrl_id)  
   重新渲染模板字符串内容: 加在元素末尾的内容  
   @param {String} 目标的 ctrl_id  
 
-* renderCtrl_attr(ctrl_id,attrkey)  
+* renderCtrl_Attr(ctrl_id,attrkey)  
   重新渲染模板字符串内容: 元素 的 属性  
   @param {String} 目标的 ctrl_id  
   @param {String} 目标的属性的 key   
