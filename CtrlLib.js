@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-04-12 17:59:30
+ * @LastEditTime: 2022-04-12 18:23:35
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -822,7 +822,7 @@ class ExCtrl extends CtrlLib{
     attrHandle(key,elements,ves,i,k,_attrVal,tname,forFlag){
         var tgt=elements[tname],k=k;
 
-        var attrVal=this.stringRender(decodeHTML(_attrVal),tname,"attr",0,key,tgt);
+        var attrVal=this.stringRender(decodeHTML(_attrVal),tname,"Attr",0,key,tgt);
 
         // that=this;
         var k=this.attrKeyStrCtrls.handle(this,elements,tname,ves,i,k,key,attrVal,forFlag);
@@ -861,11 +861,11 @@ class ExCtrl extends CtrlLib{
                     }
                     if(!f){
                         // 有被登记过的元素
-                        if(type==="attr"&&attrkey)
+                        if(type==="Attr"&&attrkey)
                         this.dataLinks[temp.hit[i].expression].link.push({ctrl_id:ctrl_id,type:type,attrkey:attrkey});
                     }else{
                         // 未被登记过的元素
-                        if(type==="attr"&&attrkey){
+                        if(type==="Attr"&&attrkey){
                             this.dataLinks[temp.hit[i].expression].link.push({ctrl_id:ctrl_id,type:type,attrkey:attrkey});
                         }else{
                             this.dataLinks[temp.hit[i].expression].link.push({ctrl_id:ctrl_id,type:type});
@@ -876,7 +876,7 @@ class ExCtrl extends CtrlLib{
                 }
                 else{
                     this.dataLinks[temp.hit[i].expression]=new DataLink(temp.hit[i].expression,temp.hit[i].value,{ctrl_id:ctrl_id,type:type});
-                    if(type==="attr"&&attrkey){
+                    if(type==="Attr"&&attrkey){
                         this.dataLinks[temp.hit[i].expression].link[0].attrkey=attrkey;
                     }
                 }
@@ -1019,7 +1019,7 @@ class ExCtrl extends CtrlLib{
             }
             tname=ves[i].ctrl_id+nameEX;
             if(dHash[ves[i].depth-1]){ //如果存在上一层
-                tempNode=this.stringRender(ves[i].before,tname,"before",this.template_string_can_be_HTML,forFlag,dHash[ves[i].depth-1]);
+                tempNode=this.stringRender(ves[i].before,tname,"Before",this.template_string_can_be_HTML,forFlag,dHash[ves[i].depth-1]);
                 if(tempNode.constructor===String)tempNode=new Text(tempNode);
                 dHash[ves[i].depth-1].appendChild(tempNode);
                 if(!elements[tname].hidden)dHash[ves[i].depth-1].appendChild(elements[tname]);
@@ -1029,7 +1029,7 @@ class ExCtrl extends CtrlLib{
                 //tnd : 下一个元素的深度
                 do{
                     if(ves[ti].inner_end){
-                        tempNode=this.stringRender(ves[ti].inner_end,ves[ti].ctrl_id+nameEX,"inner_end",this.template_string_can_be_HTML,forFlag,elements[ves[ti].ctrl_id+nameEX]);
+                        tempNode=this.stringRender(ves[ti].inner_end,ves[ti].ctrl_id+nameEX,"InnerEnd",this.template_string_can_be_HTML,forFlag,elements[ves[ti].ctrl_id+nameEX]);
                         if(tempNode.constructor===String)tempNode=new Text(tempNode);
                         if(!tempNode){
                             console.wran(tempNode);
@@ -1043,7 +1043,7 @@ class ExCtrl extends CtrlLib{
                     ti=dg[ves[ti].depth-1];
                 }while((ves[ti])&&(ves[ti].depth>=tnd)&&(ves[ti].depth<ves[i].depth));
                 if(ves[i].inner_end){
-                    tempNode=this.stringRender(ves[i].inner_end,tname,"inner_end",this.template_string_can_be_HTML,forFlag,elements[tname]);
+                    tempNode=this.stringRender(ves[i].inner_end,tname,"InnerEnd",this.template_string_can_be_HTML,forFlag,elements[tname]);
                     if(tempNode.constructor===String)tempNode=new Text(tempNode);
                     if(elements[tname]&&(!elements[tname].innerIsRender)){
                         elements[tname].appendChild(tempNode);
@@ -1051,7 +1051,7 @@ class ExCtrl extends CtrlLib{
                 }
             }else if(ves[i+1].depth===ves[i].depth){ // 如果下一个和这个的深度相同
                 if(ves[i].inner_end){
-                    tempNode=this.stringRender(ves[i].inner_end,tname,"inner_end",this.template_string_can_be_HTML,forFlag,elements[tname]);
+                    tempNode=this.stringRender(ves[i].inner_end,tname,"InnerEnd",this.template_string_can_be_HTML,forFlag,elements[tname]);
                     if(tempNode.constructor===String)tempNode=new Text(tempNode);
                     elements[tname].appendChild(tempNode);
                 }
@@ -1062,13 +1062,13 @@ class ExCtrl extends CtrlLib{
             if(ves[i].depth<minD){// 刷新最小深度
                 minD=ves[i].depth;
                 rtnFragment=document.createDocumentFragment();
-                tempNode=this.stringRender(ves[i].before,tname,"before",this.template_string_can_be_HTML,forFlag,rtnFragment);
+                tempNode=this.stringRender(ves[i].before,tname,"Before",this.template_string_can_be_HTML,forFlag,rtnFragment);
                 if(tempNode.constructor===String)tempNode=new Text(tempNode);
                 rtnFragment.appendChild(tempNode);
                 if(!elements[tname].hidden)rtnFragment.appendChild(elements[tname]);//添加到root
             }else{
                 if(ves[i].depth===minD){
-                    tempNode=this.stringRender(ves[i].before,tname,"before",this.template_string_can_be_HTML,forFlag,rtnFragment)
+                    tempNode=this.stringRender(ves[i].before,tname,"Before",this.template_string_can_be_HTML,forFlag,rtnFragment)
                     if(tempNode.constructor===String)tempNode=new Text(tempNode);
                     rtnFragment.appendChild(tempNode);
                     if(!elements[tname].hidden)rtnFragment.appendChild(elements[tname]);
@@ -1168,7 +1168,7 @@ class ExCtrl extends CtrlLib{
     renderCtrl_Before(ctrl_id){
         var tgtElement=this.elements[ctrl_id];
         var thisVe=this.bluePrint.getByCtrlID(ctrl_id);
-        var tempNode=this.stringRender(thisVe.before,ctrl_id,"before",this.template_string_can_be_HTML);
+        var tempNode=this.stringRender(thisVe.before,ctrl_id,"Before",this.template_string_can_be_HTML);
         if(tempNode.constructor===String) tempNode=new Text(tempNode);
         do{
             tgtElement.previousSibling.remove();
@@ -1180,10 +1180,10 @@ class ExCtrl extends CtrlLib{
      * 重新渲染模板字符串内容: 加在元素末尾的内容
      * @param {String} 目标的 ctrl_id
      */
-    renderCtrl_inner_End(ctrl_id){
+    renderCtrl_InnerEnd(ctrl_id){
         var tgtElement=this.elements[ctrl_id];
         var thisVe=this.bluePrint.getByCtrlID(ctrl_id);
-        var tempNode=this.stringRender(thisVe.inner_end,ctrl_id,"before",this.template_string_can_be_HTML);
+        var tempNode=this.stringRender(thisVe.inner_end,ctrl_id,"Before",this.template_string_can_be_HTML);
         if(tempNode.constructor===String) tempNode=new Text(tempNode);
         do{
             tgtElement.childNodes[tgtElement.childNodes.length-1].remove();
@@ -1198,7 +1198,7 @@ class ExCtrl extends CtrlLib{
     renderCtrl_Attr(ctrl_id,attrkey){
         var tgtElement=this.elements[ctrl_id];
         var thisVE=this.bluePrint.getByCtrlID(ctrl_id);
-        this.elements[ctrl_id].setAttribute(attrkey,this.stringRender(thisVE.getAttribute(attrkey),ctrl_id,"attr",0,attrkey,tgtElement));
+        this.elements[ctrl_id].setAttribute(attrkey,this.stringRender(thisVE.getAttribute(attrkey),ctrl_id,"Attr",0,attrkey,tgtElement));
     }
     /**
      * 渲染styleElement内容
