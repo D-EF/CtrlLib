@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-04-12 18:23:35
+ * @LastEditTime: 2022-04-13 09:40:53
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -437,6 +437,7 @@ function DataLink(expression,value,link){
         this.c__ctrl_lib_id=CtrlLib.idIndex++;
         this.data=data||{};
         this.root_nodes=[];
+        /**@type {HTMLElement} dom父元素*/
         this.parent_node;
         /** @type {CtrlLib} */
         this.parent_ctrl;
