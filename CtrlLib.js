@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-04-13 09:40:53
+ * @LastEditTime: 2022-04-14 11:46:46
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -770,9 +770,9 @@ class ExCtrl extends CtrlLib{
         this.renderStyle();
     }
     createContent(){
-        var temp=this.itemVEToElement(this.bluePrint.ves);
+        this.elements={};
+        var temp=this.itemVEToElement(this.elements,this.bluePrint.ves);
         /** @type {Object<String,Element>} */
-        this.elements=temp.elements;
         this.root_nodes=nodeListToArray(temp.fragment.childNodes);
         if(this.bluePrint.style.css_list.length){
             this.style_element=document.createElement("style");
@@ -918,9 +918,8 @@ class ExCtrl extends CtrlLib{
         fillInner=ves.slice(i+1,k);
         for(for1Fun.call(this,tgt),l=1;for2Fun.call(this,tgt);++l,for3Fun.call(this,tgt)){
             //递归得到循环内部的元素
-            temp=this.itemVEToElement(fillInner,"-EX_for-"+tname+"-C"+l,true);
+            temp=this.itemVEToElement(this.elements,fillInner,"-EX_for-"+tname+"-C"+l,true);
             elements[tname].appendChild(temp.fragment);
-            Object.assign(elements,temp.elements);
         }
         return k-1;
     }
@@ -994,12 +993,13 @@ class ExCtrl extends CtrlLib{
     }
     /**
      * 把 ve 转换成 js 的 Element 对象;
+     * @param   {*} elements element的集合的引用
      * @param   {DEF_VirtualElement[]} ves   DEF_VirtualElement list
      * @param   {String}     _nameEX    用来添加命名的
      * @return  {Object{elements:{},fragment:DocumentFragment}}
      */
-    itemVEToElement(ves,_nameEX,forFlag){
-        var elements={},
+    itemVEToElement(_elements,ves,_nameEX,forFlag){
+        var elements=_elements||{},
             rtnFragment=document.createDocumentFragment(),
             i,j,k,minD=Infinity,
             dHash=new Array(ves.length),
@@ -1353,8 +1353,7 @@ ExCtrl.prototype.reRenderAttrCtrl={
 
         ti=bluePrint.getIndexByCtrlID(tgtElem.ctrl_id);
         var tempVEs=bluePrint.getChild(ti);
-        var tempElements=this.itemVEToElement(bluePrint.ves.slice(ti,tempVEs.p));
-        Object.assign(this.elements,tempElements.elements);
+        var tempElements=this.itemVEToElement(this.elements,bluePrint.ves.slice(ti,tempVEs.p));
         tgtElem.before(tempElements.fragment);
         tgtElem.remove();
     },
@@ -1398,8 +1397,7 @@ ExCtrl.prototype.reRenderAttrCtrl={
             if(tgtElem.children.length<tempVEs.ves.length)
             {
                 // 重新渲染
-                var tempElements=this.itemVEToElement(bluePrint.ves.slice(tp,tempVEs.p));
-                Object.assign(this.elements,tempElements.elements);
+                var tempElements=this.itemVEToElement(this.elements,bluePrint.ves.slice(tp,tempVEs.p));
                 this.elements[tgtCtrlID].ifFlag=true;
             }
             // 插入目标
