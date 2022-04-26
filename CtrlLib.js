@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-04-14 11:46:46
+ * @LastEditTime: 2022-04-26 21:37:10
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -441,6 +441,7 @@ function DataLink(expression,value,link){
         this.parent_node;
         /** @type {CtrlLib} */
         this.parent_ctrl;
+        /** @type {Object} 子组件集合 */
         this.child_ctrl={};
         this.elements={};
         /** 控件触发事件 
@@ -597,7 +598,7 @@ function DataLink(expression,value,link){
      * @param {String} actionKey 事件的类型
      * @param {function(this:CtrlLib)} _fnc    事件的执行函数 将会以控件为 this 指针
      */
-    addCtrlAction(actionKey,_fnc){
+    add_CtrlAction(actionKey,_fnc){
         var temp;
         if(!(temp=this.ctrl_action_list.get(actionKey))){
             // 没有这种类型的事件，将创建
@@ -605,6 +606,22 @@ function DataLink(expression,value,link){
             temp=this.ctrl_action_list.get(actionKey)
         }
         temp.addAct(this,_fnc);
+    }
+    /**
+     * 移除控件事件
+     * @param {String} actionKey 事件的类型
+     * @param {function(this:CtrlLib)} _fnc    事件的执行函数 将会以控件为 this 指针
+     */
+    remove_CtrlAction(actionKey,_fnc){
+        /**@type {Delegate} */
+        var temp;
+        if(temp=this.ctrl_action_list.get(actionKey)){
+            // 有事件
+            temp.removeAct(this,_fnc)
+        }
+        // 没有这种类型的事件
+        return;
+        
     }
 }
 CtrlLib.idIndex=zero;
@@ -1080,7 +1097,7 @@ class ExCtrl extends CtrlLib{
         return {elements:elements,fragment:rtnFragment};
     }
     /**
-     * 重新渲染模板字符串内容
+     * 重新渲染模板字符串内容  仅有在 stringRender 中登记过才能使用
      */
     renderString(){
         var i,j,tempFootprint={},tid,ttype;
@@ -1104,14 +1121,13 @@ class ExCtrl extends CtrlLib{
         }
     }
     /**
-     * 根据依赖项重新渲染所有内容 仅有在 stringRender 中登记过才能使用
+     * 根据依赖项重新渲染所有内容
      */
     reRender(){
         var i,j,tempFootprint={},tid,ttype;
         var bluePrint=this.bluePrint;
         var elementCtrlIDs=Object.keys(this.elements);
         var tgtElem;
-
         // 清除循环填充的东西
         for(i=elementCtrlIDs.length-1;i>=0;--i){
             if(elementCtrlIDs[i].indexOf("-EX_for-")!==-1){
@@ -1123,24 +1139,7 @@ class ExCtrl extends CtrlLib{
             }
         }
         //  重新渲染 stringRender 的
-        for(i in this.dataLinks){
-            for(j=this.dataLinks[i].link.length-1;j>=0;--j){
-                // todo : 如果在模板文本里有会修改数据的表达式 
-                tid=this.dataLinks[i].link[j].ctrl_id;
-                if(this.dataLinks[i].value===this.dataLinks[i].expFnc.call(this,this.elements[tid]))
-                continue;
-                ttype=this.dataLinks[i].link[j].type;
-                for(j=this.dataLinks[i].link.length-1;j>=0;--j){
-                    tid=this.dataLinks[i].link[j].ctrl_id;
-                    ttype=this.dataLinks[i].link[j].type;
-                    if(!tempFootprint[tid+"-"+ttype]){
-                        tempFootprint[tid+"-"+ttype]=1;
-                        this["renderCtrl_"+ttype](tid,this.dataLinks[i].link[j].attrkey);
-                    }
-                }
-                break;
-            }
-        }
+        this.renderString();
         // 重新渲染 ctrl-attr 内容
         for(i=0;i<bluePrint.ves.length;++i){
             var tempVE=bluePrint.ves[i],attrKey;
@@ -1281,30 +1280,32 @@ ExCtrl.attrKeyStrCtrls=[
     new AttrKeyStrCtrl__Ex(/^pa-(.+)$/,
     function(elements,tname,ves,i,k,key,attrVal,forFlag){
         var temp=key[1],that=this;
-        elements[tname].addEventListener(temp,function(e){
-            (new Function(["e","tgt"],attrVal)).call(that,e,this);
-        });
+        if(elements[tname]["_ctrl_pa_"+temp]){
+            elements[tname].removeEventListener(temp,elements[tname]["_ctrl_pa_"+temp]);
+        }
+        elements[tname]["_ctrl_pa_"+temp]=function(e){(new Function(["e","tgt"],attrVal)).call(that,e,this);}
+        elements[tname].addEventListener(temp,elements[tname]["_ctrl_pa_"+temp]);
     }),
-    // 添加控件事件
+    // 添加控件事件 todo: ctrl-for循环中使用这个会导致无法gc
     new AttrKeyStrCtrl__Ex(/^ca-(.+)$/,
+    /** @this {ExCtrl} */
     function(elements,tname,ves,i,k,key,attrVal,forFlag){
         var tgt=elements[tname];
         var that=this;
-        this.addCtrlAction(key[1],
-            function(e){
-                (new Function(["e","tgt"],attrVal)).call(that,e,tgt);
-            }
-        );
+        this.remove_CtrlAction(key[1],tgt["_ctrl_ca_"+key[1]]);
+        tgt["_ctrl_ca_"+key[1]]=function(e){(new Function(["e","tgt"],attrVal)).call(that,e,tgt);}
+        this.add_CtrlAction(key[1],tgt["_ctrl_ca_"+key[1]]);
     }),
     // element resize 
     new AttrKeyStrCtrl__Ex(/^pa-resize$/,
-        function(elements,tname,ves,i,k,key,attrVal,forFlag){
+    /** @this {ExCtrl} */
+    function(elements,tname,ves,i,k,key,attrVal,forFlag){
         var tgt=elements[tname];
         var eventFnc=new Function(['e',"tgt",],attrVal),that=this;
         addResizeEvent(tgt,function(e){
             eventFnc.call(that,e,tgt);
         });
-        this.addCtrlAction("callback",function(){addResizeEvent.reResize(tgt)});
+        this.add_CtrlAction("callback",function(){addResizeEvent.reResize(tgt)});
     }),
     // 按下按键事件 (组合键)
     new AttrKeyStrCtrl__Ex(/^pa-keydown\[(.+)\]$/,
