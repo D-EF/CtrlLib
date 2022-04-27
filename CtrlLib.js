@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-04-26 21:37:10
+ * @LastEditTime: 2022-04-27 15:29:57
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -14,6 +14,8 @@ import {
     nodeListToArray,
     addKeyEvent,
     addResizeEvent,
+    removeResizeEvent,
+    removeKeyEvent,
 } from "../basics/dom_tool.js";
 
 /**
@@ -453,7 +455,7 @@ function DataLink(expression,value,link){
     }
     /**
      * 将控件加入到指定的dom元素内
-     * @param {Element} _parentNode 指定的父dom元素
+     * @param {HTMLElement} _parentNode 指定的父dom元素
      */
     addend(_parentNode,...surplusArgument){
         if(_parentNode){
@@ -630,13 +632,26 @@ CtrlLib.idIndex=zero;
  */
 CtrlLib.prototype.childCtrlType={};
 
+/** 
+ * @callback AttrKeyCtrl_Callback
+ * @param {HTMLElement[]}        elements   实例的 elements 的引用，用于添加新的子元素
+ * @param {String}               ctrl_id    对应 elements 的下标 / 临时的元素名称，用作实例的 elements 当前的索引
+ * @param {DEF_VirtualElement[]} ves        虚拟dom蓝本
+ * @param {Number}               i          当前的ves的下标
+ * @param {Number}               k          经处理后的ves的下标
+ * @param {String[]}             keys       经过ctrl_Fnc 处理后的 key
+ * @param {String}               _attrVal   属性值
+ * @param {Boolean}              forFlag    当前元素是否是for中的
+ * @this {ExCtrl}
+ * 
+ */ 
 /**
  * 自定义属性控制器
  */
 class AttrKeyStrCtrl{
     /**
      * @param {function(String):(String[]|undefined)} ctrl_Fnc    控制的函数 ctrl_Fnc(String key) 应返回处理后的key值{String[]} 首项应为原始 key , 返回 undefined 将不会执行 act_fnc
-     * @param {function(this:ExCtrl,Element[],String,DEF_VirtualElement[],Number,Number,*,String)} act_fnc     执行的函数 act_fnc
+     * @param {AttrKeyCtrl_Callback} act_fnc     执行的函数 act_fnc
      * @param {Boolean} stop_flag    表示是否阻塞继续调用控制器, 默认为true阻塞
      * 注意，actFnc需要返回 跳过蓝图后的 目标索引
      */
@@ -653,7 +668,7 @@ class AttrKeyStrCtrl{
     /**
      * 进行并且执行操作
      * @param {ExCtrl} ctrlLib ExCtrl实例
-     * @param {Element[]} elements 实例的 elements 的引用，用于添加新的子元素
+     * @param {HTMLElement[]} elements 实例的 elements 的引用，用于添加新的子元素
      * @param {String} tname 临时的元素名称，用作实例的 elements 当前的索引
      * @param {DEF_VirtualElement[]} ves DEF_VirtualElement 的数组
      * @param {Number} i 当前的ves的下标
@@ -679,13 +694,14 @@ class AttrKeyStrCtrl{
         }
     }
 }
+
 /**
  * 使用正则表达式 的 属性控制器
  */
 class AttrKeyStrCtrl__Ex extends AttrKeyStrCtrl{
     /**
      * @param {RegExp} regexp       属性正则表达式 如果可匹配 将 执行 actFnc
-     * @param {function(this:ExCtrl,Element[],String,DEF_VirtualElement[],Number,Number,*,String)} act_fnc     执行的函数 act_fnc
+     * @param {AttrKeyCtrl_Callback} act_fnc     执行的函数 act_fnc
      */
      constructor(regexp,act_fnc){
         super(regexp,act_fnc);
@@ -724,7 +740,7 @@ class AttrKeyStrCtrlList{
     /**
      * 进行并且执行操作
      * @param {ExCtrl} ctrlLib ExCtrl实例
-     * @param {Element[]} elements 实例的 elements 的引用，用于添加新的子元素
+     * @param {HTMLElement[]} elements 实例的 elements 的引用，用于添加新的子元素
      * @param {String} tname 临时的元素名称，用作实例的 elements 当前的索引
      * @param {DEF_VirtualElement[]} ves DEF_VirtualElement 的数组
      * @param {Number} i 当前的ves的下标
@@ -766,7 +782,7 @@ class ExCtrl extends CtrlLib{
         if(c===undefined){
             console.error("没有对应的子元素");
             return;
-        }else if(!c.getAttribute(ExCtrl.attrKeyStr.child_ctrl)){
+        }else if(!c.getAttribute(ExCtrl.KEY_STR.child_ctrl)){
             console.error("该子元素没有子控件");
             return;
         }else{
@@ -799,7 +815,7 @@ class ExCtrl extends CtrlLib{
     /**
      * 通过 ctrl_id 获取元素
      * @param {String} ctrl_id
-     * @returns {Element[]} 返回元素 包括ctrl-for 的
+     * @returns {HTMLElement[]} 返回元素 包括ctrl-for 的
      */
     getElementsByCtrlID(ctrl_id){
         var rtn=[];
@@ -829,7 +845,7 @@ class ExCtrl extends CtrlLib{
     /**
      * 控制标签的属性
      * @param {String} key 属性的key
-     * @param {Element[]} elements 实例的 elements 的引用，用于添加新的子元素
+     * @param {HTMLElement[]} elements 实例的 elements 的引用，用于添加新的子元素
      * @param {DEF_VirtualElement[]} ves DEF_VirtualElement 的数组
      * @param {Number} i 当前的ves的下标
      * @param {String} _attrVal 属性值
@@ -856,7 +872,7 @@ class ExCtrl extends CtrlLib{
      * @param {String} type      登记 类型  
      * @param {Boolean} ishtml   控制返回值, 默认将返回字符串 ，非0 将返回 DocumentFragment
      * @param {String[]} attrkey   如果是登记的 标签的属性值 这个是属性的 key
-     * @param {Element} tgt 
+     * @param {HTMLElement} tgt 
      * @return {String||DocumentFragment} 字符串 或 包含内容的文档片段
      */
     stringRender(str,ctrl_id,type,ishtml,attrkey,tgt){
@@ -916,7 +932,7 @@ class ExCtrl extends CtrlLib{
     }
     /**
      * 渲染for
-     * @param {Element[]}   elements    
+     * @param {HTMLElement[]}   elements    
      * @param {DEF_VirtualElement[]}   ves         DEF_VirtualElement list
      * @param {Number}  i           当前的ves的索引
      * @param {String}  forStr      属性内容
@@ -942,7 +958,7 @@ class ExCtrl extends CtrlLib{
     }
     /**
      * 用于控制元素是否出现
-     * @param {Element[]}   elements    
+     * @param {HTMLElement[]}   elements    
      * @param {DEF_VirtualElement[]}   ves         DEF_VirtualElement list
      * @param {Number}  i           当前的ves的索引
      * @param {String}  attrVal     属性内容
@@ -964,13 +980,13 @@ class ExCtrl extends CtrlLib{
     }
     /**
      * 渲染子控件
-     * @param {Element} element         加载子控件的元素
+     * @param {HTMLElement} element         加载子控件的元素
      * @param {DEF_VirtualElement} ve   子控件的虚拟元素
      * @param {String} childCtrlType    控件的类型
      */
     renderChildCtrl(element,ve,childCtrlType){
-        var dataStr=ve.getAttribute(ExCtrl.attrKeyStr.childCtrl_arguments);
-        var chcoArray=ve.getAttributesByKeyBA(ExCtrl.attrKeyStr.childCtrlOptionBefore);
+        var dataStr=ve.getAttribute(ExCtrl.KEY_STR.childCtrl_arguments);
+        var chcoArray=ve.getAttributesByKeyBA(ExCtrl.KEY_STR.childCtrlOptionBefore);
         var i;
         for(i=chcoArray.length-1;i>=0;--i){
             // 渲染 childCtrlOption (子控件属性) 的模板字符串
@@ -1104,7 +1120,6 @@ class ExCtrl extends CtrlLib{
         //  重新渲染 stringRender 的
         for(i in this.dataLinks){
             for(j=this.dataLinks[i].link.length-1;j>=0;--j){
-                // todo : 如果在模板文本里有会修改数据的表达式 
                 tid=this.dataLinks[i].link[j].ctrl_id;
                 if(this.dataLinks[i].value===this.dataLinks[i].expFnc.call(this,this.elements[tid]))
                 continue;
@@ -1131,6 +1146,7 @@ class ExCtrl extends CtrlLib{
         // 清除循环填充的东西
         for(i=elementCtrlIDs.length-1;i>=0;--i){
             if(elementCtrlIDs[i].indexOf("-EX_for-")!==-1){
+                this.remove_ElementExCtrlAction();
                 this.elements[elementCtrlIDs[i]].remove();
                 delete this.elements[elementCtrlIDs[i]];
                 if(this.child_ctrl[elementCtrlIDs[i]]){
@@ -1208,6 +1224,18 @@ class ExCtrl extends CtrlLib{
         var style_element=this.style_element;
         style_element.innerHTML=this.bluePrint.style.createCssString(this.c__ctrl_lib_id,this);
     }
+    /** 清除某个元素上挂在到控件的 ca 动作
+     * @param {String} ctrl_id 
+     */
+    remove_ElementExCtrlAction(ctrl_id){
+        var cab=ExCtrl.KEY_STR.ca_property_before;
+        var l=cab.length;
+        for(var i in this.elements[ctrl_id]){
+            if(i.indexOf(cab)===0){
+                this.remove_CtrlAction(i.slice(l),elements[ctrl_id][i])
+            }
+        }
+    }
     /**
      * 根据html代码, 创建一个 CtrlLib 的派生类
      * @param {String} htmlStr html代码
@@ -1230,7 +1258,7 @@ ExCtrl.prototype.bluePrint;
 /**
  * 标签的属性的 保留关键字
  */
-ExCtrl.attrKeyStr={
+ExCtrl.KEY_STR={
     if:"ctrl-if",
     for:"ctrl-for",
     child_ctrl:"ctrl-child_ctrl",
@@ -1238,6 +1266,8 @@ ExCtrl.attrKeyStr={
     childCtrlOptionBefore:"chco-",   //  给子控件添加控件属性
     // element resize 
     proxyResizeEvent:"pa-resize",
+    ca_property_before:"_ctrl_ca_",
+    pa_property_before:"_ctrl_pa_",
 }
 /**
  * 预设的 自定义属性控制器集合
@@ -1279,55 +1309,64 @@ ExCtrl.attrKeyStrCtrls=[
     // dom 绑定事件
     new AttrKeyStrCtrl__Ex(/^pa-(.+)$/,
     function(elements,tname,ves,i,k,key,attrVal,forFlag){
-        var temp=key[1],that=this;
-        if(elements[tname]["_ctrl_pa_"+temp]){
-            elements[tname].removeEventListener(temp,elements[tname]["_ctrl_pa_"+temp]);
+        var temp=key[1],that=this,
+            pa=ExCtrl.KEY_STR.pa_property_before+temp;
+            
+        if(elements[tname][pa]){
+            elements[tname].removeEventListener(temp,elements[tname][pa]);
         }
-        elements[tname]["_ctrl_pa_"+temp]=function(e){(new Function(["e","tgt"],attrVal)).call(that,e,this);}
-        elements[tname].addEventListener(temp,elements[tname]["_ctrl_pa_"+temp]);
+        elements[tname][pa]=function(e){(new Function(["e","tgt"],attrVal)).call(that,e,this);}
+        elements[tname].addEventListener(temp,elements[tname][pa]);
     }),
-    // 添加控件事件 todo: ctrl-for循环中使用这个会导致无法gc
+    // 添加控件事件
     new AttrKeyStrCtrl__Ex(/^ca-(.+)$/,
     /** @this {ExCtrl} */
     function(elements,tname,ves,i,k,key,attrVal,forFlag){
-        var tgt=elements[tname];
-        var that=this;
-        this.remove_CtrlAction(key[1],tgt["_ctrl_ca_"+key[1]]);
-        tgt["_ctrl_ca_"+key[1]]=function(e){(new Function(["e","tgt"],attrVal)).call(that,e,tgt);}
-        this.add_CtrlAction(key[1],tgt["_ctrl_ca_"+key[1]]);
+        var tgt=elements[tname],that=this,
+            ca=ExCtrl.KEY_STR.ca_property_before+key[1];
+        this.remove_CtrlAction(key[1],tgt[ca]);
+        tgt[ca]=function(e){(new Function(["e","tgt"],attrVal)).call(that,e,tgt);};
+        this.add_CtrlAction(key[1],tgt[ca]);
     }),
     // element resize 
     new AttrKeyStrCtrl__Ex(/^pa-resize$/,
     /** @this {ExCtrl} */
     function(elements,tname,ves,i,k,key,attrVal,forFlag){
-        var tgt=elements[tname];
-        var eventFnc=new Function(['e',"tgt",],attrVal),that=this;
-        addResizeEvent(tgt,function(e){
-            eventFnc.call(that,e,tgt);
-        });
-        this.add_CtrlAction("callback",function(){addResizeEvent.reResize(tgt)});
+        var tgt=elements[tname],
+            eventFnc=new Function(['e',"tgt",],attrVal),
+            that=this,
+            pa=ExCtrl.KEY_STR.pa_property_before+"resize";
+        
+        removeResizeEvent(tgt,tgt[pa])
+        tgt[pa]=function(e){eventFnc.call(that,e,tgt);}
+        addResizeEvent(tgt,tgt[pa]);
     }),
     // 按下按键事件 (组合键)
     new AttrKeyStrCtrl__Ex(/^pa-keydown\[(.+)\]$/,
     function(elements,tname,ves,i,k,key,attrVal,forFlag){
-        var that=this,tgt=elements[tname];
-        var eventFnc=new Function(['e',"tgt",],attrVal);
-        addKeyEvent(tgt,true,1,key[1].split(','),
-            function(e){
-                eventFnc.call(that,e,this)
-            },false);
+        var that=this,tgt=elements[tname],
+            eventFnc=new Function(['e',"tgt",],attrVal),
+            keycodes=key[1].split(','),
+            pa=ExCtrl.KEY_STR.pa_property_before+key[0];
+
+        removeKeyEvent(tgt,keycodes,tgt[pa],false);
+        tgt[pa]=function(e){eventFnc.call(that,e,this)}
+        addKeyEvent(tgt,true,1,keycodes,tgt[pa],false);
     }),
     // 抬起按键事件
     new AttrKeyStrCtrl__Ex(/^pa-keyup\[(.+)\]$/,
     function(elements,tname,ves,i,k,key,attrVal,forFlag){
-        var that=this;
-        var eventFnc=new Function(['e',"tgt",],attrVal);
-        addKeyEvent(tgt,true,key.slice(1),1,
-            function(e){
-                eventFnc.call(that,e,this)
-            },true);
+        var that=this,tgt=elements[tname],
+            eventFnc=new Function(['e',"tgt",],attrVal),
+            keycodes=key[1].split(','),
+            pa=ExCtrl.KEY_STR.pa_property_before+key[0];
+
+        removeKeyEvent(tgt,keycodes,tgt[pa],true);
+        tgt[pa]=function(e){eventFnc.call(that,e,this)}
+        addKeyEvent(tgt,true,1,keycodes,tgt[pa],true);
     }),
     new AttrKeyStrCtrl__Ex(/^ctrl-if$/,
+        /** @this {ExCtrl} */
         function(elements,tname,ves,i,k,key,attrVal,forFlag){
         return this.ctrlIf(elements,ves,i,attrVal,tname,forFlag);
     })
@@ -1339,13 +1378,13 @@ ExCtrl.attrKeyStrCtrls=[
 ExCtrl.prototype.reRenderAttrCtrl={
     /**
      * @param {DEF_VirtualElementList} bluePrint
-     * @param {Element} tgtElem
+     * @param {HTMLElement} tgtElem
      */
     "ctrl-for":function(bluePrint,tgtElem){
         var id=tgtElem.ctrl_id,ti=bluePrint.getIndexByCtrlID(tgtElem.ctrl_id);
         while(ti){
             ti=bluePrint.getParent(ti);
-            if(bluePrint.ves[ti].getAttribute(ExCtrl.attrKeyStr.if)&&this.elements[bluePrint.ves[ti].ctrl_id].ifFlag){
+            if(bluePrint.ves[ti].getAttribute(ExCtrl.KEY_STR.if)&&this.elements[bluePrint.ves[ti].ctrl_id].ifFlag){
                 this.elements[bluePrint.ves[ti].ctrl_id].ifFlag=false;
                 // 因为ctrl-if 会重新渲染，所以跳过
                 return;
@@ -1360,7 +1399,7 @@ ExCtrl.prototype.reRenderAttrCtrl={
     },
     /**
      * @param {DEF_VirtualElementList} bluePrint
-     * @param {Element} tgtElem
+     * @param {HTMLElement} tgtElem
      */
     "ctrl-if":function(bluePrint,tgtElem){
         var tgtCtrlID=tgtElem.ctrl_id;
@@ -1370,7 +1409,7 @@ ExCtrl.prototype.reRenderAttrCtrl={
             var ti=bluePrint.getParent(tp);
             var cni=0;  // childNodes index
             var brother=bluePrint.getChild(ti);
-            if(bluePrint.ves[ti].getAttribute(ExCtrl.attrKeyStr.proxyResizeEvent)){
+            if(bluePrint.ves[ti].getAttribute(ExCtrl.KEY_STR.proxyResizeEvent)){
                 // 父元素有 resize 属性 cni 后移 2
                 cni+=2;
             }
