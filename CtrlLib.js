@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-04-27 17:03:33
+ * @LastEditTime: 2022-04-27 19:34:09
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -1137,7 +1137,7 @@ class ExCtrl extends CtrlLib{
     }
     /**
      * 根据依赖项重新渲染所有内容
-     * @param {Boolean} want_reRenderChild 是否要让后代控件运行 reRender()
+     * @param {Number} want_reRenderChild 要让多少层后代控件运行 reRender()  设为负数则会延伸到所有子控件
      */
     reRender(want_reRenderChild){
         var i,j;
@@ -1178,7 +1178,7 @@ class ExCtrl extends CtrlLib{
 
         if(want_reRenderChild)
         for(i in this.child_ctrl){
-            this.child_ctrl[i].reRender(want_reRenderChild);
+            this.child_ctrl[i].reRender(--want_reRenderChild);
         }
     }
     // render 的 方法集; 给 stringRender 处理的内容
