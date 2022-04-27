@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-04-27 15:29:57
+ * @LastEditTime: 2022-04-27 16:53:01
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -642,6 +642,8 @@ CtrlLib.prototype.childCtrlType={};
  * @param {String[]}             keys       经过ctrl_Fnc 处理后的 key
  * @param {String}               _attrVal   属性值
  * @param {Boolean}              forFlag    当前元素是否是for中的
+ * @param {Boolean}              reflag     是否是正在重新渲染
+ * @return {Number}
  * @this {ExCtrl}
  * 
  */ 
@@ -747,9 +749,10 @@ class AttrKeyStrCtrlList{
      * @param {String} key 属性的key
      * @param {String} _attrVal 属性值
      * @param {String} forFlag 表示是不是 for 的
+     * @param {Boolean} reFlag 表示是否是刷新时调用
      * @returns {Number} 返回执行完成后的重新定位的ves下标
      */
-    handle(ctrlLib,elements,tname,ves,i,k,key,_attrVal,forFlag){
+    handle(ctrlLib,elements,tname,ves,i,k,key,_attrVal,forFlag,reFlag){
         var tgti=k,temp;
         for(var j=this.list.length-1;j>=0;--j){
             temp=this.list[j].handle(ctrlLib,elements,tname,ves,i,k,key,_attrVal,forFlag);
@@ -861,9 +864,6 @@ class ExCtrl extends CtrlLib{
         // that=this;
         var k=this.attrKeyStrCtrls.handle(this,elements,tname,ves,i,k,key,attrVal,forFlag);
         return k;
-    }
-    attrHandleR(ctrlid){
-        // todo 
     }
     /**
      * 渲染 模板字符 内容
@@ -1137,9 +1137,10 @@ class ExCtrl extends CtrlLib{
     }
     /**
      * 根据依赖项重新渲染所有内容
+     * @param {Boolean} want_reRenderChild 是否要让后代控件运行 reRender()
      */
-    reRender(){
-        var i,j,tempFootprint={},tid,ttype;
+    reRender(want_reRenderChild){
+        var i,j;
         var bluePrint=this.bluePrint;
         var elementCtrlIDs=Object.keys(this.elements);
         var tgtElem;
@@ -1174,6 +1175,11 @@ class ExCtrl extends CtrlLib{
         this.renderStyle();
         this.reRender_Callback();
         this.touchCtrlAction("render");
+
+        if(want_reRenderChild)
+        for(i in this.child_ctrl){
+            this.child_ctrl[i].reRender(want_reRenderChild);
+        }
     }
     // render 的 方法集; 给 stringRender 处理的内容
     // 
@@ -1214,7 +1220,10 @@ class ExCtrl extends CtrlLib{
     renderCtrl_Attr(ctrl_id,attrkey){
         var tgtElement=this.elements[ctrl_id];
         var thisVE=this.bluePrint.getByCtrlID(ctrl_id);
-        this.elements[ctrl_id].setAttribute(attrkey,this.stringRender(thisVE.getAttribute(attrkey),ctrl_id,"Attr",0,attrkey,tgtElement));
+        var i=this.bluePrint.getIndexByCtrlID(ctrl_id);
+
+        this.attrHandle(attrkey,this.elements,this.bluePrint.ves,i,i,thisVE.getAttribute(attrkey),ctrl_id,false);
+        // this.elements[ctrl_id].setAttribute(attrkey,this.stringRender(thisVE.getAttribute(attrkey),ctrl_id,"Attr",0,attrkey,tgtElement));
     }
     /**
      * 渲染styleElement内容
@@ -1290,7 +1299,10 @@ ExCtrl.attrKeyStrCtrls=[
     }),
     // 循环填充数据
     new AttrKeyStrCtrl__Ex(/^ctrl-for$/,
-        function(elements,tname,ves,i,k,key,attrVal,forFlag){
+        function(elements,tname,ves,i,k,key,attrVal,forFlag,reflag){
+            if(reflag){
+                return k;
+            }
             var k=i;
             k=this.renderFor(elements,ves,i,attrVal,tname,forFlag);
             elements[tname].forVesOP=i;
@@ -1300,7 +1312,16 @@ ExCtrl.attrKeyStrCtrls=[
     ),
     // 生成子控件 
     new AttrKeyStrCtrl__Ex(/^ctrl-child_ctrl$/,
-        function(elements,tname,ves,i,k,key,attrVal,forFlag){
+    /**@this {ExCtrl} */
+        function(elements,tname,ves,i,k,key,attrVal,forFlag,reflag){
+            if(reflag){
+                if(!(attrVal===this.child_ctrl[tname].constructor.name)){
+                    // 卸载子控件
+                    this.child_ctrl[tname].removeCtrl();
+                }else{
+                    return;
+                }
+            }
             this.renderChildCtrl(elements[ves[i].ctrl_id],ves[i],attrVal);
         }
     ),
@@ -1367,7 +1388,10 @@ ExCtrl.attrKeyStrCtrls=[
     }),
     new AttrKeyStrCtrl__Ex(/^ctrl-if$/,
         /** @this {ExCtrl} */
-        function(elements,tname,ves,i,k,key,attrVal,forFlag){
+        function(elements,tname,ves,i,k,key,attrVal,forFlag,reflag){
+            if(reflag){
+                return;
+            }
         return this.ctrlIf(elements,ves,i,attrVal,tname,forFlag);
     })
 ]
