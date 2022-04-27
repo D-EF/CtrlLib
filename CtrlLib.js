@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-04-27 16:53:01
+ * @LastEditTime: 2022-04-27 17:03:33
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -1332,7 +1332,6 @@ ExCtrl.attrKeyStrCtrls=[
     function(elements,tname,ves,i,k,key,attrVal,forFlag){
         var temp=key[1],that=this,
             pa=ExCtrl.KEY_STR.pa_property_before+temp;
-            
         if(elements[tname][pa]){
             elements[tname].removeEventListener(temp,elements[tname][pa]);
         }
