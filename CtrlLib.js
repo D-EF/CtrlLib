@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-04-27 19:34:09
+ * @LastEditTime: 2022-05-03 19:47:57
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -1357,9 +1357,13 @@ ExCtrl.attrKeyStrCtrls=[
             that=this,
             pa=ExCtrl.KEY_STR.pa_property_before+"resize";
         
+        this.remove_CtrlAction("callback",tgt[pa+"__re"]);
         removeResizeEvent(tgt,tgt[pa])
         tgt[pa]=function(e){eventFnc.call(that,e,tgt);}
         addResizeEvent(tgt,tgt[pa]);
+        tgt[pa+"__re"]=function(){addResizeEvent.reResize(tgt)};
+        tgt[pa+"__re"]();
+        this.add_CtrlAction("callback",tgt[pa+"__re"]);
     }),
     // 按下按键事件 (组合键)
     new AttrKeyStrCtrl__Ex(/^pa-keydown\[(.+)\]$/,
