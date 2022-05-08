@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-05-07 16:13:12
+ * @LastEditTime: 2022-05-08 17:55:53
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -475,6 +475,7 @@ function DataLink(expression,value,link){
             this.callback(...arguments);
             this.reRender_Callback();
             this.touchCtrlAction("callback");
+            this.touchCtrlAction("render");
         }else{
             console.error('Fatal error! This Control have not parent_node!');
         }
