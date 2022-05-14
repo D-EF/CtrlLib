@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-05-08 17:55:53
+ * @LastEditTime: 2022-05-14 18:14:10
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -499,6 +499,7 @@ function DataLink(expression,value,link){
             this.callback(...arguments);
             this.reRender_Callback();
             this.touchCtrlAction("callback");
+            
         }
         else{
             console.error('Fatal error! This Control have not target!');
@@ -1345,15 +1346,22 @@ ExCtrl.attrKeyStrCtrls=[
         elements[tname][pa]=function(e){(new Function(["e","tgt"],attrVal)).call(that,e,this);}
         elements[tname].addEventListener(temp,elements[tname][pa]);
     }),
+    // 渲染dom元素时立刻运行事件
+    new AttrKeyStrCtrl__Ex(/^ctrl-ea$/,
+    /** @this {ExCtrl} */
+    function(elements,tname,ves,i,k,key,attrVal,for_nameEX){
+        var tgt=elements[tname],that=this;
+        (function(e){(new Function(["e","tgt"],attrVal)).call(that,e,tgt);})()
+    }),
     // 添加控件事件
     new AttrKeyStrCtrl__Ex(/^ca-(.+)$/,
     /** @this {ExCtrl} */
     function(elements,tname,ves,i,k,key,attrVal,for_nameEX){
         var tgt=elements[tname],that=this,
-            ca=ExCtrl.KEY_STR.ca_property_before+key[1];
-        this.remove_CtrlAction(key[1],tgt[ca]);
-        tgt[ca]=function(e){(new Function(["e","tgt"],attrVal)).call(that,e,tgt);};
-        this.add_CtrlAction(key[1],tgt[ca]);
+            ca=ExCtrl.KEY_STR.ca_property_before+key[1]+tname;
+        this.remove_CtrlAction(key[1],this[ca]);
+        this[ca]=function(e){(new Function(["e","tgt"],attrVal)).call(that,e,tgt);};
+        this.add_CtrlAction(key[1],this[ca]);
     }),
     // element resize 
     new AttrKeyStrCtrl__Ex(/^pa-resize$/,
@@ -1368,7 +1376,7 @@ ExCtrl.attrKeyStrCtrls=[
         removeResizeEvent(tgt,tgt[pa])
         tgt[pa]=function(e){eventFnc.call(that,e,tgt);}
         addResizeEvent(tgt,tgt[pa]);
-        tgt[pa+"__re"]=function(){addResizeEvent.reResize(tgt)};
+        tgt[pa+"__re"]=function(){addResizeEvent.reResize(tgt);that.remove_CtrlAction("callback",tgt[pa+"__re"])};
         tgt[pa+"__re"]();
         this.add_CtrlAction("callback",tgt[pa+"__re"]);
     }),
