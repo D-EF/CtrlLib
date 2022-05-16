@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-05-14 18:14:10
+ * @LastEditTime: 2022-05-16 20:01:36
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -680,14 +680,15 @@ class AttrKeyStrCtrl{
      * @param {Array} key 属性的key
      * @param {String} _attrVal 属性值
      * @param {String} for_nameEX 表示是不是 for 的
+     * @param {Boolean}              reflag     是否是正在重新渲染
      * @returns {{stop_flag:Boolean,tgti:Number}}
      * stopFlag表示是否继续调用控制器
      */
-    handle(ctrlLib,elements,tname,ves,i,k,key,_attrVal,for_nameEX){
+    handle(ctrlLib,elements,tname,ves,i,k,key,_attrVal,for_nameEX,reFlag){
         var ctrlFucRtn=this.ctrl_Fnc(key);
         var tgti=k;
         if(ctrlFucRtn&&ctrlFucRtn.length){
-            tgti=this.act_fnc&&this.act_fnc.call(ctrlLib,elements,tname,ves,i,k,ctrlFucRtn,_attrVal,for_nameEX);
+            tgti=this.act_fnc&&this.act_fnc.call(ctrlLib,elements,tname,ves,i,k,ctrlFucRtn,_attrVal,for_nameEX,reFlag);
             if((tgti===undefined)||tgti<k){
                 tgti=k
             }
@@ -757,7 +758,7 @@ class AttrKeyStrCtrlList{
     handle(ctrlLib,elements,tname,ves,i,k,key,_attrVal,for_nameEX,reFlag){
         var tgti=k,temp;
         for(var j=this.list.length-1;j>=0;--j){
-            temp=this.list[j].handle(ctrlLib,elements,tname,ves,i,k,key,_attrVal,for_nameEX);
+            temp=this.list[j].handle(ctrlLib,elements,tname,ves,i,k,key,_attrVal,for_nameEX,reFlag);
             tgti=temp.tgti
             if(temp.stop_flag){
                 return tgti;
@@ -856,15 +857,16 @@ class ExCtrl extends CtrlLib{
      * @param {String} _attrVal 属性值
      * @param {String} tname 临时的元素名称，用作实例的 elements 当前的索引
      * @param {String} for_nameEX 表示是不是 for 的
+     * @param {Boolean}              reflag     是否是正在重新渲染
      * @returns {Number} 返回运算完成后的ves下标
      */
-    attrHandle(key,elements,ves,i,k,_attrVal,tname,for_nameEX){
+    attrHandle(key,elements,ves,i,k,_attrVal,tname,for_nameEX,reFlag){
         var tgt=elements[tname],k=k;
 
         var attrVal=this.stringRender(decodeHTML(_attrVal),tname,"Attr",0,key,tgt);
 
         // that=this;
-        var k=this.attrKeyStrCtrls.handle(this,elements,tname,ves,i,k,key,attrVal,for_nameEX);
+        var k=this.attrKeyStrCtrls.handle(this,elements,tname,ves,i,k,key,attrVal,for_nameEX,reFlag);
         return k;
     }
     /**
@@ -939,9 +941,12 @@ class ExCtrl extends CtrlLib{
      * @param {Number}  i           当前的ves的索引
      * @param {String}  forStr      属性内容
      * @param {String}  tname       elements的索引
+     * @param {Boolean} for_nameEX  是否在重渲染
+     * @param {Boolean} reflag      是否在重渲染
      * @returns {Number} 返回跳过子元素的索引
      */
-    renderFor(elements,ves,i,forStr,tname){
+    renderFor(elements,ves,i,forStr,tname,for_nameEX,reFlag){
+        var for_nameEX=for_nameEX||"";
         var k=i,p,temp,l,ioffset=ioffset||0;
         var fillInner;
         var tgt=this.elements[ves[i].ctrl_id];
@@ -953,7 +958,7 @@ class ExCtrl extends CtrlLib{
         fillInner=ves.slice(i+1,k);
         for(for1Fun.call(this,tgt),l=1;for2Fun.call(this,tgt);++l,for3Fun.call(this,tgt)){
             //递归得到循环内部的元素
-            temp=this.itemVEToElement(this.elements,fillInner,"-EX_for-"+tname+"-C"+l);
+            temp=this.itemVEToElement(this.elements,fillInner,for_nameEX+"-EX_for-"+tname+"-C"+l,reFlag);
             elements[tname].appendChild(temp.fragment);
         }
         return k-1;
@@ -982,12 +987,12 @@ class ExCtrl extends CtrlLib{
     }
     /**
      * 渲染子控件
-     * @param {HTMLElement} element         加载子控件的元素
+     * @param {HTMLElement} element     加载子控件的元素
      * @param {DEF_VirtualElement} ve   子控件的虚拟元素
      * @param {String} childCtrlType    控件的类型
      */
     renderChildCtrl(element,ve,childCtrlType){
-        var dataStr=ve.getAttribute(ExCtrl.KEY_STR.childCtrl_arguments);
+        var dataStr=templateStringRender(ve.getAttribute(ExCtrl.KEY_STR.childCtrl_arguments),this,[element]).str;
         var chcoArray=ve.getAttributesByKeyBA(ExCtrl.KEY_STR.childCtrlOptionBefore);
         var i;
         for(i=chcoArray.length-1;i>=0;--i){
@@ -997,8 +1002,8 @@ class ExCtrl extends CtrlLib{
         var that=this,temp,
         getDataCallback=function (){
             if(!(that.isready))return;
-            var child_ctrl
-            if(that.child_ctrl[element.ctrl_id]&&(that.child_ctrl[element.ctrl_id].constructor.name===childCtrlType)){
+            var child_ctrl;
+            if(that.child_ctrl[element.ctrl_id]&&(that.child_ctrl[element.ctrl_id].constructor===that.childCtrlType[childCtrlType])){
                 child_ctrl=that.child_ctrl[element.ctrl_id]
             }else{
                 child_ctrl=new that.childCtrlType[childCtrlType](...arguments);
@@ -1037,9 +1042,10 @@ class ExCtrl extends CtrlLib{
      * @param   {*} elements element的集合的引用
      * @param   {DEF_VirtualElement[]} ves   DEF_VirtualElement list
      * @param   {String}     for_nameEX    for循环时用来添加命名并且标识当前是for
+     * @param   {Boolean}    reFlag 是否为重新加载
      * @return  {Object{elements:{},fragment:DocumentFragment}}
      */
-    itemVEToElement(_elements,ves,for_nameEX){
+    itemVEToElement(_elements,ves,for_nameEX,reFlag){
         var elements=_elements||{},
             rtnFragment=document.createDocumentFragment(),
             i,j,k,minD=Infinity,
@@ -1057,7 +1063,7 @@ class ExCtrl extends CtrlLib{
             elements[tname]=document.createElement(ves[i].tag_name);
             elements[tname].ctrl_id=tname;
             for(j=ves[i].attribute.length-1;j>=0;--j){
-                k=this.attrHandle(ves[i].attribute[j].key,elements,ves,i,k,ves[i].attribute[j].value,tname,nameEX);
+                k=this.attrHandle(ves[i].attribute[j].key,elements,ves,i,k,ves[i].attribute[j].value,tname,nameEX,reFlag);
             }
             tname=ves[i].ctrl_id+nameEX;
             if(dHash[ves[i].depth-1]){ //如果存在上一层
@@ -1150,19 +1156,20 @@ class ExCtrl extends CtrlLib{
     reRender(want_reRenderChild){
         var i,j;
         var bluePrint=this.bluePrint;
-        var elementCtrlIDs=Object.keys(this.elements);
         var tgtElem;
+        
         // 清除循环填充的东西
-        for(i=elementCtrlIDs.length-1;i>=0;--i){
-            if(elementCtrlIDs[i].indexOf("-EX_for-")!==-1){
+        for(i in this.elements){
+            if(i.indexOf("-EX_for-")!==-1){
                 this.remove_ElementExCtrlAction();
-                this.elements[elementCtrlIDs[i]].remove();
-                delete this.elements[elementCtrlIDs[i]];
-                if(this.child_ctrl[elementCtrlIDs[i]]){
-                    delete this.child_ctrl[elementCtrlIDs[i]];
-                }
+                this.elements[i].remove();
+                delete this.elements[i];
+                // if(this.child_ctrl[i]){
+                //     delete this.child_ctrl[i];
+                // }
             }
         }
+
         //  重新渲染 stringRender 的
         this.renderString();
         // 重新渲染 ctrl-attr 内容
@@ -1308,11 +1315,8 @@ ExCtrl.attrKeyStrCtrls=[
     // 循环填充数据
     new AttrKeyStrCtrl__Ex(/^ctrl-for$/,
         function(elements,tname,ves,i,k,key,attrVal,for_nameEX,reflag){
-            if(reflag){
-                return k;
-            }
             var k=i;
-            k=this.renderFor(elements,ves,i,attrVal,tname,for_nameEX);
+            k=this.renderFor(elements,ves,i,attrVal,tname,for_nameEX,reflag);
             elements[tname].forVesOP=i;
             elements[tname].forVesED=k;
             return k;
@@ -1323,14 +1327,12 @@ ExCtrl.attrKeyStrCtrls=[
     /**@this {ExCtrl} */
         function(elements,tname,ves,i,k,key,attrVal,for_nameEX,reflag){
             if(reflag){
-                if(!(attrVal===this.child_ctrl[tname].constructor.name)){
+                if(!(this.childCtrlType[attrVal]===this.child_ctrl[tname].constructor)){
                     // 卸载子控件
                     this.child_ctrl[tname].removeCtrl();
-                }else{
-                    return;
                 }
             }
-            this.renderChildCtrl(elements[ves[i].ctrl_id+for_nameEX],ves[i],attrVal);
+            this.renderChildCtrl(elements[tname],ves[i],attrVal);
         }
     ),
     // 生成子控件时的构造函数的参数的表达式 在生成子控件时实现, 此处不操作
@@ -1419,6 +1421,7 @@ ExCtrl.attrKeyStrCtrls=[
  */
 ExCtrl.prototype.reRenderAttrCtrl={
     /**
+     * @this {ExCtrl}
      * @param {DEF_VirtualElementList} bluePrint
      * @param {HTMLElement} tgtElem
      */
@@ -1435,7 +1438,7 @@ ExCtrl.prototype.reRenderAttrCtrl={
 
         ti=bluePrint.getIndexByCtrlID(tgtElem.ctrl_id);
         var tempVEs=bluePrint.getChild(ti);
-        var tempElements=this.itemVEToElement(this.elements,bluePrint.ves.slice(ti,tempVEs.p));
+        var tempElements=this.itemVEToElement(this.elements,bluePrint.ves.slice(ti,tempVEs.p),undefined,true);
         tgtElem.before(tempElements.fragment);
         tgtElem.remove();
     },
@@ -1479,7 +1482,7 @@ ExCtrl.prototype.reRenderAttrCtrl={
             if(tgtElem.children.length<tempVEs.ves.length)
             {
                 // 重新渲染
-                var tempElements=this.itemVEToElement(this.elements,bluePrint.ves.slice(tp,tempVEs.p));
+                this.itemVEToElement(this.elements,bluePrint.ves.slice(tp,tempVEs.p),undefined,true);
                 this.elements[tgtCtrlID].ifFlag=true;
             }
             // 插入目标
