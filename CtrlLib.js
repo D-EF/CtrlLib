@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-05-16 20:01:36
+ * @LastEditTime: 2022-05-16 20:03:37
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -1006,6 +1006,7 @@ class ExCtrl extends CtrlLib{
             if(that.child_ctrl[element.ctrl_id]&&(that.child_ctrl[element.ctrl_id].constructor===that.childCtrlType[childCtrlType])){
                 child_ctrl=that.child_ctrl[element.ctrl_id]
             }else{
+                if(that.child_ctrl[element.ctrl_id])that.child_ctrl[element.ctrl_id].removeCtrl();
                 child_ctrl=new that.childCtrlType[childCtrlType](...arguments);
             }
 
@@ -1326,12 +1327,6 @@ ExCtrl.attrKeyStrCtrls=[
     new AttrKeyStrCtrl__Ex(/^ctrl-child_ctrl$/,
     /**@this {ExCtrl} */
         function(elements,tname,ves,i,k,key,attrVal,for_nameEX,reflag){
-            if(reflag){
-                if(!(this.childCtrlType[attrVal]===this.child_ctrl[tname].constructor)){
-                    // 卸载子控件
-                    this.child_ctrl[tname].removeCtrl();
-                }
-            }
             this.renderChildCtrl(elements[tname],ves[i],attrVal);
         }
     ),
