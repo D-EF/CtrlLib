@@ -1,6 +1,6 @@
 /*
  * @Author: Darth_Eternalfaith
- * @LastEditTime: 2022-05-16 20:03:37
+ * @LastEditTime: 2022-05-18 12:06:35
  * @LastEditors: Darth_Eternalfaith
  */
 import {
@@ -452,6 +452,7 @@ function DataLink(expression,value,link){
         this.ctrl_action_list=new Map();
         /** 子控件事件队列 */
         this.child_ctrl_action_list={};
+        this._temp_ctrl_action={};
     }
     /**
      * 将控件加入到指定的dom元素内
@@ -1355,10 +1356,10 @@ ExCtrl.attrKeyStrCtrls=[
     /** @this {ExCtrl} */
     function(elements,tname,ves,i,k,key,attrVal,for_nameEX){
         var tgt=elements[tname],that=this,
-            ca=ExCtrl.KEY_STR.ca_property_before+key[1]+tname;
-        this.remove_CtrlAction(key[1],this[ca]);
-        this[ca]=function(e){(new Function(["e","tgt"],attrVal)).call(that,e,tgt);};
-        this.add_CtrlAction(key[1],this[ca]);
+            ca=ExCtrl.KEY_STR.ca_property_before+key[1]+'_'+tname;
+        this.remove_CtrlAction(key[1],this._temp_ctrl_action[ca]);
+        this._temp_ctrl_action[ca]=function(e){(new Function(["e","tgt"],attrVal)).call(that,e,tgt);};
+        this.add_CtrlAction(key[1],this._temp_ctrl_action[ca]);
     }),
     // element resize 
     new AttrKeyStrCtrl__Ex(/^pa-resize$/,
@@ -1368,9 +1369,8 @@ ExCtrl.attrKeyStrCtrls=[
             eventFnc=new Function(['e',"tgt",],attrVal),
             that=this,
             pa=ExCtrl.KEY_STR.pa_property_before+"resize";
-        
         this.remove_CtrlAction("callback",tgt[pa+"__re"]);
-        removeResizeEvent(tgt,tgt[pa])
+        removeResizeEvent(tgt,tgt[pa]);
         tgt[pa]=function(e){eventFnc.call(that,e,tgt);}
         addResizeEvent(tgt,tgt[pa]);
         tgt[pa+"__re"]=function(){addResizeEvent.reResize(tgt);that.remove_CtrlAction("callback",tgt[pa+"__re"])};
